@@ -423,8 +423,8 @@ def main(shot,timebase,path_shot):
     zsep_upper,zvsin,zvsout,upper_gap,lower_gap,q0,qstar,q95,V_loop_efit,V_surf_efit,\
     Wmhd,ssep,n_over_ncrit,dipdt,P_ohm,H_HandD,Halpha,Dalpha,p_rad,\
     NL_04,ne_t,te_t,gpc2_te0,gpc_te8,g_side_rat, e_bot_mks])) 
-    #omitted edge, core, engineering,b_bot_mks,QUICKFIT data, 60/70/80/90/95,NL01-NL10, and cxrs data
-    #make certain arrays 0 if not called/unavailable    
+    #omitted edge and core (which are not yet interpolated), engineering,b_bot_mks,QUICKFIT data, 
+    #60/70/80/90/95,NL01-NL10, and cxrs data make certain arrays 0 if not called/unavailable    
     #perhaps include condition where if certain columns for a particular row are nan, 
      #or if error associated is too high, or if nonsensical (e.g. beta_p < 0), then do not save those
      #rows and remove those particular rows from the populated database
