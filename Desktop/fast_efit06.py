@@ -43,12 +43,7 @@ def run_efit(efit_,shot,tstart,tend,dt):
         os.system("/usr/local/cmod/codes/efit/bin/fast_efitdd < efit_input.txt > efit_output.txt")  
 #        os.remove("efit_input.txt")
 #        os.remove("efit_output.txt")
-
-#inputs (can be external, or inserted in below 4 lines)
-shot = 1100204004
-tstart = 1000.*timebase[0] #501.0 #milliseconds
-dt = 1.0 #milliseconds
-tend = 1000.*timebase[-1] #800.0 #milliseconds  
+ 
 
 
 efits = ['efit06','efit07']
@@ -60,66 +55,71 @@ path_shot = {} #dictionary, with keys as shot; values are paths
 #if efit06 occupied, then try with efit07
 #if efit07 occupied, raise an error
 
-while True:
-    try:
-        efit_ = efits[0]
-        tree = MDSplus.Tree('{}'.format(efit_), shot)   
-        date_created  = Data.execute("date_time($)",max(tree.getNodeWild('***').time_inserted))
-#  the time if statements below ensures the timebase in the tree is at least covering the range and dt specified        
-        time = (tree.getNode('\efit_aeqdsk:time')).data()        
-        if (round(1000.*time[0]) <= round(tstart)) and (round(1000.*time[-1]) \
-        >= round(tend)) and (int(1000.*(time[1]-time[0])) <= int(dt)):            
-            print('{} is done in {}'.format(shot,efit_))   
-            path_shot['{}'.format(shot)] = efit_,date_created.split(' ')[0]
-            break
-# the date if statement will allow overwrite if last updated in 2018
-        else:  
-            if ((date_created.split(" ")[0].split("-"))[2]) == '2018':  
-                efit_ = efits[0]
-                print('Writing {} to {}'.format(shot,efit_))
+def main(shot,tstart,tend,dt):
+    while True:
+        try:
+            efit_ = efits[0]
+            tree = MDSplus.Tree('{}'.format(efit_), shot)   
+            date_created  = Data.execute("date_time($)",max(tree.getNodeWild('***').time_inserted))
+    #  the time if statements below ensures the timebase in the tree is at least covering the range and dt specified        
+            time = (tree.getNode('\efit_aeqdsk:time')).data()        
+            if (round(1000.*time[0]) <= round(tstart)) and (round(1000.*time[-1]) \
+            >= round(tend)) and (int(1000.*(time[1]-time[0])) <= int(dt)):            
+                print('{} is done in {}'.format(shot,efit_))   
                 path_shot['{}'.format(shot)] = efit_,date_created.split(' ')[0]
-                tree = Tree('{}'.format(efit_),-1)
-                tree.createPulse(shot)
-                run_efit(efit_,shot,tstart,tend,dt)
                 break
-            else:
-                print('{} is occupied for {}'.format(efit_,shot))
-            try:
-                efit_ = efits[1]
-                tree = MDSplus.Tree('{}'.format(efit_), shot)   
-                date_created  = Data.execute("date_time($)",max(tree.getNodeWild('***').time_inserted))
-                time = (tree.getNode('\efit_aeqdsk:time')).data()        
-                if (round(1000.*time[0]) <= round(tstart)) and (round(1000.*time[-1]) \
-                >= round(tend)) and (int(1000.*(time[1]-time[0])) <= int(dt)):                       
-                    print('{} is done in {}'.format(shot,efit_))  
+    # the date if statement will allow overwrite if last updated in 2018
+            else:  
+                if ((date_created.split(" ")[0].split("-"))[2]) == '2018':  
+                    efit_ = efits[0]
+                    print('Writing {} to {}'.format(shot,efit_))
                     path_shot['{}'.format(shot)] = efit_,date_created.split(' ')[0]
+                    tree = Tree('{}'.format(efit_),-1)
+                    tree.createPulse(shot)
+                    run_efit(efit_,shot,tstart,tend,dt)
                     break
                 else:
-                    if ((date_created.split(" ")[0].split("-"))[2]) == '2018':
-                        efit_ = efits[1]
-                        print('Writing {} to {}'.format(shot,efit_))  
+                    print('{} is occupied for {}'.format(efit_,shot))
+                try:
+                    efit_ = efits[1]
+                    tree = MDSplus.Tree('{}'.format(efit_), shot)   
+                    date_created  = Data.execute("date_time($)",max(tree.getNodeWild('***').time_inserted))
+                    time = (tree.getNode('\efit_aeqdsk:time')).data()        
+                    if (round(1000.*time[0]) <= round(tstart)) and (round(1000.*time[-1]) \
+                    >= round(tend)) and (int(1000.*(time[1]-time[0])) <= int(dt)):                       
+                        print('{} is done in {}'.format(shot,efit_))  
                         path_shot['{}'.format(shot)] = efit_,date_created.split(' ')[0]
-                        tree = Tree('{}'.format(efit_),-1)
-                        tree.createPulse(shot) 
-                        run_efit(efit_,shot,tstart,tend,dt)
                         break
                     else:
-                        print('{} and {} are occupied for {}'.format(efits[0],efits[1],shot))
-                        raise
-            except (TreeFOPENR,TreeNODATA):
-                efit_ = efits[1]
-                print('Writing {} to {}'.format(shot,efit_))  
-                path_shot['{}'.format(shot)] = efit_,date_created.split(' ')[0]
-                tree = Tree('{}'.format(efit_),-1)
-                tree.createPulse(shot) 
-                run_efit(efit_,shot,tstart,tend,dt)
-                break
-    except (TreeFOPENR,TreeNODATA):
-        efit_ = efits[0]
-        print('Writing {} to {}'.format(shot,efit_))
-        path_shot['{}'.format(shot)] = efit_,date_created.split(' ')[0]
-        tree = Tree('{}'.format(efit_),-1)
-        tree.createPulse(shot)
-        run_efit(efit_,shot,tstart,tend,dt)
-        break
-           
+                        if ((date_created.split(" ")[0].split("-"))[2]) == '2018':
+                            efit_ = efits[1]
+                            print('Writing {} to {}'.format(shot,efit_))  
+                            path_shot['{}'.format(shot)] = efit_,date_created.split(' ')[0]
+                            tree = Tree('{}'.format(efit_),-1)
+                            tree.createPulse(shot) 
+                            run_efit(efit_,shot,tstart,tend,dt)
+                            break
+                        else:
+                            print('{} and {} are occupied for {}'.format(efits[0],efits[1],shot))
+                            raise
+                except (TreeFOPENR,TreeNODATA):
+                    efit_ = efits[1]
+                    print('Writing {} to {}'.format(shot,efit_))  
+                    path_shot['{}'.format(shot)] = efit_,date_created.split(' ')[0]
+                    tree = Tree('{}'.format(efit_),-1)
+                    tree.createPulse(shot) 
+                    run_efit(efit_,shot,tstart,tend,dt)
+                    break
+        except (TreeFOPENR,TreeNODATA):
+            efit_ = efits[0]
+            print('Writing {} to {}'.format(shot,efit_))
+            tree = Tree('{}'.format(efit_),-1)
+            tree.createPulse(shot)
+            run_efit(efit_,shot,tstart,tend,dt)
+            date_created  = Data.execute("date_time($)",max(tree.getNodeWild('***').time_inserted))
+            path_shot['{}'.format(shot)] = efit_,date_created.split(' ')[0]
+            break
+    print path_shot 
+
+if __name__ == "__main__":
+    main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
