@@ -40,7 +40,7 @@ def run_efit(efit_,shot,tstart,tend,dt):
             print('ERROR')
             raise
         file_handler.close() 
-        os.system("/usr/local/cmod/codes/efit/bin/fast_efitdd < efit_input.txt > efit_output.txt")  
+        os.system("/usr/local/cmod/codes/efit/bin/fast_efitd129d < efit_input.txt > efit_output.txt")  
 #        os.remove("efit_input.txt")
 #        os.remove("efit_output.txt")
  
