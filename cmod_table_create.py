@@ -20,7 +20,7 @@ from fast_efit06 import path_shot
 sys.path.append('/home/mathewsa/Desktop/')
 import data_acquire_MDSplus 
 
-shots = [1100210009] #[1100210009] #input for shots in cmod logbook we are considering
+shots = [1100210009,1100204004] #input for shots in cmod logbook we are considering
 #shot = 1100204004 #1140724005 #1160930033 #1140221015  
 i = 0
 while i < len(shots):
