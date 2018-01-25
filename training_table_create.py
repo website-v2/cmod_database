@@ -65,7 +65,7 @@ i = 0
 timebases = []
 if len(list1) == len(list2):
     while i < len(list1): 
-        timebases.append([list1[i],np.arange(round(start_times[i],3),round(end_times[i],3),0.001)])
+        timebases.append([list1[i],np.arange(round(start_times[i],3),round(end_times[i]+0.001,3),0.001)])
         i = i + 1
         
 def returnNotMatches(a, b):
