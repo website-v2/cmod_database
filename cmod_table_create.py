@@ -35,7 +35,7 @@ while i < len(shots):
             index_end = np.max(np.where(np.abs(ip) > 100000.)[0])
             start_time = time_ip[index_begin] #in seconds
             end_time = time_ip[index_end]
-            timebase = np.arange(round(start_time,3),round(end_time,3),0.001) #using 1 millisecond constant interval
+            timebase = np.arange(round(start_time,3),round(end_time+0.001,3),0.001) #using 1 millisecond constant interval
             tstart = 1000.*timebase[0] #501.0 #milliseconds
             dt = 1.0 #milliseconds
             tend = 1000.*timebase[-1] #800.0 #milliseconds     
