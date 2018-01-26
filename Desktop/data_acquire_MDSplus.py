@@ -396,11 +396,12 @@ def main(shot,timebase,path_shot):
             e_bot_mks = (pressure.getNode('\e_bot_mks').data())[0] #[mtorr]
             time_e_bot_mks = pressure.getNode(('\e_bot_mks')).dim_of().data()
             e_bot_mks = np.interp(timebase,time_e_bot_mks,e_bot_mks,left=np.nan,right=np.nan)
-    #        b_bot_mks = pressure.getNode('\b_bot_mks').data() #[mtorr]
-    #        time_b_bot_mks = pressure.getNode(('\b_bot_mks')).dim_of().data()
+            b_bot_mks = pressure.getNode('\b_bot_mks').data() #[mtorr]
+            time_b_bot_mks = pressure.getNode(('\b_bot_mks')).dim_of().data()
+            b_bot_mks = np.interp(timebase,time_b_bot_mks,b_bot_mks,left=np.nan,right=np.nan)
             break
         except TreeNODATA:
-            g_side_rat = e_bot_mks = b_bot_mks = a = NaN
+            g_side_rat = e_bot_mks = b_bot_mks = NaN
             time_g_side_rat = time_e_bot_mks = time_b_bot_mks = timebase
             print("No values stored for edge pressures") 
             print(shot)
@@ -422,8 +423,8 @@ def main(shot,timebase,path_shot):
     beta_t,kappa,triang_l,triang_u,triang,li,areao,vout,aout,rout,zmag,zout,zsep_lower,\
     zsep_upper,zvsin,zvsout,upper_gap,lower_gap,q0,qstar,q95,V_loop_efit,V_surf_efit,\
     Wmhd,ssep,n_over_ncrit,dipdt,P_ohm,H_HandD,Halpha,Dalpha,p_rad,\
-    NL_04,ne_t,te_t,gpc2_te0,gpc_te8,g_side_rat, e_bot_mks])) 
-    #omitted edge and core (which are not yet interpolated), engineering,b_bot_mks,QUICKFIT data, 
+    NL_04,ne_t,te_t,gpc2_te0,gpc_te8,g_side_rat,e_bot_mks,b_bot_mks])) 
+    #omitted edge and core (which are not yet interpolated), engineering,QUICKFIT data, 
     #60/70/80/90/95,NL01-NL10, and cxrs data make certain arrays 0 if not called/unavailable    
     #perhaps include condition where if certain columns for a particular row are nan, 
      #or if error associated is too high, or if nonsensical (e.g. beta_p < 0), then do not save those
