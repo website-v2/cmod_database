@@ -88,7 +88,7 @@ def main(shot,timebase,path_shot):
     
     while True:
         try:  
-            efit = MDSplus.Tree('{}'.format((path_shot['{}'.format(shot)])[0]), shot)
+            efit = MDSplus.Tree('{}'.format(path_shot), shot)
             time_efit = (efit.getNode('\efit_aeqdsk:time')).data()
             beta_N = (efit.getNode('\efit_aeqdsk:betan')).data(); #normalized beta
             beta_N = np.interp(timebase,time_efit,beta_N,left=np.nan,right=np.nan)
@@ -113,6 +113,8 @@ def main(shot,timebase,path_shot):
             aout = np.interp(timebase,time_efit,aout,left=np.nan,right=np.nan)
             rout = (efit.getNode('\efit_aeqdsk:rout')).data(); #major radius of geometric center
             rout = np.interp(timebase,time_efit,rout,left=np.nan,right=np.nan)
+            rmag = (efit.getNode('\efit_aeqdsk:rmagx')).data()
+            rmag = np.interp(timebase,time_efit,rmag,left=np.nan,right=np.nan)
             zmag = (efit.getNode('\efit_aeqdsk:zmagx')).data(); #z of magnetic axis
             zmag = np.interp(timebase,time_efit,zmag,left=np.nan,right=np.nan)
             zout = (efit.getNode('\efit_aeqdsk:zout')).data(); #z of lcfs (constructed)
@@ -136,6 +138,14 @@ def main(shot,timebase,path_shot):
             qstar = np.interp(timebase,time_efit,qstar,left=np.nan,right=np.nan)
             q95 = (efit.getNode('\efit_aeqdsk:q95')).data(); #edge safety factor
             q95 = np.interp(timebase,time_efit,q95,left=np.nan,right=np.nan)
+            qout = (efit.getNode('\efit_aeqdsk:qout')).data()
+            qout = np.interp(timebase,time_efit,qout,left=np.nan,right=np.nan)
+            BtVac = (efit.getNode('\efit_aeqdsk:btaxv')).data() #on-axis plasma toroidal field 
+            BtVac = np.interp(timebase,time_efit,BtVac,left=np.nan,right=np.nan)
+            BtPlasma = (efit.getNode('\efit_aeqdsk:btaxp')).data() #on-axis plasma toroidal field
+            BtPlasma = np.interp(timebase,time_efit,BtPlasma,left=np.nan,right=np.nan)
+            BpAvg = (efit.getNode('\efit_aeqdsk:bpolav')).data() #average poloidal field
+            BpAvg = np.interp(timebase,time_efit,BpAvg,left=np.nan,right=np.nan)
             V_loop_efit = (efit.getNode('\efit_aeqdsk:vloopt')).data(); #loop voltage
             V_loop_efit = np.interp(timebase,time_efit,V_loop_efit,left=np.nan,right=np.nan)
             V_surf_efit = (efit.getNode('\efit_aeqdsk:vsurfa')).data(); #surface voltage
@@ -152,16 +162,34 @@ def main(shot,timebase,path_shot):
             V_inductive = inductance*dipdt_smoothed
             V_resistive = V_loop_efit - V_inductive
             P_ohm = ip*V_resistive
-    #possibly include aspect ratio ~ rout/aout
-    #can find time derivatives of quantities like beta, li, Wmhd 
+            
+            pcurrt = (efit.getNode('\efit_g_eqdsk:pcurrt')).data() #current density, Jp
+            refit = (efit.getNode('\efit_g_eqdsk:pcurrt')).dim_of().data()
+            Bcentre = (efit.getNode('\efit_a_eqdsk:BCentr')).data()
+            Rcentre = (efit.getNode('\efit_a_eqdsk:RCENCM')).data() #radial position where Bcent is calculated
+            rGrid = (efit.getNode('\efit_g_eqdsk:rGrid')).data()
+            zGrid = (efit.getNode('\efit_g_eqdsk:zGrid')).data()
+            psiRZ = (efit.getNode('\efit_g_eqdsk:psiRZ')).data() #psi not normalized
+            psiAxis = (efit.getNode('\efit_aeqdsk:simagx')).data() #psi on magnetic axis
+            psiLCFS = (efit.getNode('\efit_aeqdsk:sibdry')).data() #psi at separatrix
+            
+#            efit_rmid = (efit.getNode('\efit_g_eqdsk:rpres')).data() #maximum major radius of each flux surface
+#            volp = (efit.getNode('\efit_g_eqdsk:volp')).data() #array of volume within flux surface
+            fpol = (efit.getNode('\efit_g_eqdsk:fpol')).data() #should be multipled by -1*sign(current)
+            pres_flux = (efit.getNode('\efit_g_eqdsk:pres')).data() #array of pressure on flux surface psi
+            ffprime = (efit.getNode('\efit_g_eqdsk:ffprim')).data()
+            pprime = (efit.getNode('\efit_g_eqdsk:pprime')).data() #plasma pressure gradient as function of psi        
+            qpsi = (efit.getNode('\efit_g_eqdsk:qpsi')).data() #array of q, safety factor, on flux surface psi        
+            rlcfs = (efit.getNode('\efit_g_eqdsk:rbbbs')).data()
+            zlcfs = (efit.getNode('\efit_g_eqdsk:zbbbs')).data() 
             break
         except TreeNODATA:
             time_efit = timebase
             beta_N = beta_p = beta_t = kappa = triang_l = triang_u =\
             triang = li = areao = vout = aout = rout = zmag =\
             zout = zseps = zvsin = zvsout = upper_gap = lower_gap =\
-            q0 = qstar = q95 = V_loop_efit = V_surf_efit = Wmhd = ssep =\
-            n_over_ncrit = P_ohm = NaN
+            q0 = qstar = q95 = qout = BtVac = BtPlasma = BpAvg = V_loop_efit =\
+            V_surf_efit = Wmhd = ssep = n_over_ncrit = P_ohm = NaN
             print("No values stored for efit") 
             print(shot)
             break

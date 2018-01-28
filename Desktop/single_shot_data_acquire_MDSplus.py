@@ -135,6 +135,8 @@ while True:
         aout = np.interp(timebase,time_efit,aout,left=np.nan,right=np.nan)
         rout = (efit.getNode('\efit_aeqdsk:rout')).data(); #major radius of geometric center
         rout = np.interp(timebase,time_efit,rout,left=np.nan,right=np.nan)
+        rmag = (efit.getNode('\efit_aeqdsk:rmagx')).data()
+        rmag = np.interp(timebase,time_efit,rmag,left=np.nan,right=np.nan)
         zmag = (efit.getNode('\efit_aeqdsk:zmagx')).data(); #z of magnetic axis
         zmag = np.interp(timebase,time_efit,zmag,left=np.nan,right=np.nan)
         zout = (efit.getNode('\efit_aeqdsk:zout')).data(); #z of lcfs (constructed)
@@ -158,6 +160,14 @@ while True:
         qstar = np.interp(timebase,time_efit,qstar,left=np.nan,right=np.nan)
         q95 = (efit.getNode('\efit_aeqdsk:q95')).data(); #edge safety factor
         q95 = np.interp(timebase,time_efit,q95,left=np.nan,right=np.nan)
+        qout = (efit.getNode('\efit_aeqdsk:qout')).data()
+        qout = np.interp(timebase,time_efit,qout,left=np.nan,right=np.nan)
+        BtVac = (efit.getNode('\efit_aeqdsk:btaxv')).data() #on-axis plasma toroidal field 
+        BtVac = np.interp(timebase,time_efit,BtVac,left=np.nan,right=np.nan)
+        BtPlasma = (efit.getNode('\efit_aeqdsk:btaxp')).data() #on-axis plasma toroidal field
+        BtPlasma = np.interp(timebase,time_efit,BtPlasma,left=np.nan,right=np.nan)
+        BpAvg = (efit.getNode('\efit_aeqdsk:bpolav')).data() #average poloidal field
+        BpAvg = np.interp(timebase,time_efit,BpAvg,left=np.nan,right=np.nan)
         V_loop_efit = (efit.getNode('\efit_aeqdsk:vloopt')).data(); #loop voltage
         V_loop_efit = np.interp(timebase,time_efit,V_loop_efit,left=np.nan,right=np.nan)
         V_surf_efit = (efit.getNode('\efit_aeqdsk:vsurfa')).data(); #surface voltage
@@ -175,16 +185,45 @@ while True:
         V_resistive = V_loop_efit - V_inductive
         P_ohm = ip*V_resistive
         
-        pcurrt = (efit.getNode('\efit_g_eqdsk:pcurrt')).data()
+        pcurrt = (efit.getNode('\efit_g_eqdsk:pcurrt')).data() #current density, Jp
         refit = (efit.getNode('\efit_g_eqdsk:pcurrt')).dim_of().data()
-        efit_rmid = (efit.getNode('\\analysis::top.efit.results:fitout:rpres')).data()
-        volp = (efit.getNode('\\analysis::top.efit.results:fitout:volp')).data() #array of volume within flux surface
-        fpol = (efit.getNode('\\analysis::top.efit.results:fitout:fpol')).data()
+        Bcentre = (efit.getNode('\efit_a_eqdsk:BCentr')).data()
+        Rcentre = (efit.getNode('\efit_a_eqdsk:RCENCM')).data() #radial position where Bcent is calculated
+        rGrid = (efit.getNode('\efit_g_eqdsk:rGrid')).data()
+        zGrid = (efit.getNode('\efit_g_eqdsk:zGrid')).data()
+        psiRZ = (efit.getNode('\efit_g_eqdsk:psiRZ')).data() #psi not normalized
+        psiAxis = (efit.getNode('\efit_aeqdsk:simagx')).data() #psi on magnetic axis
+        psiLCFS = (efit.getNode('\efit_aeqdsk:sibdry')).data() #psi at separatrix
+        
+#        efit_rmid = (efit.getNode('\\analysis::top.efit.results:fitout:rpres')).data() #maximum major radius of each flux surface
+#        volp = (efit.getNode('\\analysis::top.efit.results:fitout:volp')).data() #array of volume within flux surface
+        fpol = (efit.getNode('\\analysis::top.efit.results:fitout:fpol')).data() #should be multipled by -1*sign(current)
         pres_flux = (efit.getNode('\\analysis::top.efit.results:fitout:pres')).data() #array of pressure on flux surface psi
         ffprime = (efit.getNode('\\analysis::top.efit.results:fitout:ffprim')).data()
-        pprime = (efit.getNode('\\analysis::top.efit.results:fitout:pprime')).data()#plasma pressure gradient as function of psi        
+        pprime = (efit.getNode('\\analysis::top.efit.results:fitout:pprime')).data() #plasma pressure gradient as function of psi        
         qpsi = (efit.getNode('\\analysis::top.efit.results:fitout:qpsi')).data() #array of q, safety factor, on flux surface psi        
-#        rlcfs = (efit.getNode('\\analysis::top.efit.results:fitout:_RLCFS')).data() 
+        rlcfs = (efit.getNode('\efit_g_eqdsk:rbbbs')).data()
+        zlcfs = (efit.getNode('\efit_g_eqdsk:zbbbs')).data()
+         
+#        #cross-section
+#        xvctr = (efit.getNode('\\analysis::top.limiters.tiles:XTILE')).data()
+#        yvctr = (efit.getNode('\\analysis::top.limiters.tiles:YTILE')).data()
+#        nvctr = (efit.getNode('\\analysis::top.limiters.tiles:NSEG')).data()
+#        lvctr = (efit.getNode('\\analysis::top.limiters.tiles:PTS_PER_SEG')).data()
+#        x = []
+#        y = []
+#        for i in range(nvctr):
+#            length = lvctr[i]
+#            xseg = xvctr[i,0:length]
+#            yseg = yvctr[i,0:length]
+#            x.extend(xseg)
+#            y.extend(yseg)
+#            if i != nvctr-1:
+#                x.append(None)
+#                y.append(None)
+#
+#        x = np.array(x)
+#        y = np.array(y) 
 #possibly include aspect ratio ~ rout/aout
 #can find time derivatives of quantities like beta, li, Wmhd 
         break
@@ -193,8 +232,8 @@ while True:
         beta_N = beta_p = beta_t = kappa = triang_l = triang_u =\
         triang = li = areao = vout = aout = rout = zmag =\
         zout = zseps = zvsin = zvsout = upper_gap = lower_gap =\
-        q0 = qstar = q95 = V_loop_efit = V_surf_efit = Wmhd = ssep =\
-        n_over_ncrit = P_ohm = NaN
+        q0 = qstar = q95 = qout = BtVac = BtPlasma = BpAvg = V_loop_efit =\
+        V_surf_efit = Wmhd = ssep = n_over_ncrit = P_ohm = NaN
         print("No values stored for efit") 
         print(shot)
         break
@@ -448,4 +487,4 @@ update_time = datetime.now()
 update_time = str(datetime.now()) 
 update_time = [update_time]*len(timebase) 
 
-shot = np.asarray([shot]*len(timebase),int) 
+shot = np.asarray([shot]*len(timebase),int)  
