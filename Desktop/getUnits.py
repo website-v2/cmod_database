@@ -74,8 +74,8 @@ z_midplane = (electrons.getNode('\electrons::top.yag_edgets.data.fiber_z:holder_
 R_edge = (electrons.getNode('\ELECTRONS::TOP.YAG.RESULTS.PARAM:R')).units_of() #N/A but I believe v R-position (m)
 
 spectroscopy = MDSplus.Tree('SPECTROSCOPY', shot)
-H_HandD = (spectroscopy.getNode('\SPECTROSCOPY::BALMER_H_TO_D')).units_of() ; #N/A H/(H+D)
-time_H_HandD = spectroscopy.getNode('\SPECTROSCOPY::BALMER_H_TO_D').dim_of().units_of() #N/A?? (I believe seconds)
+HoverHD = (spectroscopy.getNode('\SPECTROSCOPY::BALMER_H_TO_D')).units_of() ; #N/A H/(H+D)
+time_HoverHD = spectroscopy.getNode('\SPECTROSCOPY::BALMER_H_TO_D').dim_of().units_of() #N/A?? (I believe seconds)
 Halpha = (spectroscopy.getNode('\SPECTROSCOPY::HA_2_BRIGHT')).units_of() ; #mW/cm^2/ster    H-Alpha at H Port
 time_Halpha = (spectroscopy.getNode('\SPECTROSCOPY::HA_2_BRIGHT')).dim_of().units_of() ; #seconds 
 Dalpha = (spectroscopy.getNode('\SPECTROSCOPY::TOP.VUV.VIS_SIGNALS:MCP_VIS_SIG1')).units_of()  # 'W/m^2/st' D-alpha (W/m^2/st)
@@ -85,6 +85,7 @@ time_z_ave = (spectroscopy.getNode('\SPECTROSCOPY::z_ave')).dim_of().units_of() 
 p_rad = MDSplus.Tree('SPECTROSCOPY', shot)  
 time_p_rad = (p_rad.getNode('\TWOPI_FOIL')).dim_of().units_of() #seconds
 p_rad = (p_rad.getNode('\TWOPI_FOIL')).units_of() #W
+p_rad_core = (p_rad.getNode('\\top.bolometer.results.foil:main_power')).units_of() #MW
 
 
 cxrs = MDSplus.Tree('DNB', shot)

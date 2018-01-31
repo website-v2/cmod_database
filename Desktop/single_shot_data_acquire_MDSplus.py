@@ -195,8 +195,8 @@ while True:
         psiAxis = (efit.getNode('\efit_aeqdsk:simagx')).data() #psi on magnetic axis
         psiLCFS = (efit.getNode('\efit_aeqdsk:sibdry')).data() #psi at separatrix
         
-#        efit_rmid = (efit.getNode('\\analysis::top.efit.results:fitout:rpres')).data() #maximum major radius of each flux surface
-#        volp = (efit.getNode('\\analysis::top.efit.results:fitout:volp')).data() #array of volume within flux surface
+        efit_rmid = (efit.getNode('\\analysis::top.efit.results:fitout:rpres')).data() #maximum major radius of each flux surface
+        volp = (efit.getNode('\\analysis::top.efit.results:fitout:volp')).data() #array of volume within flux surface
         fpol = (efit.getNode('\\analysis::top.efit.results:fitout:fpol')).data() #should be multipled by -1*sign(current)
         pres_flux = (efit.getNode('\\analysis::top.efit.results:fitout:pres')).data() #array of pressure on flux surface psi
         ffprime = (efit.getNode('\\analysis::top.efit.results:fitout:ffprim')).data()
@@ -310,9 +310,9 @@ while True:
 while True:
     try:
         spectroscopy = MDSplus.Tree('SPECTROSCOPY', shot)
-        H_HandD = (spectroscopy.getNode('\SPECTROSCOPY::BALMER_H_TO_D')).data(); #H/(H+D)
-        time_H_HandD = spectroscopy.getNode('\SPECTROSCOPY::BALMER_H_TO_D').dim_of().data()
-        H_HandD = np.interp(timebase,time_H_HandD,H_HandD,left=np.nan,right=np.nan)
+        HoverHD = (spectroscopy.getNode('\SPECTROSCOPY::BALMER_H_TO_D')).data(); #H/(H+D)
+        time_HoverHD = spectroscopy.getNode('\SPECTROSCOPY::BALMER_H_TO_D').dim_of().data()
+        HoverHD = np.interp(timebase,time_HoverHD,HoverHD,left=np.nan,right=np.nan)
         Halpha = (spectroscopy.getNode('\SPECTROSCOPY::HA_2_BRIGHT')).data(); #H-Alpha at H Port
         time_Halpha = (spectroscopy.getNode('\SPECTROSCOPY::HA_2_BRIGHT')).dim_of().data();
         Halpha = np.interp(timebase,time_Halpha,Halpha,left=np.nan,right=np.nan)
@@ -330,8 +330,8 @@ while True:
 #rad_fraction = p_rad/p_input (if p_input==0 then NaN/0)
         break
     except TreeNODATA:
-        H_HandD = Halpha = Dalpha = z_ave = p_rad = NaN
-        time_H_HandD = time_Halpha = time_Dalpha = time_z_ave = time_p_rad = timebase    
+        HoverHD = Halpha = Dalpha = z_ave = p_rad = NaN
+        time_HoverHD = time_Halpha = time_Dalpha = time_z_ave = time_p_rad = timebase    
         print("No values stored for spectroscopy") 
         print(shot)
         break

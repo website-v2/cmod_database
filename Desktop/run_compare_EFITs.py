@@ -24,7 +24,7 @@ import numpy as np
 #shot is the shot number, tstart, tend, and dt are in milliseconds
 #overwrites efit06 tree only; ensure the tree is free for the shot!****
 
-shot = 1150826029
+shot = 1100204004
 number = 1 #number of burst (<20)
 tstart = 1001.0
 tend = 1300.0
@@ -44,7 +44,7 @@ def array_psiRZ_r(array1):
     i = 0  
     app = []
     while i < len(array1[40]):
-        app.append(array1[40][20][i])
+        app.append(array1[40][int((len(array1[40]))/2.)][i]) #halfway point in z over all r 
         i = i + 1
     return app
     
@@ -52,7 +52,7 @@ def array_psiRZ_z(array2):
     i = 0  
     app = []
     while i < len(array2[40]):
-        app.append(array2[40][i][20])
+        app.append(array2[40][i][[int((len(array2[40]))/2.)]]) #halfway point in r ove all z
         i = i + 1
     return app
     
@@ -60,7 +60,7 @@ def array_r(array):
     i = 0  
     app = []
     while i < len(array):
-        app.append(array[i][44])
+        app.append(array[i][40]) #40 corresponds to 40th time slice out of 300 time slices
         i = i + 1  
     return app
 

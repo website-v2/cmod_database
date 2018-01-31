@@ -113,19 +113,28 @@ def main(shot,timebase,path_shot):
             aout = np.interp(timebase,time_efit,aout,left=np.nan,right=np.nan)
             rout = (efit.getNode('\efit_aeqdsk:rout')).data(); #major radius of geometric center
             rout = np.interp(timebase,time_efit,rout,left=np.nan,right=np.nan)
+            zout = (efit.getNode('\efit_aeqdsk:zout')).data(); #z of lcfs (constructed)
+            zout = np.interp(timebase,time_efit,zout,left=np.nan,right=np.nan)
             rmag = (efit.getNode('\efit_aeqdsk:rmagx')).data()
             rmag = np.interp(timebase,time_efit,rmag,left=np.nan,right=np.nan)
             zmag = (efit.getNode('\efit_aeqdsk:zmagx')).data(); #z of magnetic axis
             zmag = np.interp(timebase,time_efit,zmag,left=np.nan,right=np.nan)
-            zout = (efit.getNode('\efit_aeqdsk:zout')).data(); #z of lcfs (constructed)
-            zout = np.interp(timebase,time_efit,zout,left=np.nan,right=np.nan)
+            rseps = (efit.getNode('\efit_aeqdsk:rseps')).data(); #r of upper and lower xpts
+            rsep_lower = rseps[:,0]
+            rsep_upper = rseps[:,1]   
+            rsep_lower = np.interp(timebase,time_efit,rsep_lower,left=np.nan,right=np.nan)
+            rsep_upper = np.interp(timebase,time_efit,rsep_upper,left=np.nan,right=np.nan)
             zseps = (efit.getNode('\efit_aeqdsk:zseps')).data(); #z of upper and lower xpts
             zsep_lower = zseps[:,0]
             zsep_upper = zseps[:,1]  
             zsep_lower = np.interp(timebase,time_efit,zsep_lower,left=np.nan,right=np.nan)
             zsep_upper = np.interp(timebase,time_efit,zsep_upper,left=np.nan,right=np.nan)
+            rvsin = (efit.getNode('\efit_aeqdsk:rvsin')).data(); #r of inner strike point
+            rvsin = np.interp(timebase,time_efit,rvsin,left=np.nan,right=np.nan)
             zvsin = (efit.getNode('\efit_aeqdsk:zvsin')).data(); #z of inner strike point
             zvsin = np.interp(timebase,time_efit,zvsin,left=np.nan,right=np.nan)
+            rvsout = (efit.getNode('\efit_aeqdsk:rvsout')).data(); #r of outer strike point
+            rvsout = np.interp(timebase,time_efit,rvsout,left=np.nan,right=np.nan)
             zvsout = (efit.getNode('\efit_aeqdsk:zvsout')).data(); #z of outer strike point
             zvsout = np.interp(timebase,time_efit,zvsout,left=np.nan,right=np.nan)
             upper_gap = (efit.getNode('\efit_aeqdsk:otop')).data()/100.; # meters
@@ -266,9 +275,9 @@ def main(shot,timebase,path_shot):
     while True:
         try:
             spectroscopy = MDSplus.Tree('SPECTROSCOPY', shot)
-            H_HandD = (spectroscopy.getNode('\SPECTROSCOPY::BALMER_H_TO_D')).data(); #H/(H+D)
-            time_H_HandD = spectroscopy.getNode('\SPECTROSCOPY::BALMER_H_TO_D').dim_of().data()
-            H_HandD = np.interp(timebase,time_H_HandD,H_HandD,left=np.nan,right=np.nan)
+            HoverHD = (spectroscopy.getNode('\SPECTROSCOPY::BALMER_H_TO_D')).data(); #H/(H+D)
+            time_HoverHD = spectroscopy.getNode('\SPECTROSCOPY::BALMER_H_TO_D').dim_of().data()
+            HoverHD = np.interp(timebase,time_HoverHD,HoverHD,left=np.nan,right=np.nan)
             Halpha = (spectroscopy.getNode('\SPECTROSCOPY::HA_2_BRIGHT')).data(); #H-Alpha at H Port
             time_Halpha = (spectroscopy.getNode('\SPECTROSCOPY::HA_2_BRIGHT')).dim_of().data();
             Halpha = np.interp(timebase,time_Halpha,Halpha,left=np.nan,right=np.nan)
@@ -282,12 +291,15 @@ def main(shot,timebase,path_shot):
             time_p_rad = (p_rad.getNode('\TWOPI_FOIL')).dim_of().data()
             p_rad = (p_rad.getNode('\TWOPI_FOIL')).data()
             p_rad = np.interp(timebase,time_p_rad,p_rad,left=np.nan,right=np.nan)
+            time_p_rad_core = (p_rad.getNode('\\top.bolometer.results.foil:main_power')).dim_of().data()
+            p_rad_core = (p_rad.getNode('\\top.bolometer.results.foil:main_power')).data()
+            p_rad_core = np.interp(timebase,time_p_rad_core,p_rad_core,left=np.nan,right=np.nan)
     #use twopi_diode instead as in Granetz code if avoiding non-causal filtering
     #rad_fraction = p_rad/p_input (if p_input==0 then NaN/0)
             break
         except TreeNODATA:
-            H_HandD = Halpha = Dalpha = z_ave = p_rad = NaN
-            time_H_HandD = time_Halpha = time_Dalpha = time_z_ave = time_p_rad = timebase    
+            HoverHD = Halpha = Dalpha = z_ave = p_rad = p_rad_core = NaN
+            time_HoverHD = time_Halpha = time_Dalpha = time_z_ave = time_p_rad = time_p_rad_core = timebase    
             print("No values stored for spectroscopy") 
             print(shot)
             break
@@ -450,7 +462,7 @@ def main(shot,timebase,path_shot):
     np.savetxt("{}".format(filepath), np.transpose([shot,timebase,ip,btor,p_lh,p_icrf,beta_N,beta_p,\
     beta_t,kappa,triang_l,triang_u,triang,li,areao,vout,aout,rout,zmag,zout,zsep_lower,\
     zsep_upper,zvsin,zvsout,upper_gap,lower_gap,q0,qstar,q95,V_loop_efit,V_surf_efit,\
-    Wmhd,ssep,n_over_ncrit,dipdt,P_ohm,H_HandD,Halpha,Dalpha,p_rad,\
+    Wmhd,ssep,n_over_ncrit,dipdt,P_ohm,HoverHD,Halpha,Dalpha,p_rad,\
     NL_04,ne_t,te_t,gpc2_te0,gpc_te8,g_side_rat,e_bot_mks,b_bot_mks])) 
     #omitted edge and core (which are not yet interpolated), engineering,QUICKFIT data, 
     #60/70/80/90/95,NL01-NL10, and cxrs data make certain arrays 0 if not called/unavailable    
