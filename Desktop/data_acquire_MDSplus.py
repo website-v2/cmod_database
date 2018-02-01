@@ -23,6 +23,7 @@ def main(shot,timebase,path_shot):
      
     NaN = (np.empty(len(timebase)) * np.nan)
     zeros = np.zeros(len(timebase))
+    ones = np.ones(len(timebase))
     
     while True:
         try:
@@ -70,14 +71,32 @@ def main(shot,timebase,path_shot):
     
     while True:
         try:
-            p_icrf = MDSplus.Tree('rf', shot)
-            time_p_icrf = (p_icrf.getNode('\RF::RF_POWER_NET')).dim_of().data()
-            p_icrf = 1000000.*(p_icrf.getNode('\RF::RF_POWER_NET')).data(); #[W]
+            p_icrf_tree = MDSplus.Tree('rf', shot)
+            time_p_icrf = (p_icrf_tree.getNode('\RF::RF_POWER_NET')).dim_of().data()
+            p_icrf = 1000000.*(p_icrf_tree.getNode('\RF::RF_POWER_NET')).data(); #[W] net icrf power
             p_icrf = np.interp(timebase,time_p_icrf,p_icrf,left=np.nan,right=np.nan)
+            time_p_icrf_d = (p_icrf_tree.getNode('\RF::RF_POWER_D')).dim_of().data()
+            p_icrf_d = 1000000.*(p_icrf_tree.getNode('\RF::RF_POWER_D')).data()
+            p_icrf_d = np.interp(timebase,time_p_icrf_d,p_icrf_d,left=np.nan,right=np.nan)
+            freq_icrf_d = (p_icrf_tree.getNode('\RF::TOP.ANTENNA.DATA.D_PORT:FREQ')).data()
+            freq_icrf_d = 1000000.*ones*freq_icrf_d
+            time_p_icrf_e = (p_icrf_tree.getNode('\RF::RF_POWER_E')).dim_of().data()
+            p_icrf_e = 1000000.*(p_icrf_tree.getNode('\RF::RF_POWER_E')).data()
+            p_icrf_e = np.interp(timebase,time_p_icrf_e,p_icrf_e,left=np.nan,right=np.nan)
+            freq_icrf_e = (p_icrf_tree.getNode('\RF::TOP.ANTENNA.DATA.E_PORT:FREQ')).data()
+            freq_icrf_e = 1000000.*ones*freq_icrf_e
+            time_p_icrf_j3 = (p_icrf_tree.getNode('\RF::RF_POWER_J3')).dim_of().data()
+            p_icrf_j3 = 1000000.*(p_icrf_tree.getNode('\RF::RF_POWER_J3')).data()
+            p_icrf_j3 = np.interp(timebase,time_p_icrf_j3,p_icrf_j3,left=np.nan,right=np.nan)
+            freq_icrf_j = (p_icrf_tree.getNode('\RF::TOP.ANTENNA.DATA.J_PORT:FREQ')).data() #for J3 and J4
+            freq_icrf_j = 1000000.*ones*freq_icrf_j #J3 and J4 are equal
+            time_p_icrf_j4 = (p_icrf_tree.getNode('\RF::RF_POWER_J4')).dim_of().data()
+            p_icrf_j4 = 1000000.*(p_icrf_tree.getNode('\RF::RF_POWER_J4')).data()
+            p_icrf_j4 = np.interp(timebase,time_p_icrf_j4,p_icrf_j4,left=np.nan,right=np.nan)
             break
         except TreeNODATA:
-            p_icrf = NaN
-            time_p_icrf = timebase
+            p_icrf = p_icrf_d = p_icrf_e = p_icrf_j3 = p_icrf_j4 = NaN
+            time_p_icrf = time_p_icrf_d = time_p_icrf_e = time_p_icrf_j3 = time_p_icrf_j4 = timebase
             print("No values stored for p_icrf") 
             print(shot)
             break
@@ -105,37 +124,37 @@ def main(shot,timebase,path_shot):
             triang = (triang_u + triang_l)/2. #overall triangularity - horizontal (major radius)
             li = (efit.getNode('\efit_aeqdsk:li')).data(); #internal inductance
             li = np.interp(timebase,time_efit,li,left=np.nan,right=np.nan)
-            areao = (efit.getNode('\efit_aeqdsk:areao')).data(); #area of lcfs
+            areao = (efit.getNode('\efit_aeqdsk:areao')).data()/(100.*100.); #area of lcfs
             areao = np.interp(timebase,time_efit,areao,left=np.nan,right=np.nan)
-            vout = (efit.getNode('\efit_aeqdsk:vout')).data(); #volume of lcfs
+            vout = (efit.getNode('\efit_aeqdsk:vout')).data()/(100.*100.*100.); #volume of lcfs
             vout = np.interp(timebase,time_efit,vout,left=np.nan,right=np.nan)
-            aout = (efit.getNode('\efit_aeqdsk:aout')).data(); #minor radius of lcfs
+            aout = (efit.getNode('\efit_aeqdsk:aout')).data()/(100.); #minor radius of lcfs
             aout = np.interp(timebase,time_efit,aout,left=np.nan,right=np.nan)
-            rout = (efit.getNode('\efit_aeqdsk:rout')).data(); #major radius of geometric center
+            rout = (efit.getNode('\efit_aeqdsk:rout')).data()/(100.); #major radius of geometric center
             rout = np.interp(timebase,time_efit,rout,left=np.nan,right=np.nan)
-            zout = (efit.getNode('\efit_aeqdsk:zout')).data(); #z of lcfs (constructed)
+            zout = (efit.getNode('\efit_aeqdsk:zout')).data()/(100.); #z of lcfs (constructed)
             zout = np.interp(timebase,time_efit,zout,left=np.nan,right=np.nan)
-            rmag = (efit.getNode('\efit_aeqdsk:rmagx')).data()
+            rmag = (efit.getNode('\efit_aeqdsk:rmagx')).data()/(100.)
             rmag = np.interp(timebase,time_efit,rmag,left=np.nan,right=np.nan)
-            zmag = (efit.getNode('\efit_aeqdsk:zmagx')).data(); #z of magnetic axis
+            zmag = (efit.getNode('\efit_aeqdsk:zmagx')).data()/(100.); #z of magnetic axis
             zmag = np.interp(timebase,time_efit,zmag,left=np.nan,right=np.nan)
             rseps = (efit.getNode('\efit_aeqdsk:rseps')).data(); #r of upper and lower xpts
-            rsep_lower = rseps[:,0]
-            rsep_upper = rseps[:,1]   
+            rsep_lower = rseps[:,0]/(100.)
+            rsep_upper = rseps[:,1]/(100.)   
             rsep_lower = np.interp(timebase,time_efit,rsep_lower,left=np.nan,right=np.nan)
             rsep_upper = np.interp(timebase,time_efit,rsep_upper,left=np.nan,right=np.nan)
             zseps = (efit.getNode('\efit_aeqdsk:zseps')).data(); #z of upper and lower xpts
-            zsep_lower = zseps[:,0]
-            zsep_upper = zseps[:,1]  
+            zsep_lower = zseps[:,0]/(100.)
+            zsep_upper = zseps[:,1] /(100.) 
             zsep_lower = np.interp(timebase,time_efit,zsep_lower,left=np.nan,right=np.nan)
             zsep_upper = np.interp(timebase,time_efit,zsep_upper,left=np.nan,right=np.nan)
-            rvsin = (efit.getNode('\efit_aeqdsk:rvsin')).data(); #r of inner strike point
+            rvsin = (efit.getNode('\efit_aeqdsk:rvsin')).data()/(100.); #r of inner strike point
             rvsin = np.interp(timebase,time_efit,rvsin,left=np.nan,right=np.nan)
-            zvsin = (efit.getNode('\efit_aeqdsk:zvsin')).data(); #z of inner strike point
+            zvsin = (efit.getNode('\efit_aeqdsk:zvsin')).data()/(100.); #z of inner strike point
             zvsin = np.interp(timebase,time_efit,zvsin,left=np.nan,right=np.nan)
-            rvsout = (efit.getNode('\efit_aeqdsk:rvsout')).data(); #r of outer strike point
+            rvsout = (efit.getNode('\efit_aeqdsk:rvsout')).data()/(100.); #r of outer strike point
             rvsout = np.interp(timebase,time_efit,rvsout,left=np.nan,right=np.nan)
-            zvsout = (efit.getNode('\efit_aeqdsk:zvsout')).data(); #z of outer strike point
+            zvsout = (efit.getNode('\efit_aeqdsk:zvsout')).data()/(100.); #z of outer strike point
             zvsout = np.interp(timebase,time_efit,zvsout,left=np.nan,right=np.nan)
             upper_gap = (efit.getNode('\efit_aeqdsk:otop')).data()/100.; # meters
             upper_gap = np.interp(timebase,time_efit,upper_gap,left=np.nan,right=np.nan)
@@ -181,9 +200,16 @@ def main(shot,timebase,path_shot):
             psiRZ = (efit.getNode('\efit_g_eqdsk:psiRZ')).data() #psi not normalized
             psiAxis = (efit.getNode('\efit_aeqdsk:simagx')).data() #psi on magnetic axis
             psiLCFS = (efit.getNode('\efit_aeqdsk:sibdry')).data() #psi at separatrix
-            
-#            efit_rmid = (efit.getNode('\efit_g_eqdsk:rpres')).data() #maximum major radius of each flux surface
-#            volp = (efit.getNode('\efit_g_eqdsk:volp')).data() #array of volume within flux surface
+            chord_v_len = (efit.getNode('\efit_aeqdsk:rco2v')).data() #vertical chord lengths for CO2 (TCI)
+            i = 0  
+            chord_4_v_len = []
+            while i < len(chord_v_len):
+                chord_4_v_len.append(chord_v_len[i][3])
+                i = i + 1  
+            chord_4_v_len = np.array(chord_4_v_len)/100. #retrieves length of chord 4 in metres for all time slices
+            chord_4_v_len = np.interp(timebase,time_efit,chord_4_v_len,left=np.nan,right=np.nan)  
+            efit_rmid = (efit.getNode('\efit_fitout:rpres')).data() #maximum major radius of each flux surface
+            volp = (efit.getNode('\efit_fitout:volp')).data() #array of volume within flux surface
             fpol = (efit.getNode('\efit_g_eqdsk:fpol')).data() #should be multipled by -1*sign(current)
             pres_flux = (efit.getNode('\efit_g_eqdsk:pres')).data() #array of pressure on flux surface psi
             ffprime = (efit.getNode('\efit_g_eqdsk:ffprim')).data()
@@ -198,7 +224,7 @@ def main(shot,timebase,path_shot):
             triang = li = areao = vout = aout = rout = zmag =\
             zout = zseps = zvsin = zvsout = upper_gap = lower_gap =\
             q0 = qstar = q95 = qout = BtVac = BtPlasma = BpAvg = V_loop_efit =\
-            V_surf_efit = Wmhd = ssep = n_over_ncrit = P_ohm = NaN
+            V_surf_efit = Wmhd = ssep = n_over_ncrit = P_ohm = chord_4_v_len = NaN
             print("No values stored for efit") 
             print(shot)
             break
@@ -214,8 +240,8 @@ def main(shot,timebase,path_shot):
             time_core = (electrons.getNode('\ELECTRONS::TOP.YAG_NEW.RESULTS.PROFILES:NE_RZ')).dim_of().data()
             dens_core = (electrons.getNode('\ELECTRONS::TOP.YAG_NEW.RESULTS.PROFILES:NE_RZ')).data(); #density (m^-3)
             dens_core_err = (electrons.getNode('\ELECTRONS::TOP.YAG_NEW.RESULTS.PROFILES:NE_ERR')).data(); #error (m^-3)
-            temp_core = (electrons.getNode('\ELECTRONS::TOP.YAG_NEW.RESULTS.PROFILES:TE_RZ')).data(); #temperature (keV)
-            temp_core_err = (electrons.getNode('\ELECTRONS::TOP.YAG_NEW.RESULTS.PROFILES:TE_ERR')).data(); #error (keV)
+            temp_core = (electrons.getNode('\ELECTRONS::TOP.YAG_NEW.RESULTS.PROFILES:TE_RZ')).data()*1000.; #temperature (eV)
+            temp_core_err = (electrons.getNode('\ELECTRONS::TOP.YAG_NEW.RESULTS.PROFILES:TE_ERR')).data()*1000.; #error (eV)
             midR_core = (electrons.getNode('\ELECTRONS::TOP.YAG_NEW.RESULTS.PROFILES:R_MID_T')).data(); #mapped midplane R (m) coreTS
             z_core = (electrons.getNode('\ELECTRONS::TOP.YAG_NEW.RESULTS.PROFILES:Z_SORTED')).data(); # z-position (m)
             R_core = (electrons.getNode('\ELECTRONS::TOP.YAG.RESULTS.PARAM:R')).data(); # v R-position (m)
@@ -292,7 +318,7 @@ def main(shot,timebase,path_shot):
             p_rad = (p_rad.getNode('\TWOPI_FOIL')).data()
             p_rad = np.interp(timebase,time_p_rad,p_rad,left=np.nan,right=np.nan)
             time_p_rad_core = (p_rad.getNode('\\top.bolometer.results.foil:main_power')).dim_of().data()
-            p_rad_core = (p_rad.getNode('\\top.bolometer.results.foil:main_power')).data()
+            p_rad_core = (p_rad.getNode('\\top.bolometer.results.foil:main_power')).data()*1000000.
             p_rad_core = np.interp(timebase,time_p_rad_core,p_rad_core,left=np.nan,right=np.nan)
     #use twopi_diode instead as in Granetz code if avoiding non-causal filtering
     #rad_fraction = p_rad/p_input (if p_input==0 then NaN/0)
@@ -348,13 +374,14 @@ def main(shot,timebase,path_shot):
             r_NL = (TCI.getNode('\electrons::top.tci.results:rad')).data() #major radius of each of 10 chords in metres
             time_NL_04 = (TCI.getNode('\ELECTRONS::TOP.TCI.RESULTS:NL_04')).dim_of().data() #same time for each chord
             NL_04 = np.interp(timebase,time_NL_04,NL_04,left=np.nan,right=np.nan)
+            nLave_04 = NL_04/chord_4_v_len   
             nebar_efit = (TCI.getNode('\ELECTRONS::TOP.TCI.RESULTS.INVERSION:NEBAR_EFIT')).data()
             time_nebar_efit = (TCI.getNode('\ELECTRONS::TOP.TCI.RESULTS.INVERSION:NEBAR_EFIT')).dim_of().data() #NeBar_EFIT (TCI)
             nebar_efit = np.interp(timebase,time_nebar_efit,nebar_efit,left=np.nan,right=np.nan)
             break
         except TreeNODATA:
             NL_01 = NL_02 = NL_03 = NL_04 = NL_05 = NL_06 = NL_07 =\
-            NL_08 = NL_09 = NL_10 = nebar_efit = NaN
+            NL_08 = NL_09 = NL_10 = nLave_04 = nebar_efit = NaN
             time_NL_04 = time_nebar_efit = timebase  
             print("No values stored for tci") 
             print(shot)
@@ -371,7 +398,7 @@ def main(shot,timebase,path_shot):
             ne_t = (electrons.getNode('\THOM_MIDPLN:NE_T')).data() #Thomson Ne(+1.5) midplane
             time_thomson_ne_t = (electrons.getNode('\THOM_MIDPLN:NE_T')).dim_of().data()
             ne_t = np.interp(timebase,time_thomson_ne_t,ne_t,left=np.nan,right=np.nan)
-            te_t = (electrons.getNode('\THOM_MIDPLN:TE_T')).data() #Thomson Te(+1.5)
+            te_t = (electrons.getNode('\THOM_MIDPLN:TE_T')).data()*1000. #Thomson Te(+1.5)
             time_thomson_te_t = (electrons.getNode('\THOM_MIDPLN:TE_T')).dim_of().data()
             te_t = np.interp(timebase,time_thomson_te_t,te_t,left=np.nan,right=np.nan)
             break
