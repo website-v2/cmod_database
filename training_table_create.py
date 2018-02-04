@@ -18,11 +18,13 @@ import fast_efit06
 from fast_efit06 import path_shot
 sys.path.append('/home/mathewsa/Desktop/')
 import data_acquire_MDSplus 
+sys.path.append('/home/mathewsa/')
+import insert_columns_and_populate_training 
 import sqlite3
 import numpy as np
 
-sqlite_old_file = '/Users/Abhilash/Desktop/am_transitions_copy.db' #location of old database
-sqlite_new_file = '/Users/Abhilash/Desktop/am_transitions_copy.db' #location of new database
+sqlite_old_file = '/home/mathewsa/Desktop/am_transitions_copy.db' #location of old database
+sqlite_new_file = '/home/mathewsa/Desktop/am_transitions_copy.db' #location of new database
 table_old_name = 'transitions_20171207'  #name of old table in old db
 table_new_name = 'confinement_table' #name of new table in new db
 column1 = 'shot'
@@ -77,7 +79,7 @@ returnNotMatches(list1,list2) #ensures same number of shots with start and end
 
 
 #making table for training set
-shots = list1 #input for shots from confinement training table I created
+shots = [1100204004]#list1 #input for shots from confinement training table I created 
 
 i = 0
 while i < len(shots):
@@ -87,7 +89,7 @@ while i < len(shots):
     else:
         raise
     tree = Tree('cmod', shot)
-    while True: #plasma current is used as threshold for beginning and end of time series
+    while True:  
         try: 
             start_time = timebases[i][1][0] #in seconds
             end_time = timebases[i][1][-1]
@@ -97,15 +99,16 @@ while i < len(shots):
             tend = 1000.*timebase[-1] #800.0 #milliseconds     
             fast_efit06.main(shot,tstart,tend,dt) 
             data_acquire_MDSplus.main(shot,timebase,path_shot)
-            break
-        except TreeNODATA: 
-            print("No values stored for ip") 
-            print(shot)
-            raise
+            insert_columns_and_populate_training.main(shot) 
+            break 
         except:
-            print("Unexpected error for ip")
+            print("Unexpected error")
             print(shot)
             raise       
     #can define an alternative timebase if desired, but using this
     #definition of > 100kA as start/end condition currently for table
     i = i + 1
+
+    
+print('Shots to not include in tables except for training are:')
+print(shots)

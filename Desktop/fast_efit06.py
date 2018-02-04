@@ -70,16 +70,16 @@ def main(shot,tstart,tend,dt):
                 break
     # the date if statement will allow overwrite if last updated in 2018
             else:  
-                if ((date_created.split(" ")[0].split("-"))[2]) == '2018':  
-                    efit_ = efits[0]
-                    print('Writing {} to {}'.format(shot,efit_))
-                    path_shot['{}'.format(shot)] = efit_,date_created.split(' ')[0]
-                    tree = Tree('{}'.format(efit_),-1)
-                    tree.createPulse(shot)
-                    run_efit(efit_,shot,tstart,tend,dt)
-                    break
-                else:
-                    print('{} is occupied for {}'.format(efit_,shot))
+#                if ((date_created.split(" ")[0].split("-")[2]) == '2018') and (((date_created.split(" ")[0].split("-"))[1]) == 'JAN'):  
+#                    efit_ = efits[0]
+#                    print('Writing {} to {}'.format(shot,efit_))
+#                    path_shot['{}'.format(shot)] = efit_,date_created.split(' ')[0]
+#                    tree = Tree('{}'.format(efit_),-1)
+#                    tree.createPulse(shot)
+#                    run_efit(efit_,shot,tstart,tend,dt)
+#                    break
+#                else:
+#                    print('{} is occupied for {}'.format(efit_,shot))
                 try:
                     efit_ = efits[1]
                     tree = MDSplus.Tree('{}'.format(efit_), shot)   
@@ -91,17 +91,17 @@ def main(shot,tstart,tend,dt):
                         path_shot['{}'.format(shot)] = efit_,date_created.split(' ')[0]
                         break
                     else:
-                        if ((date_created.split(" ")[0].split("-"))[2]) == '2018':
-                            efit_ = efits[1]
-                            print('Writing {} to {}'.format(shot,efit_))  
-                            path_shot['{}'.format(shot)] = efit_,date_created.split(' ')[0]
-                            tree = Tree('{}'.format(efit_),-1)
-                            tree.createPulse(shot) 
-                            run_efit(efit_,shot,tstart,tend,dt)
-                            break
-                        else:
-                            print('{} and {} are occupied for {}'.format(efits[0],efits[1],shot))
-                            raise
+#                        if ((date_created.split(" ")[0].split("-"))[2]) == '2018':
+#                            efit_ = efits[1]
+#                            print('Writing {} to {}'.format(shot,efit_))  
+#                            path_shot['{}'.format(shot)] = efit_,date_created.split(' ')[0]
+#                            tree = Tree('{}'.format(efit_),-1)
+#                            tree.createPulse(shot) 
+#                            run_efit(efit_,shot,tstart,tend,dt)
+#                            break
+#                        else:
+                        print('{} and {} are occupied for {}'.format(efits[0],efits[1],shot))
+                        raise
                 except (TreeFOPENR,TreeNODATA):
                     efit_ = efits[1]
                     print('Writing {} to {}'.format(shot,efit_))  
