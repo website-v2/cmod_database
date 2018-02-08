@@ -3,6 +3,10 @@
 Created on Tue Jan 23 00:05:37 2018
 
 @author: mathewsa
+
+This code takes shot, tstart, dt, and tend as input, and will write to trees 
+efit06 or efit07 if they are available based on the 129x129 grid with double 
+precision up to 5000 steps. Thus (tend-tstart)/dt < 5000 should be satisfied.
 """
 
 import MDSplus 
@@ -11,8 +15,6 @@ import math
 import os
 import subprocess 
 
-#This code takes shot, tstart, dt, and tend as input,
-#and will write to trees efit06 or efit07 if they are available
 
 
 #function to run efit in mode 10
@@ -80,6 +82,7 @@ def main(shot,tstart,tend,dt):
 #                    break
 #                else:
 #                    print('{} is occupied for {}'.format(efit_,shot))
+#above flag for data is currently commented out as certain input dates have variable structure
                 try:
                     efit_ = efits[1]
                     tree = MDSplus.Tree('{}'.format(efit_), shot)   

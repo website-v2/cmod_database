@@ -3,6 +3,14 @@
 Created on Fri Jan 12 12:45:03 2018
 
 @author: mathewsa
+
+This code acquires all relevant data from MDSplus trees and saves select variables
+as arrays. The correct path for the efit tree for that shot (i.e. efit06 or efit07
+currently) must be passed. The desired timebase for interpolation must also be
+provided as all the data is linearly interpolated over this particular timebase. 
+If data is absent during segment(s) of the desired timebase, then dependent on the
+particular variable, either 0 or NaN is inserted as a placeholder. Units for all
+quantities of interest are stored in word document for the generated table.
 """
 
 import MDSplus 
@@ -57,7 +65,7 @@ def main(shot,timebase,path_shot):
             time_p_lh = (p_lh.getNode('\LH::TOP.RESULTS:NETPOW')).dim_of().data() #[s]
             p_lh = 1000.*(p_lh.getNode('\LH::TOP.RESULTS:NETPOW')).data() #[W]
             p_lh = np.interp(timebase,time_p_lh,p_lh,left=np.nan,right=np.nan)
-            break
+	    break
         except (TreeNODATA,TreeFOPENR): #not available if LH turned off
             p_lh = zeros
             time_p_lh = timebase
@@ -65,10 +73,15 @@ def main(shot,timebase,path_shot):
             print(shot)
             break
         except:
-            print("Unexpected error for p_lh")
-            print(shot)
-            raise 
-    
+	    if p_lh == 0.0:
+                p_lh = zeros
+                time_p_lh = timebase
+		print("p_lh was just element 0")
+		break
+	    else:
+                print("Unexpected error for p_lh")
+                print(shot)
+                raise 
     
     while True:
         try:
@@ -343,28 +356,28 @@ def main(shot,timebase,path_shot):
             raise
     
     
-    while True:
-        try:
-            cxrs = MDSplus.Tree('DNB', shot)
-            Vpol = 1000.*((cxrs.getNode('\DNB::TOP.MIT_CXRS.RESULTS.ACTIVE.POLOIDAL:VEL')).data()) #poloidal velocity [m/s]
-            time_Vpol = (cxrs.getNode('\DNB::TOP.MIT_CXRS.RESULTS.ACTIVE.POLOIDAL:VEL')).dim_of().data()
-            dVpol = 1000.*((cxrs.getNode('\DNB::TOP.MIT_CXRS.RESULTS.ACTIVE.POLOIDAL:VEL_SIGMA')).data()) #poloidal velocity sigma [m/s]
-            Vpol = np.interp(timebase,time_Vpol,Vpol,left=np.nan,right=np.nan)
-            Vtor = 1000.*((cxrs.getNode('\DNB::TOP.MIT_CXRS.RESULTS.ACTIVE.TOR_OUT:VEL')).data()) #toroidal velocity [m/s]$
-            time_Vtor = (cxrs.getNode('\DNB::TOP.MIT_CXRS.RESULTS.ACTIVE.TOR_OUT:VEL')).dim_of().data() 
-            dVtor = 1000.*((cxrs.getNode('\DNB::TOP.MIT_CXRS.RESULTS.ACTIVE.TOR_OUT:VEL_SIGMA')).data()) #toroidal velocity sigma [m/s]
-            Vtor = np.interp(timebase,time_Vtor,Vtor,left=np.nan,right=np.nan)
-            break
-        except TreeNODATA:
-            Vpol = dVpol = Vtor = dVtor = NaN
-            time_Vpol = time_Vtor = timebase       
-            print("No values stored for cxrs") 
-            print(shot)
-            break
-        except:
-            print("Unexpected error for cxrs")
-            print(shot)
-            raise
+#    while True:
+#        try:
+#            cxrs = MDSplus.Tree('DNB', shot)
+#           Vpol = 1000.*((cxrs.getNode('\DNB::TOP.MIT_CXRS.RESULTS.ACTIVE.POLOIDAL:VEL')).data()) #poloidal velocity [m/s]
+#            time_Vpol = (cxrs.getNode('\DNB::TOP.MIT_CXRS.RESULTS.ACTIVE.POLOIDAL:VEL')).dim_of().data()
+#            dVpol = 1000.*((cxrs.getNode('\DNB::TOP.MIT_CXRS.RESULTS.ACTIVE.POLOIDAL:VEL_SIGMA')).data()) #poloidal velocity sigma [m/s]
+#            Vpol = np.interp(timebase,time_Vpol,Vpol,left=np.nan,right=np.nan)
+#            Vtor = 1000.*((cxrs.getNode('\DNB::TOP.MIT_CXRS.RESULTS.ACTIVE.TOR_OUT:VEL')).data()) #toroidal velocity [m/s]$
+#           time_Vtor = (cxrs.getNode('\DNB::TOP.MIT_CXRS.RESULTS.ACTIVE.TOR_OUT:VEL')).dim_of().data() 
+#            dVtor = 1000.*((cxrs.getNode('\DNB::TOP.MIT_CXRS.RESULTS.ACTIVE.TOR_OUT:VEL_SIGMA')).data()) #toroidal velocity sigma [m/s]
+#            Vtor = np.interp(timebase,time_Vtor,Vtor,left=np.nan,right=np.nan)
+#            break
+#        except TreeNODATA:
+#            Vpol = dVpol = Vtor = dVtor = NaN
+#            time_Vpol = time_Vtor = timebase       
+#            print("No values stored for cxrs") 
+#            print(shot)
+#            break
+#        except:
+#            print("Unexpected error for cxrs")
+#            print(shot)
+#            raise
     
     while True:
         try:

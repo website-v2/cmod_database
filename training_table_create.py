@@ -4,6 +4,12 @@
 Created on Wed Jan 24 23:44:07 2018
 
 @author: Abhilash
+
+This code utilizes scripts for running a fast efit (<5000 steps, 129x129), if
+trees efit06 OR efit07 are available. It then calls upon a script to acquire MDSplus
+data and then populates a designated table with that information. It is initalized by
+grabbing data from a TRAINING TABLE where every time slice is either L,H,I, or end,
+and only time slices for transitions (i.e. mode changes) are included.
 """
 
 import MDSplus 
@@ -21,10 +27,9 @@ import data_acquire_MDSplus
 sys.path.append('/home/mathewsa/')
 import insert_columns_and_populate_training 
 import sqlite3
-import numpy as np
 
-sqlite_old_file = '/home/mathewsa/Desktop/am_transitions_copy.db' #location of old database
-sqlite_new_file = '/home/mathewsa/Desktop/am_transitions_copy.db' #location of new database
+sqlite_old_file = '/home/mathewsa/Desktop/am_transitions.db' #location of old database
+sqlite_new_file = '/home/mathewsa/Desktop/am_transitions.db' #location of new database
 table_old_name = 'transitions_20171207'  #name of old table in old db
 table_new_name = 'confinement_table' #name of new table in new db
 column1 = 'shot'
@@ -77,22 +82,31 @@ def returnNotMatches(a, b):
     return output
 returnNotMatches(list1,list2) #ensures same number of shots with start and end
 
-
 #making table for training set
-shots = [1100204004]#list1 #input for shots from confinement training table I created 
+shots = list1 #[1120920026,1120824016] # input for shots from confinement training table 
 
 i = 0
+index_i = 0 #additional index if shots != timebase shots
 while i < len(shots):
     shot = shots[i] 
-    if shot == timebases[i][0]:
+    if shot == timebases[index_i][0]:
         pass
     else:
-        raise
+	flag = 1
+	while (index_i < len(timebases)) and (flag == 1): 
+	    if shot == timebases[index_i][0]:
+	        flag = 0
+	    else:
+                index_i = index_i + 1
+	if flag == 1:
+	    print('This shot does not exist')
+	    raise
+
     tree = Tree('cmod', shot)
     while True:  
         try: 
-            start_time = timebases[i][1][0] #in seconds
-            end_time = timebases[i][1][-1]
+            start_time = timebases[index_i][1][0] #in seconds
+            end_time = timebases[index_i][1][-1]
             timebase = np.arange(round(start_time,3),round(end_time,3),0.001) #using 1 millisecond constant interval
             tstart = 1000.*timebase[0] #milliseconds
             dt = 1.0 #milliseconds

@@ -4,9 +4,12 @@
 Created on Thu Jan 11 14:41:07 2018
 
 @author: Abhilash
-"""
 
-"""This code simply inserts new columns into an existing table"""
+This code inserts new columns into an existing table if they are absent,
+and then populates those columns for a given shot. Currently only 0D data included. 
+Updates the final column of the entire row with the current time (i.e. last written).
+To be run in conjuction with other scripts that acquire MDSplus data for correct shot
+"""
 
 import sqlite3
 from datetime import datetime
@@ -14,7 +17,7 @@ import numpy as np
 import sys
 
 def main(shot):
-    sqlite_file = '/home/mathewsa/Desktop/am_transitions_copy.db'
+    sqlite_file = '/home/mathewsa/Desktop/am_transitions.db'
     table_name = 'confinement_table'
     column1 = 'shot'
     column2 = 'id' # name of the PRIMARY KEY column
@@ -60,17 +63,17 @@ def main(shot):
     while shot != rows[first_index][0]:
         first_index = first_index + 1
     
-    k = first_index #+ rows[0][1] - 1 #since table does not necessarily start at id = 1 (and index starts at 0)
+    k = first_index  
     j = 0
     while (shot == rows[k][0]): 
-        time = rows[k][4]  
-        if round(((extra_variables['timebase'])[j]),3) == time:
-            try:  
+        time = rows[k][4]   
+        if round(((extra_variables['timebase'])[j]),3) == time: 
+            try:
                 for i in data:   
                     conn.commit()  
                     cursor.execute((("UPDATE {} SET {}= ? WHERE id = ?").\
                     format(table_name,i)),((data['{}'.format(i)])[j],rows[k][1]))  
-                    
+                
                 current_time = datetime.now()    
                 current_time = str(datetime.now()) 
                 conn.commit()  
@@ -81,8 +84,7 @@ def main(shot):
                 print('ERROR: ID already exists in PRIMARY KEY column {}'.format(column2))
                 #this exception only arises to tell us that we have added shots from the old table already, with "same ID"!
         k = k + 1 
-        j = j + 1
-        print(j,j/len((extra_variables['timebase'])))
+        j = j + 1 
 
     conn.commit()
     conn.close()
