@@ -42,11 +42,8 @@ def run_efit(efit_,shot,tstart,tend,dt):
             print('ERROR')
             raise
         file_handler.close() 
-        os.system("/usr/local/cmod/codes/efit/bin/fast_efitd129d < efit_input.txt > efit_output.txt")  
-#        os.remove("efit_input.txt")
-#        os.remove("efit_output.txt")
+        os.system("/usr/local/cmod/codes/efit/bin/fast_efitd129d < efit_input.txt > efit_output.txt")   
  
-
 
 efits = ['efit06','efit07']
 path_shot = {} #dictionary, with keys as shot; values are paths
@@ -72,17 +69,6 @@ def main(shot,tstart,tend,dt):
                 break
     # the date if statement will allow overwrite if last updated in 2018
             else:  
-#                if ((date_created.split(" ")[0].split("-")[2]) == '2018') and (((date_created.split(" ")[0].split("-"))[1]) == 'JAN'):  
-#                    efit_ = efits[0]
-#                    print('Writing {} to {}'.format(shot,efit_))
-#                    path_shot['{}'.format(shot)] = efit_,date_created.split(' ')[0]
-#                    tree = Tree('{}'.format(efit_),-1)
-#                    tree.createPulse(shot)
-#                    run_efit(efit_,shot,tstart,tend,dt)
-#                    break
-#                else:
-#                    print('{} is occupied for {}'.format(efit_,shot))
-#above flag for data is currently commented out as certain input dates have variable structure
                 try:
                     efit_ = efits[1]
                     tree = MDSplus.Tree('{}'.format(efit_), shot)   
@@ -94,15 +80,6 @@ def main(shot,tstart,tend,dt):
                         path_shot['{}'.format(shot)] = efit_,date_created.split(' ')[0]
                         break
                     else:
-#                        if ((date_created.split(" ")[0].split("-"))[2]) == '2018':
-#                            efit_ = efits[1]
-#                            print('Writing {} to {}'.format(shot,efit_))  
-#                            path_shot['{}'.format(shot)] = efit_,date_created.split(' ')[0]
-#                            tree = Tree('{}'.format(efit_),-1)
-#                            tree.createPulse(shot) 
-#                            run_efit(efit_,shot,tstart,tend,dt)
-#                            break
-#                        else:
                         print('{} and {} are occupied for {}'.format(efits[0],efits[1],shot))
                         raise
                 except (TreeFOPENR,TreeNODATA):
