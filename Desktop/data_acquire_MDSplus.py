@@ -339,7 +339,7 @@ def main(shot,timebase,path_shot):
             p_rad = (p_rad_tree.getNode('\TWOPI_FOIL')).data()
             p_rad = np.interp(timebase,time_p_rad,p_rad,left=np.nan,right=np.nan)
             time_p_rad_core = (p_rad_tree.getNode('\\top.bolometer.results.foil:main_power')).dim_of().data()
-            p_rad_core = (p_rad_tree.getNode('\\top.bolometer.results.foil:main_power')).data()*1000000.
+            p_rad_core = (p_rad_tree.getNode('\\top.bolometer.results.foil:main_power')).data() 
             p_rad_core = np.interp(timebase,time_p_rad_core,p_rad_core,left=np.nan,right=np.nan)
     #use twopi_diode instead as in Granetz code if avoiding non-causal filtering
     #rad_fraction = p_rad/p_input (if p_input==0 then NaN/0)

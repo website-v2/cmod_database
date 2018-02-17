@@ -24,10 +24,10 @@ import numpy as np
 #shot is the shot number, tstart, tend, and dt are in milliseconds
 #overwrites efit06 tree only; ensure the tree is free for the shot!****
 
-shot = 1100204004
+shot = 1160803022
 number = 1 #number of burst (<20)
-tstart = 1001.0
-tend = 1300.0
+tstart = 801.0
+tend = 1100.0
 dt = 1.0
 ntimes = 300 
 timebase = np.arange(round(tstart,3),round(tend+1.,3),dt)
