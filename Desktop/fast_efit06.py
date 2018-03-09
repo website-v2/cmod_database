@@ -15,8 +15,6 @@ import math
 import os
 import subprocess 
 
-
-
 #function to run efit in mode 10
 #efit_ is the tree (e.g. efit06 or efit07)
 #shot is the shot number, tstart, tend, and dt are in milliseconds
