@@ -10,10 +10,11 @@ from datetime import datetime
 import numpy as np
 import sys
 import matplotlib.pyplot as plt 
+from mpl_toolkits.mplot3d import Axes3D
  
 sqlite_file = '/home/mathewsa/Desktop/am_transitions.db'
 table_name = 'confinement_table'
-table_name_transitions = 'transitions_20171207'
+table_name_transitions = 'transitions'
 column1 = 'shot'
 column2 = 'id' # name of the PRIMARY KEY column
 column3 = 'present_mode'
@@ -99,6 +100,16 @@ L_mode_Wmhd = []
 L_mode_V_loop_efit = []  
 L_mode_HoverHD = [] 
 n_nG_L = []
+L_mode_zsep_lower = []
+L_mode_zsep_upper = []
+L_mode_rsep_lower = []
+L_mode_rsep_upper = []
+L_mode_zvsin = []
+L_mode_rvsin = []
+L_mode_zvsout = []
+L_mode_rvsout = []
+L_mode_upper_gap = []
+L_mode_lower_gap = []
 
 H_mode_ip = []
 H_mode_btor = [] 
@@ -120,6 +131,16 @@ H_mode_Wmhd = []
 H_mode_V_loop_efit = []  
 H_mode_HoverHD = [] 
 n_nG_H = []
+H_mode_zsep_lower = []
+H_mode_zsep_upper = []
+H_mode_rsep_lower = []
+H_mode_rsep_upper = []
+H_mode_zvsin = []
+H_mode_rvsin = []
+H_mode_zvsout = []
+H_mode_rvsout = []
+H_mode_upper_gap = []
+H_mode_lower_gap = []
 
 I_mode_ip = []
 I_mode_btor = [] 
@@ -141,6 +162,16 @@ I_mode_Wmhd = []
 I_mode_V_loop_efit = []  
 I_mode_HoverHD = [] 
 n_nG_I = []
+I_mode_zsep_lower = []
+I_mode_zsep_upper = []
+I_mode_rsep_lower = []
+I_mode_rsep_upper = []
+I_mode_zvsin = []
+I_mode_rvsin = []
+I_mode_zvsout = []
+I_mode_rvsout = []
+I_mode_upper_gap = []
+I_mode_lower_gap = []
 
 i = 0 
 while i < len(rows):
@@ -175,6 +206,16 @@ while i < len(rows):
                     L_mode_Wmhd.append((values['Wmhd'])[i])
                     L_mode_V_loop_efit.append((values['V_loop_efit'])[i])
                     L_mode_HoverHD.append((values['HoverHD'])[i])
+                    L_mode_zsep_lower.append((values['zsep_lower'])[i])
+                    L_mode_zsep_upper.append((values['zsep_upper'])[i])
+                    L_mode_rsep_lower.append((values['rsep_lower'])[i])
+                    L_mode_rsep_upper.append((values['rsep_upper'])[i])
+                    L_mode_zvsin.append((values['zvsin'])[i])
+                    L_mode_rvsin.append((values['rvsin'])[i])
+                    L_mode_zvsout.append((values['zvsout'])[i])
+                    L_mode_rvsout.append((values['rvsout'])[i])
+                    L_mode_upper_gap.append((values['upper_gap'])[i])
+                    L_mode_lower_gap.append((values['lower_gap'])[i])
                     nG = ((((values['ip'])[i])/(np.pi*a*a))/(10.**6.))*(10.**20.)
                     n_nG_L.append(((values['nLave_04'])[i])/nG)  
                 elif present_mode == 'H': 
@@ -197,6 +238,16 @@ while i < len(rows):
                     H_mode_Wmhd.append((values['Wmhd'])[i])
                     H_mode_V_loop_efit.append((values['V_loop_efit'])[i])
                     H_mode_HoverHD.append((values['HoverHD'])[i])
+                    H_mode_zsep_lower.append((values['zsep_lower'])[i])
+                    H_mode_zsep_upper.append((values['zsep_upper'])[i])
+                    H_mode_rsep_lower.append((values['rsep_lower'])[i])
+                    H_mode_rsep_upper.append((values['rsep_upper'])[i])
+                    H_mode_zvsin.append((values['zvsin'])[i])
+                    H_mode_rvsin.append((values['rvsin'])[i])
+                    H_mode_zvsout.append((values['zvsout'])[i])
+                    H_mode_rvsout.append((values['rvsout'])[i])
+                    H_mode_upper_gap.append((values['upper_gap'])[i])
+                    H_mode_lower_gap.append((values['lower_gap'])[i])    
                     nG = ((((values['ip'])[i])/(np.pi*a*a))/(10.**6.))*(10.**20.)
                     n_nG_H.append(((values['nLave_04'])[i])/nG)  
                 elif present_mode == 'I': 
@@ -219,6 +270,16 @@ while i < len(rows):
                     I_mode_Wmhd.append((values['Wmhd'])[i])
                     I_mode_V_loop_efit.append((values['V_loop_efit'])[i])
                     I_mode_HoverHD.append((values['HoverHD'])[i])
+                    I_mode_zsep_lower.append((values['zsep_lower'])[i])
+                    I_mode_zsep_upper.append((values['zsep_upper'])[i])
+                    I_mode_rsep_lower.append((values['rsep_lower'])[i])
+                    I_mode_rsep_upper.append((values['rsep_upper'])[i])
+                    I_mode_zvsin.append((values['zvsin'])[i])
+                    I_mode_rvsin.append((values['rvsin'])[i])
+                    I_mode_zvsout.append((values['zvsout'])[i])
+                    I_mode_rvsout.append((values['rvsout'])[i])
+                    I_mode_upper_gap.append((values['upper_gap'])[i])
+                    I_mode_lower_gap.append((values['lower_gap'])[i]) 
                     nG = ((((values['ip'])[i])/(np.pi*a*a))/(10.**6.))*(10.**20.)
                     n_nG_I.append(((values['nLave_04'])[i])/nG)  
                 else:
@@ -299,6 +360,18 @@ plt.draw()
 plt.close()
 
 plt.figure() 
+plt.scatter(n_nG_L[::1],L_mode_Dalpha[::1],c='b',s=70, alpha=0.03,label='L')
+plt.scatter(n_nG_H[::1],H_mode_Dalpha[::1],c='g',s=70, alpha=0.03,label='H') 
+plt.scatter(n_nG_I[::1],I_mode_Dalpha[::1],c='r',s=70, alpha=0.03,label='I') 
+plt.xlabel('n/nG')
+plt.ylabel('Dalpha')
+plt.ylim(0.0,35.)
+plt.legend(loc=2)
+plt.savefig('Dalpha_v_nG_2.png')
+plt.draw()
+plt.close()
+
+plt.figure() 
 plt.scatter(n_nG_L[::1],L_mode_li[::1],c='b',s=70, alpha=0.03,label='L')
 plt.scatter(n_nG_H[::1],H_mode_li[::1],c='g',s=70, alpha=0.03,label='H') 
 plt.scatter(n_nG_I[::1],I_mode_li[::1],c='r',s=70, alpha=0.03,label='I') 
@@ -347,8 +420,6 @@ plt.draw()
 plt.close()
 
  
-
- 
 plt.figure() 
 plt.scatter(L_mode_Dalpha[::1],L_mode_p_icrf[::1],c='b',s=70, alpha=0.03,label='L')
 plt.scatter(H_mode_Dalpha[::1],H_mode_p_icrf[::1],c='g',s=70, alpha=0.03,label='H') 
@@ -358,6 +429,18 @@ plt.ylabel('p_icrf')
 #plt.xlim(0.0,100.)
 plt.legend(loc=2)
 plt.savefig('p_icrf_v_Dalpha.png')
+plt.draw()
+plt.close()
+
+plt.figure() 
+plt.scatter(L_mode_Dalpha[::1],L_mode_p_icrf[::1],c='b',s=70, alpha=0.03,label='L')
+plt.scatter(H_mode_Dalpha[::1],H_mode_p_icrf[::1],c='g',s=70, alpha=0.03,label='H') 
+plt.scatter(I_mode_Dalpha[::1],I_mode_p_icrf[::1],c='r',s=70, alpha=0.03,label='I') 
+plt.xlabel('Dalpha')
+plt.ylabel('p_icrf')
+plt.xlim(0.0,35.)
+plt.legend(loc=2)
+plt.savefig('p_icrf_v_Dalpha_2.png')
 plt.draw()
 plt.close()
 
@@ -418,6 +501,18 @@ plt.ylabel('Dalpha')
 #plt.ylim(0.0,100.)
 plt.legend(loc=2)
 plt.savefig('Dalpha_v_P_ohm.png')
+plt.draw()
+plt.close() 
+
+plt.figure() 
+plt.scatter(L_mode_P_ohm[::1],L_mode_Dalpha[::1],c='b',s=70, alpha=0.03,label='L')
+plt.scatter(H_mode_P_ohm[::1],H_mode_Dalpha[::1],c='g',s=70, alpha=0.03,label='H') 
+plt.scatter(I_mode_P_ohm[::1],I_mode_Dalpha[::1],c='r',s=70, alpha=0.03,label='I') 
+plt.xlabel('P_ohm')
+plt.ylabel('Dalpha')
+plt.ylim(0.0,35.)
+plt.legend(loc=2)
+plt.savefig('Dalpha_v_P_ohm_2.png')
 plt.draw()
 plt.close() 
 
@@ -494,6 +589,18 @@ plt.draw()
 plt.close()
 
 plt.figure() 
+plt.scatter(L_mode_q95[::1],L_mode_Dalpha[::1],c='b',s=70, alpha=0.03,label='L')
+plt.scatter(H_mode_q95[::1],H_mode_Dalpha[::1],c='g',s=70, alpha=0.03,label='H') 
+plt.scatter(I_mode_q95[::1],I_mode_Dalpha[::1],c='r',s=70, alpha=0.03,label='I') 
+plt.xlabel('q95')
+plt.ylabel('Dalpha')
+plt.ylim(0.0,35.)
+plt.legend(loc=2)
+plt.savefig('Dalpha_v_q95_2.png')
+plt.draw()
+plt.close()
+
+plt.figure() 
 plt.scatter(L_mode_nLave_04[::1],L_mode_p_rad[::1],c='b',s=70, alpha=0.03,label='L')
 plt.scatter(H_mode_nLave_04[::1],H_mode_p_rad[::1],c='g',s=70, alpha=0.03,label='H') 
 plt.scatter(I_mode_nLave_04[::1],I_mode_p_rad[::1],c='r',s=70, alpha=0.03,label='I') 
@@ -516,3 +623,195 @@ plt.legend(loc=2)
 plt.savefig('p_rad_v_nebar_efit.png')
 plt.draw()
 plt.close()
+
+plt.figure() 
+plt.scatter(L_mode_rsep_lower[::1],L_mode_zsep_lower[::1],c='b',s=70, alpha=0.03,label='L')
+plt.scatter(H_mode_rsep_lower[::1],H_mode_zsep_lower[::1],c='g',s=70, alpha=0.03,label='H') 
+plt.scatter(I_mode_rsep_lower[::1],I_mode_zsep_lower[::1],c='r',s=70, alpha=0.03,label='I') 
+plt.xlabel('rsep_lower')
+plt.ylabel('zsep_lower')
+plt.xlim(-10.00,-9.98)
+plt.ylim(-10.2,-9.95)
+plt.legend(loc=2)
+plt.savefig('zsep_lower_v_rsep_lower.png')
+plt.draw()
+plt.close()
+
+plt.figure() 
+plt.scatter(L_mode_rsep_lower[::1],L_mode_zsep_lower[::1],c='b',s=70, alpha=0.03,label='L')
+plt.scatter(H_mode_rsep_lower[::1],H_mode_zsep_lower[::1],c='g',s=70, alpha=0.03,label='H') 
+plt.scatter(I_mode_rsep_lower[::1],I_mode_zsep_lower[::1],c='r',s=70, alpha=0.03,label='I') 
+plt.xlabel('rsep_lower')
+plt.ylabel('zsep_lower')
+plt.xlim(0.0,1.5)
+plt.ylim(-1.0,0.0)
+plt.legend(loc=2)
+plt.savefig('zsep_lower_v_rsep_lower_2.png')
+plt.draw()
+plt.close()
+
+plt.figure() 
+plt.scatter(L_mode_rsep_upper[::1],L_mode_zsep_upper[::1],c='b',s=70, alpha=0.03,label='L')
+plt.scatter(H_mode_rsep_upper[::1],H_mode_zsep_upper[::1],c='g',s=70, alpha=0.03,label='H') 
+plt.scatter(I_mode_rsep_upper[::1],I_mode_zsep_upper[::1],c='r',s=70, alpha=0.03,label='I') 
+plt.xlabel('rsep_upper')
+plt.ylabel('zsep_upper')
+plt.xlim(-10.0,-9.98)
+plt.ylim(-10.1,-9.9)
+plt.legend(loc=2)
+plt.savefig('zsep_upper_v_rsep_upper.png')
+plt.draw()
+plt.close()
+
+plt.figure() 
+plt.scatter(L_mode_rsep_upper[::1],L_mode_zsep_upper[::1],c='b',s=70, alpha=0.03,label='L')
+plt.scatter(H_mode_rsep_upper[::1],H_mode_zsep_upper[::1],c='g',s=70, alpha=0.03,label='H') 
+plt.scatter(I_mode_rsep_upper[::1],I_mode_zsep_upper[::1],c='r',s=70, alpha=0.03,label='I') 
+plt.xlabel('rsep_upper')
+plt.ylabel('zsep_upper')
+plt.xlim(0.0,1.1)
+plt.ylim(-0.5,1.5)
+plt.legend(loc=2)
+plt.savefig('zsep_upper_v_rsep_upper_2.png')
+plt.draw()
+plt.close()
+
+plt.figure() 
+plt.scatter(L_mode_rvsin[::1],L_mode_zvsin[::1],c='b',s=70, alpha=0.03,label='L')
+plt.scatter(H_mode_rvsin[::1],H_mode_zvsin[::1],c='g',s=70, alpha=0.03,label='H') 
+plt.scatter(I_mode_rvsin[::1],I_mode_zvsin[::1],c='r',s=70, alpha=0.03,label='I') 
+plt.xlabel('rvsin')
+plt.ylabel('zvsin')
+#plt.xlim(0.0,0.7)
+plt.legend(loc=2)
+plt.savefig('zvsin_v_rvsin.png')
+plt.draw()
+plt.close()
+
+plt.figure() 
+plt.scatter(L_mode_rvsin[::1],L_mode_zvsin[::1],c='b',s=70, alpha=0.03,label='L')
+plt.scatter(H_mode_rvsin[::1],H_mode_zvsin[::1],c='g',s=70, alpha=0.03,label='H') 
+plt.scatter(I_mode_rvsin[::1],I_mode_zvsin[::1],c='r',s=70, alpha=0.03,label='I') 
+plt.xlabel('rvsin')
+plt.ylabel('zvsin')
+plt.ylim(-0.5,-0.35)
+plt.xlim(0.43,0.5)
+plt.legend(loc=2)
+plt.savefig('zvsin_v_rvsin_2.png')
+plt.draw()
+plt.close()
+
+plt.figure() 
+plt.scatter(L_mode_rvsin[::1],L_mode_zvsin[::1],c='b',s=70, alpha=0.03,label='L')
+plt.scatter(H_mode_rvsin[::1],H_mode_zvsin[::1],c='g',s=70, alpha=0.03,label='H') 
+plt.scatter(I_mode_rvsin[::1],I_mode_zvsin[::1],c='r',s=70, alpha=0.03,label='I') 
+plt.xlabel('rvsin')
+plt.ylabel('zvsin')
+plt.ylim(0.40,0.44)
+plt.xlim(0.41,0.55)
+plt.legend(loc=2)
+plt.savefig('zvsin_v_rvsin_3.png')
+plt.draw()
+plt.close()
+
+plt.figure() 
+plt.scatter(L_mode_rvsout[::1],L_mode_zvsout[::1],c='b',s=70, alpha=0.03,label='L')
+plt.scatter(H_mode_rvsout[::1],H_mode_zvsout[::1],c='g',s=70, alpha=0.03,label='H') 
+plt.scatter(I_mode_rvsout[::1],I_mode_zvsout[::1],c='r',s=70, alpha=0.03,label='I') 
+plt.xlabel('rvsout')
+plt.ylabel('zvsout')
+#plt.ylim(-0.7,-0.4)
+plt.legend(loc=2)
+plt.savefig('zvsout_v_rvsout.png')
+plt.draw()
+plt.close()
+
+plt.figure() 
+plt.scatter(L_mode_rvsout[::1],L_mode_zvsout[::1],c='b',s=70, alpha=0.03,label='L')
+plt.scatter(H_mode_rvsout[::1],H_mode_zvsout[::1],c='g',s=70, alpha=0.03,label='H') 
+plt.scatter(I_mode_rvsout[::1],I_mode_zvsout[::1],c='r',s=70, alpha=0.03,label='I') 
+plt.xlabel('rvsout')
+plt.ylabel('zvsout')
+plt.ylim(-0.62,-0.4)
+plt.xlim(0.42,0.68)
+plt.legend(loc=2)
+plt.savefig('zvsout_v_rvsout_2.png')
+plt.draw()
+plt.close()
+
+plt.figure() 
+plt.scatter(L_mode_rvsout[::1],L_mode_zvsout[::1],c='b',s=70, alpha=0.03,label='L')
+plt.scatter(H_mode_rvsout[::1],H_mode_zvsout[::1],c='g',s=70, alpha=0.03,label='H') 
+plt.scatter(I_mode_rvsout[::1],I_mode_zvsout[::1],c='r',s=70, alpha=0.03,label='I') 
+plt.xlabel('rvsout')
+plt.ylabel('zvsout')
+plt.ylim(0.42,0.44)
+plt.xlim(0.42,0.64)
+plt.legend(loc=2)
+plt.savefig('zvsout_v_rvsout_3.png')
+plt.draw()
+plt.close()
+
+plt.figure() 
+plt.scatter(L_mode_lower_gap[::1],L_mode_upper_gap[::1],c='b',s=70, alpha=0.03,label='L')
+plt.scatter(H_mode_lower_gap[::1],H_mode_upper_gap[::1],c='g',s=70, alpha=0.03,label='H') 
+plt.scatter(I_mode_lower_gap[::1],I_mode_upper_gap[::1],c='r',s=70, alpha=0.03,label='I') 
+plt.xlabel('lower_gap')
+plt.ylabel('upper_gap')
+#plt.xlim(0.0,0.7)
+plt.legend(loc=2)
+plt.savefig('upper_gap_v_lower_gap.png')
+plt.draw()
+plt.close()
+
+#%matplotlib notebook 
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')  
+ax.scatter(L_mode_rvsout[::20],L_mode_zvsout[::20],L_mode_q95[::20],label='L',c='b',s=70, alpha=0.03)
+ax.scatter(H_mode_rvsout[::1],H_mode_zvsout[::1],H_mode_q95[::1],label='H',c='g',s=70, alpha=0.03)
+ax.scatter(I_mode_rvsout[::1],I_mode_zvsout[::1],I_mode_q95[::1],label='I',c='r',s=70, alpha=0.03)
+plt.ylim(-0.62,-0.4)
+plt.xlim(0.42,0.68)
+ax.set_xlabel('rvsout')
+ax.set_ylabel('zvsout')
+ax.set_zlabel('q95')
+plt.show()
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')  
+ax.scatter(L_mode_rvsout[::20],L_mode_zvsout[::20],L_mode_q95[::20],label='L',c='b',s=70, alpha=0.03)
+ax.scatter(H_mode_rvsout[::1],H_mode_zvsout[::1],H_mode_q95[::1],label='H',c='g',s=70, alpha=0.03)
+ax.scatter(I_mode_rvsout[::1],I_mode_zvsout[::1],I_mode_q95[::1],label='I',c='r',s=70, alpha=0.03)
+plt.ylim(0.42,0.44)
+plt.xlim(0.42,0.64)
+ax.set_xlabel('rvsout')
+ax.set_ylabel('zvsout')
+ax.set_zlabel('q95')
+plt.show()
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')  
+ax.scatter(L_mode_rvsout[::20],L_mode_zvsout[::20],L_mode_li[::20],label='L',c='b',s=70, alpha=0.03)
+ax.scatter(H_mode_rvsout[::1],H_mode_zvsout[::1],H_mode_li[::1],label='H',c='g',s=70, alpha=0.03)
+ax.scatter(I_mode_rvsout[::1],I_mode_zvsout[::1],I_mode_li[::1],label='I',c='r',s=70, alpha=0.03)
+plt.ylim(-0.62,-0.4)
+plt.xlim(0.42,0.68)
+ax.set_xlabel('rvsout')
+ax.set_ylabel('zvsout')
+ax.set_zlabel('li')
+plt.legend(loc=2)
+plt.show()
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')  
+ax.scatter(L_mode_rvsout[::20],L_mode_zvsout[::20],L_mode_li[::20],label='L',c='b',s=70, alpha=0.03)
+ax.scatter(H_mode_rvsout[::1],H_mode_zvsout[::1],H_mode_li[::1],label='H',c='g',s=70, alpha=0.03)
+ax.scatter(I_mode_rvsout[::1],I_mode_zvsout[::1],I_mode_li[::1],label='I',c='r',s=70, alpha=0.03)
+plt.ylim(0.42,0.44)
+plt.xlim(0.42,0.64)
+ax.set_xlabel('rvsout')
+ax.set_ylabel('zvsout')
+ax.set_zlabel('li')
+plt.legend(loc=2)
+plt.show()
