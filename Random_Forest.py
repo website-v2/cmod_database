@@ -8,6 +8,7 @@ Created on Sun Mar 18 02:20:13 2018
 from sklearn.datasets import make_blobs
 from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import LogisticRegression
+from sklearn.feature_selection import RFE 
 from sklearn.svm import LinearSVC
 from sklearn.calibration import calibration_curve
 from sklearn.ensemble import RandomForestClassifier
@@ -17,7 +18,8 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.datasets import make_classification
 from sklearn import preprocessing
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler 
+from sklearn.ensemble import ExtraTreesClassifier
 import itertools
 import sqlite3
 from datetime import datetime
@@ -108,7 +110,7 @@ while i < len(rows):
             Y_data.append((values['present_mode'])[i])
             X_data.append([(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
                       (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
-                      (values['beta_p'])[i],(values['nebar_efit'])[i]])
+                      (values['beta_p'])[i],(values['P_ohm'])[i]])
             total_x_data.append([(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
                       (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
                       (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
@@ -119,7 +121,7 @@ while i < len(rows):
                       (values['zsep_upper'])[i],(values['rsep_lower'])[i],(values['rsep_upper'])[i],
                       (values['zvsin'])[i],(values['rvsin'])[i],(values['zvsout'])[i],
                       (values['rvsout'])[i],(values['upper_gap'])[i],(values['lower_gap'])[i],
-                      (values['qstar'])[i],(values['q95'])[i],(values['V_loop_efit'])[i],
+                      (values['qstar'])[i],(values['V_loop_efit'])[i],
                       (values['V_surf_efit'])[i],(values['cpasma'])[i],(values['ssep'])[i],
                       (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],
                       (values['e_bot_mks'])[i],(values['b_bot_mks'])[i]])
@@ -155,8 +157,10 @@ print('H-mode fraction to total time slices: ',p,'/',len(Y_data))
 # Create classifiers
 lr = LogisticRegression()
 gnb = GaussianNB()
-svc = LinearSVC(C=1.0)
+svc = LinearSVC(C=100.)
 rfc = RandomForestClassifier(n_estimators=100)
+
+tree_depth_max = [estimator.tree_.depth for estimator in rfc.estimators_]
 
 # Plot calibration plots
 
@@ -217,133 +221,12 @@ ax2.set_ylabel("Count")
 ax2.legend(loc="upper center", ncol=2)
 
 plt.tight_layout()
-plt.show()
-
-## Train uncalibrated random forest classifier on whole train and validation
-## data and evaluate on test data
-#clf = RandomForestClassifier(n_estimators=25)
-#clf.fit(X_train_valid, y_train_valid)
-#clf_probs = clf.predict_proba(X_test)
-#score = log_loss(y_test, clf_probs)
-#
-## Train random forest classifier, calibrate on validation data and evaluate
-## on test data
-#clf = RandomForestClassifier(n_estimators=25)
-#clf.fit(X_train, y_train)
-#clf_probs = clf.predict_proba(X_test)
-#sig_clf = CalibratedClassifierCV(clf, method="sigmoid", cv="prefit")
-#sig_clf.fit(X_valid, y_valid)
-#sig_clf_probs = sig_clf.predict_proba(X_test)
-#sig_score = log_loss(y_test, sig_clf_probs)
-
-## Plot changes in predicted probabilities via arrows
-#plt.figure(0)
-#colors = ["r", "g", "b"]
-#for i in range(clf_probs.shape[0]):
-#    plt.arrow(clf_probs[i, 0], clf_probs[i, 1],
-#              sig_clf_probs[i, 0] - clf_probs[i, 0],
-#              sig_clf_probs[i, 1] - clf_probs[i, 1],
-#              color=colors[y_test[i]], head_width=1e-2)
-#
-## Plot perfect predictions
-#plt.plot([1.0], [0.0], 'ro', ms=20, label="Class 1")
-#plt.plot([0.0], [1.0], 'go', ms=20, label="Class 2")
-#plt.plot([0.0], [0.0], 'bo', ms=20, label="Class 3")
-#
-## Plot boundaries of unit simplex
-#plt.plot([0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], 'k', label="Simplex")
-#
-## Annotate points on the simplex
-#plt.annotate(r'($\frac{1}{3}$, $\frac{1}{3}$, $\frac{1}{3}$)',
-#             xy=(1.0/3, 1.0/3), xytext=(1.0/3, .23), xycoords='data',
-#             arrowprops=dict(facecolor='black', shrink=0.05),
-#             horizontalalignment='center', verticalalignment='center')
-#plt.plot([1.0/3], [1.0/3], 'ko', ms=5)
-#plt.annotate(r'($\frac{1}{2}$, $0$, $\frac{1}{2}$)',
-#             xy=(.5, .0), xytext=(.5, .1), xycoords='data',
-#             arrowprops=dict(facecolor='black', shrink=0.05),
-#             horizontalalignment='center', verticalalignment='center')
-#plt.annotate(r'($0$, $\frac{1}{2}$, $\frac{1}{2}$)',
-#             xy=(.0, .5), xytext=(.1, .5), xycoords='data',
-#             arrowprops=dict(facecolor='black', shrink=0.05),
-#             horizontalalignment='center', verticalalignment='center')
-#plt.annotate(r'($\frac{1}{2}$, $\frac{1}{2}$, $0$)',
-#             xy=(.5, .5), xytext=(.6, .6), xycoords='data',
-#             arrowprops=dict(facecolor='black', shrink=0.05),
-#             horizontalalignment='center', verticalalignment='center')
-#plt.annotate(r'($0$, $0$, $1$)',
-#             xy=(0, 0), xytext=(.1, .1), xycoords='data',
-#             arrowprops=dict(facecolor='black', shrink=0.05),
-#             horizontalalignment='center', verticalalignment='center')
-#plt.annotate(r'($1$, $0$, $0$)',
-#             xy=(1, 0), xytext=(1, .1), xycoords='data',
-#             arrowprops=dict(facecolor='black', shrink=0.05),
-#             horizontalalignment='center', verticalalignment='center')
-#plt.annotate(r'($0$, $1$, $0$)',
-#             xy=(0, 1), xytext=(.1, 1), xycoords='data',
-#             arrowprops=dict(facecolor='black', shrink=0.05),
-#             horizontalalignment='center', verticalalignment='center')
-## Add grid
-#plt.grid("off")
-#for x in [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
-#    plt.plot([0, x], [x, 0], 'k', alpha=0.2)
-#    plt.plot([0, 0 + (1-x)/2], [x, x + (1-x)/2], 'k', alpha=0.2)
-#    plt.plot([x, x + (1-x)/2], [0, 0 + (1-x)/2], 'k', alpha=0.2)
-#
-#plt.title("Change of predicted probabilities after sigmoid calibration")
-#plt.xlabel("Probability class 1")
-#plt.ylabel("Probability class 2")
-#plt.xlim(-0.05, 1.05)
-#plt.ylim(-0.05, 1.05)
-#plt.legend(loc="best")
-#
-#print("Log-loss of")
-#print(" * uncalibrated classifier trained on 80% datapoints: %.3f "
-#      % score)
-#print(" * classifier trained on 60% datapoints and calibrated on "
-#      "20% datapoint: %.3f" % sig_score)
-#
-## Illustrate calibrator
-#plt.figure(1)
-## generate grid over 2-simplex
-#p1d = np.linspace(0, 1, 20)
-#p0, p1 = np.meshgrid(p1d, p1d)
-#p2 = 1 - p0 - p1
-#p = np.c_[p0.ravel(), p1.ravel(), p2.ravel()]
-#p = p[p[:, 2] >= 0]
-#
-#calibrated_classifier = sig_clf.calibrated_classifiers_[0]
-#prediction = np.vstack([calibrator.predict(this_p)
-#                        for calibrator, this_p in
-#                        zip(calibrated_classifier.calibrators_, p.T)]).T
-#prediction /= prediction.sum(axis=1)[:, None]
-#
-## Plot modifications of calibrator
-#for i in range(prediction.shape[0]):
-#    plt.arrow(p[i, 0], p[i, 1],
-#              prediction[i, 0] - p[i, 0], prediction[i, 1] - p[i, 1],
-#              head_width=1e-2, color=colors[np.argmax(p[i])])
-## Plot boundaries of unit simplex
-#plt.plot([0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], 'k', label="Simplex")
-#
-#plt.grid("off")
-#for x in [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
-#    plt.plot([0, x], [x, 0], 'k', alpha=0.2)
-#    plt.plot([0, 0 + (1-x)/2], [x, x + (1-x)/2], 'k', alpha=0.2)
-#    plt.plot([x, x + (1-x)/2], [0, 0 + (1-x)/2], 'k', alpha=0.2)
-#
-#plt.title("Illustration of sigmoid calibrator")
-#plt.xlabel("Probability class 1")
-#plt.ylabel("Probability class 2")
-#plt.xlim(-0.05, 1.05)
-#plt.ylim(-0.05, 1.05)
-#
-#plt.show()
+plt.show() 
 
 print(accuracy)
-print(c_matrix)
+#print(c_matrix)
 print('Test set has '+str(np.sum(y_test_np == 1))+' H-modes and '+str(np.sum(y_test_np == 0))+' L-modes')
-print(c_matrix1)
+#print(c_matrix1)
 
 def plot_confusion_matrix(cm, classes,
                           normalize=False,
@@ -355,11 +238,11 @@ def plot_confusion_matrix(cm, classes,
     """
     if normalize:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-        print("Normalized confusion matrix")
-    else:
-        print('Confusion matrix, without normalization')
-
-    print(cm)
+#        print("Normalized confusion matrix")
+#    else:
+#        print('Confusion matrix, without normalization')
+#
+#    print(cm)
 
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
@@ -437,23 +320,19 @@ n, bins, patches = plt.hist(X_train_valid[:,5], 20, density=False, label = 'p_ic
 n, bins, patches = plt.hist(X_test[:,5], 20, density=False, label = 'p_icrf, test', facecolor='r', alpha=0.75)
 plt.legend()
 plt.show()
-n, bins, patches = plt.hist(X_train_valid[:,6], 20, density=False, label = 'beta_N, train', facecolor='g', alpha=0.75)
-n, bins, patches = plt.hist(X_test[:,6], 20, density=False, label = 'beta_N, test', facecolor='r', alpha=0.75)
+n, bins, patches = plt.hist(X_train_valid[:,6], 20, density=False, label = 'beta_p, train', facecolor='g', alpha=0.75)
+n, bins, patches = plt.hist(X_test[:,6], 20, density=False, label = 'beta_p, test', facecolor='r', alpha=0.75)
 plt.legend()
-plt.show()
-n, bins, patches = plt.hist(X_train_valid[:,7], 20, density=False, label = 'nebar_efit, train', facecolor='g', alpha=0.75)
-n, bins, patches = plt.hist(X_test[:,7], 20, density=False, label = 'nebar_efit, test', facecolor='r', alpha=0.75)
-plt.legend()
-plt.show()
+plt.show() 
 
 
 X_std = StandardScaler().fit_transform(total_x_data)
 mean_vec = np.mean(X_std, axis=0)
 cov_mat = (X_std - mean_vec).T.dot((X_std - mean_vec)) / (X_std.shape[0]-1)
-print('Covariance matrix \n%s' %cov_mat)
+#print('Covariance matrix \n%s' %cov_mat)
 eig_vals, eig_vecs = np.linalg.eig(cov_mat)
-print('Eigenvectors \n%s' %eig_vecs)
-print('\nEigenvalues \n%s' %eig_vals)
+#print('Eigenvectors \n%s' %eig_vecs)
+#print('\nEigenvalues \n%s' %eig_vals)
 # Make a list of (eigenvalue, eigenvector) tuples
 eig_pairs = [(np.abs(eig_vals[i]), eig_vecs[:,i]) for i in range(len(eig_vals))]
 
@@ -462,9 +341,9 @@ eig_pairs.sort()
 eig_pairs.reverse()
 
 # Visually confirm that the list is correctly sorted by decreasing eigenvalues
-print('Eigenvalues in descending order:')
-for i in eig_pairs:
-    print(i[0])
+#print('Eigenvalues in descending order:')
+#for i in eig_pairs:
+#    print(i[0])
     
 tot = sum(eig_vals)
 var_exp = [(i / tot)*100 for i in sorted(eig_vals, reverse=True)]
@@ -478,19 +357,140 @@ plt.legend()
 plt.show()
 
 
-list_vector = []
-names = ['ip','btor','li','q95','Wmhd','p_icrf','beta_N','nebar_efit','beta_p','beta_t','kappa','triang','areao','vout','aout','rout','zout','zmag','rmag','zsep_lower','zsep_upper','rsep_lower','rsep_upper','zvsin','rvsin','zvsout','rvsout','upper_gap','lower_gap','qstar','q95','V_loop_efit','V_surf_efit','cpasma','ssep','P_ohm','NL_04','g_side_rat','e_bot_mks','b_bot_mks']
-k = 0 
-while k < len(eig_vecs):
-    j = 0
-    for i in eig_vecs[k]:
-        list_vector.append([k,i,j,names[j]]) #j and names[j] is essentially redundant here
-        j = j + 1
-    k = k + 1
+#list_vector = []
+names = ['ip','btor','li','q95','Wmhd','p_icrf','beta_N','nebar_efit','beta_p','beta_t','kappa','triang','areao','vout','aout','rout','zout','zmag','rmag','zsep_lower','zsep_upper','rsep_lower','rsep_upper','zvsin','rvsin','zvsout','rvsout','upper_gap','lower_gap','qstar','V_loop_efit','V_surf_efit','cpasma','ssep','P_ohm','NL_04','g_side_rat','e_bot_mks','b_bot_mks']
+#k = 0 
+#while k < len(eig_vecs):
+#    j = 0
+#    for i in eig_vecs[k]:
+#        list_vector.append([k,i,j,names[j]]) #j and names[j] is essentially redundant here
+#        j = j + 1
+#    k = k + 1
+#    
+#k = 0
+#while k < len(eig_vecs):
+#    temp_sort = list_vector[(40*k):(39 + 40*k)]
+#    temp_sort = sorted(temp_sort, key=lambda tup: abs(tup[1]),reverse=True)
+#    print(temp_sort[0:20])
+#    k = k + 1
+#    
+
+forest = ExtraTreesClassifier(n_estimators=100,
+                              random_state=0)
+X = np.array(total_x_data)
+y = np.array(Y_data)
+forest.fit(X, y)
+importances = forest.feature_importances_
+std = np.std([tree.feature_importances_ for tree in forest.estimators_],
+             axis=0)
+indices = np.argsort(importances)[::-1]
+
+# Print the feature ranking
+print("Feature ranking:")
+
+for f in range(X.shape[1]):
+    print("%d. feature %d (%f), %s" % (f + 1, indices[f], importances[indices[f]], names[indices[f]]))
+
+# Plot the feature importances of the forest
+plt.figure()
+plt.title("Feature importances")
+plt.bar(range(X.shape[1]), importances[indices],
+       color="r", yerr=std[indices], align="center")
+plt.xticks(range(X.shape[1]), indices)
+plt.xlim([-1, X.shape[1]])
+plt.show()
+
+
+model = LogisticRegression()
+rfe = RFE(model, 1)
+fit = rfe.fit(X, y) 
+j = 0
+print('LogisticRegression')
+for i in list(fit.ranking_):
+    print(names[j], 'rank:', i)
+    j = j + 1
     
-k = 0
-while k < len(eig_vecs):
-    temp_sort = list_vector[(40*k):(39 + 40*k)]
-    temp_sort = sorted(temp_sort, key=lambda tup: abs(tup[1]),reverse=True)
-    print(temp_sort[0:20])
-    k = k + 1
+#model = LinearSVC(C=1.0)
+#rfe = RFE(model, 8)
+#fit = rfe.fit(X, y) 
+#j = 0
+#print('LinearSVC')
+#for i in list(fit.ranking_):
+#    print(names[j], i)
+#    j = j + 1
+#    
+#model = RandomForestClassifier(n_estimators=100)
+#rfe = RFE(model, 8)
+#fit = rfe.fit(X, y) 
+#j = 0
+#print('RandomForestClassifier')
+#for i in list(fit.ranking_):
+#    print(names[j], i)
+#    j = j + 1
+    
+    
+#simply plots confusion matrix for different ntrees; but not significant...
+#ntree = 198
+#while ntree < 200:
+#    rfc = RandomForestClassifier(n_estimators=ntree)
+#    rfc.fit(X_train_valid, y_train_valid)
+#    c_matrix['Random Forest'] = confusion_matrix(y_test_np, prediction['Random Forest'])
+#    plt.figure()
+#    plot_confusion_matrix(c_matrix['Random Forest'], classes=class_names,
+#                      title='Confusion matrix, without normalization, RF') 
+#    plt.figure()
+#    plot_confusion_matrix(c_matrix['Random Forest'], classes=class_names, normalize=True,
+#                      title='Normalized confusion matrix, RF')
+#    plt.show()
+#    ntree = ntree + 1
+
+
+
+
+#from collections import OrderedDict 
+#RANDOM_STATE = 123
+#
+## NOTE: Setting the `warm_start` construction parameter to `True` disables
+## support for parallelized ensembles but is necessary for tracking the OOB
+## error trajectory during training.
+#ensemble_clfs = [
+#    ("RandomForestClassifier, max_features='sqrt'",
+#        RandomForestClassifier(warm_start=True, oob_score=True,
+#                               max_features="sqrt",
+#                               random_state=RANDOM_STATE)),
+#    ("RandomForestClassifier, max_features='log2'",
+#        RandomForestClassifier(warm_start=True, max_features='log2',
+#                               oob_score=True,
+#                               random_state=RANDOM_STATE)),
+#    ("RandomForestClassifier, max_features=None",
+#        RandomForestClassifier(warm_start=True, max_features=None,
+#                               oob_score=True,
+#                               random_state=RANDOM_STATE))
+#]
+#
+## Map a classifier name to a list of (<n_estimators>, <error rate>) pairs.
+#error_rate = OrderedDict((label, []) for label, _ in ensemble_clfs)
+#
+## Range of `n_estimators` values to explore.
+#min_estimators = 30
+#max_estimators = 150
+#
+#for label, clf in ensemble_clfs:
+#    for i in range(min_estimators, max_estimators + 1)[::1]:
+#        clf.set_params(n_estimators=i)
+#        clf.fit(np.array(X_data), np.array(Y_data))
+#
+#        # Record the OOB error for each `n_estimators=i` setting.
+#        oob_error = 1 - clf.oob_score_
+#        error_rate[label].append((i, oob_error))
+#
+## Generate the "OOB error rate" vs. "n_estimators" plot.
+#for label, clf_err in error_rate.items():
+#    xs, ys = zip(*clf_err)
+#    plt.plot(xs, ys, label=label)
+#
+#plt.xlim(min_estimators, max_estimators)
+#plt.xlabel("n_estimators")
+#plt.ylabel("OOB error rate")
+#plt.legend(loc="upper right")
+#plt.show()
