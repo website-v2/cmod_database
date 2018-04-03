@@ -9,7 +9,7 @@ from sklearn.datasets import make_blobs
 from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.feature_selection import RFE 
-from sklearn.svm import LinearSVC
+from sklearn.svm import LinearSVC, SVC
 from sklearn.calibration import calibration_curve
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.calibration import CalibratedClassifierCV
@@ -157,7 +157,7 @@ print('H-mode fraction to total time slices: ',p,'/',len(Y_data))
 # Create classifiers
 lr = LogisticRegression()
 gnb = GaussianNB()
-svc = LinearSVC(C=100.)
+#svc = SVC(kernel='linear')#LinearSVC(C=100.)
 rfc = RandomForestClassifier(n_estimators=100)
 
 tree_depth_max = [estimator.tree_.depth for estimator in rfc.estimators_]
@@ -178,7 +178,7 @@ c_matrix1 = {}
 ax1.plot([0, 1], [0, 1], "k:", label="Perfectly calibrated")
 for clf, name in [(lr, 'Logistic'),
                   (gnb, 'Naive Bayes'),
-                  (svc, 'Support Vector Classification'),
+#                  (svc, 'Support Vector Classification'),
                   (rfc, 'Random Forest')]:
     clf.fit(X_train_valid, y_train_valid)
     if hasattr(clf, "predict_proba"):
@@ -277,13 +277,13 @@ plot_confusion_matrix(c_matrix['Naive Bayes'], classes=class_names,
 plt.figure()
 plot_confusion_matrix(c_matrix['Naive Bayes'], classes=class_names, normalize=True,
                       title='Normalized confusion matrix, NB')
-plt.figure()
-plot_confusion_matrix(c_matrix['Support Vector Classification'], classes=class_names,
-                      title='Confusion matrix, without normalization, SVC')
+#plt.figure()
+#plot_confusion_matrix(c_matrix['Support Vector Classification'], classes=class_names,
+#                      title='Confusion matrix, without normalization, SVC')
 # Plot normalized confusion matrix
-plt.figure()
-plot_confusion_matrix(c_matrix['Support Vector Classification'], classes=class_names, normalize=True,
-                      title='Normalized confusion matrix, SVC')
+#plt.figure()
+#plot_confusion_matrix(c_matrix['Support Vector Classification'], classes=class_names, normalize=True,
+#                      title='Normalized confusion matrix, SVC')
 plt.figure()
 plot_confusion_matrix(c_matrix['Random Forest'], classes=class_names,
                       title='Confusion matrix, without normalization, RF')
