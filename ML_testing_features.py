@@ -9,7 +9,6 @@ from sklearn.datasets import make_blobs
 from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.feature_selection import RFE 
-from sklearn.feature_selection import RFECV
 from sklearn.svm import LinearSVC, SVC
 from sklearn.calibration import calibration_curve
 from sklearn.ensemble import RandomForestClassifier
@@ -114,9 +113,10 @@ while i < len(rows):
                     print(rows[i][0])
                     bad_shot = rows[i][0] 
             Y_data0.append((values['present_mode'])[i])
-            X_data0.append([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
-                      (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
-                      (values['beta_p'])[i],(values['P_ohm'])[i]])
+            X_data0.append([(values['shot'])[i],(values['cpasma'])[i],(values['lower_gap'])[i],(values['upper_gap'])[i],
+                      (values['nebar_efit'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
+                      (values['ip'])[i],(values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],
+                      (values['q95'])[i],(values['beta_p'])[i],(values['btor'])[i]])
             total_x_data.append([(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
                       (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
                       (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
@@ -202,7 +202,7 @@ while update_index < 10:
     lr = LogisticRegression()
     gnb = GaussianNB()
     #svc = SVC(kernel='linear')#LinearSVC(C=100.)
-    rfc = RandomForestClassifier(n_estimators=100,max_features="sqrt")
+    rfc = RandomForestClassifier(n_estimators=100)
     
     tree_depth_max = [estimator.tree_.depth for estimator in rfc.estimators_]
     
@@ -424,38 +424,34 @@ while update_index < 10:
     
     X_test = np.array(X_test)
     X_train_valid = np.array(X_train_valid)
-    n, bins, patches = plt.hist(X_train_valid[:,0], 20, label = 'Ip, train', facecolor='g', alpha=0.75)
-    n, bins, patches = plt.hist(X_test[:,0], 20, label = 'Ip, test', facecolor='r', alpha=0.75)
-    plt.legend()
-    plt.show()
-    n, bins, patches = plt.hist(X_train_valid[:,1], 20,  label = 'Btor, train', facecolor='g', alpha=0.75)
-    n, bins, patches = plt.hist(X_test[:,1], 20, label = 'Btor, test', facecolor='r', alpha=0.75)
-    plt.legend()
-    plt.show()
-    n, bins, patches = plt.hist(X_train_valid[:,2], 20, label = 'li, train', facecolor='g', alpha=0.75)
-    n, bins, patches = plt.hist(X_test[:,2], 20, label = 'li, test', facecolor='r', alpha=0.75)
-    plt.legend()
-    plt.show()
-    n, bins, patches = plt.hist(X_train_valid[:,3], 20, label = 'q95, train', facecolor='g', alpha=0.75)
-    n, bins, patches = plt.hist(X_test[:,3], 20, label = 'q95, test', facecolor='r', alpha=0.75)
-    plt.legend()
-    plt.show()
-    n, bins, patches = plt.hist(X_train_valid[:,4], 20, label = 'Wmhd, train', facecolor='g', alpha=0.75)
-    n, bins, patches = plt.hist(X_test[:,4], 20, label = 'Wmhd, test', facecolor='r', alpha=0.75)
-    plt.legend()
-    plt.show()
-    n, bins, patches = plt.hist(X_train_valid[:,5], 20, label = 'p_icrf, train', facecolor='g', alpha=0.75)
-    n, bins, patches = plt.hist(X_test[:,5], 20, label = 'p_icrf, test', facecolor='r', alpha=0.75)
-    plt.legend()
-    plt.show()
-    n, bins, patches = plt.hist(X_train_valid[:,6], 20, label = 'beta_p, train', facecolor='g', alpha=0.75)
-    n, bins, patches = plt.hist(X_test[:,6], 20, label = 'beta_p, test', facecolor='r', alpha=0.75)
-    plt.legend()
-    plt.show() 
-    n, bins, patches = plt.hist(X_train_valid[:,7], 20, label = 'P_ohm, train', facecolor='g', alpha=0.75)
-    n, bins, patches = plt.hist(X_test[:,7], 20, label = 'P_ohm, test', facecolor='r', alpha=0.75)
-    plt.legend()
-    plt.show() 
+#    n, bins, patches = plt.hist(X_train_valid[:,0], 20, label = 'Ip, train', facecolor='g', alpha=0.75)
+#    n, bins, patches = plt.hist(X_test[:,0], 20, label = 'Ip, test', facecolor='r', alpha=0.75)
+#    plt.legend()
+#    plt.show()
+#    n, bins, patches = plt.hist(X_train_valid[:,1], 20,  label = 'Btor, train', facecolor='g', alpha=0.75)
+#    n, bins, patches = plt.hist(X_test[:,1], 20, label = 'Btor, test', facecolor='r', alpha=0.75)
+#    plt.legend()
+#    plt.show()
+#    n, bins, patches = plt.hist(X_train_valid[:,2], 20, label = 'li, train', facecolor='g', alpha=0.75)
+#    n, bins, patches = plt.hist(X_test[:,2], 20, label = 'li, test', facecolor='r', alpha=0.75)
+#    plt.legend()
+#    plt.show()
+#    n, bins, patches = plt.hist(X_train_valid[:,3], 20, label = 'q95, train', facecolor='g', alpha=0.75)
+#    n, bins, patches = plt.hist(X_test[:,3], 20, label = 'q95, test', facecolor='r', alpha=0.75)
+#    plt.legend()
+#    plt.show()
+#    n, bins, patches = plt.hist(X_train_valid[:,4], 20, label = 'Wmhd, train', facecolor='g', alpha=0.75)
+#    n, bins, patches = plt.hist(X_test[:,4], 20, label = 'Wmhd, test', facecolor='r', alpha=0.75)
+#    plt.legend()
+#    plt.show()
+#    n, bins, patches = plt.hist(X_train_valid[:,5], 20, label = 'p_icrf, train', facecolor='g', alpha=0.75)
+#    n, bins, patches = plt.hist(X_test[:,5], 20, label = 'p_icrf, test', facecolor='r', alpha=0.75)
+#    plt.legend()
+#    plt.show()
+#    n, bins, patches = plt.hist(X_train_valid[:,6], 20, label = 'beta_p, train', facecolor='g', alpha=0.75)
+#    n, bins, patches = plt.hist(X_test[:,6], 20, label = 'beta_p, test', facecolor='r', alpha=0.75)
+#    plt.legend()
+#    plt.show() 
     
     X_std = StandardScaler().fit_transform(total_x_data)
     mean_vec = np.mean(X_std, axis=0)
