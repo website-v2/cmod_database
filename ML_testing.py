@@ -16,10 +16,12 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.metrics import log_loss 
 from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.datasets import make_classification
 from sklearn import preprocessing
-from sklearn.preprocessing import StandardScaler 
+from sklearn.preprocessing import StandardScaler  
+from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.utils import shuffle
 from sklearn.feature_selection import SelectKBest
@@ -170,6 +172,10 @@ true_L_NB = []
 true_H_NB = []
 false_L_NB = []
 false_H_NB = []
+true_L_NN = []
+true_H_NN = []
+false_L_NN = []
+false_H_NN = []
 true_L_Logistic = []
 true_H_Logistic = []
 false_L_Logistic = []
@@ -198,11 +204,17 @@ while update_index < 10:
     y_valid_np = np.array([int(numeric_string) for numeric_string in y_valid])
     y_test_np = np.array([int(numeric_string) for numeric_string in y_test])
     y_train_np = np.array([int(numeric_string) for numeric_string in y_train_valid])
+    scaler = StandardScaler()
+    scaler.fit(X_train)
+    X_train_validNN = scaler.transform(X_train_valid)
+    X_validNN = scaler.transform(X_valid)
+    X_testNN = scaler.transform(X_test)
+    
     # Create classifiers
     lr = LogisticRegression()
-    gnb = GaussianNB()
-    #svc = SVC(kernel='linear')#LinearSVC(C=100.)
+    gnb = GaussianNB() 
     rfc = RandomForestClassifier(n_estimators=100,max_features="sqrt")
+    mlp = MLPClassifier(hidden_layer_sizes=(30,30,30))
     
     tree_depth_max = [estimator.tree_.depth for estimator in rfc.estimators_]
     
@@ -232,44 +244,40 @@ while update_index < 10:
     for clf, name in [(lr, 'Logistic'),
                       (gnb, 'Naive Bayes'),
     #                  (svc, 'Support Vector Classification'),
-                      (rfc, 'Random Forest')]:
-        clf.fit(X_train_valid, y_train_valid)
-        if hasattr(clf, "predict_proba"):
+                      (rfc, 'Random Forest'),
+                      (mlp, 'NeuralNet')]:
+        if name == 'NeuralNet':
+            clf.fit(X_train_validNN, y_train_valid)
+            prob_pos = clf.predict_proba(X_testNN)[:, 1] #probability of 1, or H-mode
+            prob_pos_valid = clf.predict_proba(X_validNN)[:, 1]
+            prediction_prob[str(name)] = np.array([int(numeric_string) for numeric_string in prob_pos])
+            prediction_prob_valid[str(name)] = np.array([int(numeric_string) for numeric_string in prob_pos_valid])
+            prediction[str(name)] = np.array([int(numeric_string) for numeric_string in clf.predict(X_testNN)])
+            prediction_valid[str(name)] = np.array([int(numeric_string) for numeric_string in clf.predict(X_validNN)])
+            predictions = mlp.predict(X_testNN)
+            print(confusion_matrix(y_test,predictions))
+            print(classification_report(y_test,predictions))
+        else:
+            clf.fit(X_train_valid, y_train_valid)
+#        if hasattr(clf, "predict_proba"):
             prob_pos = clf.predict_proba(X_test)[:, 1] #probability of 1, or H-mode
             prob_pos_valid = clf.predict_proba(X_valid)[:, 1]
             prediction_prob[str(name)] = np.array([int(numeric_string) for numeric_string in prob_pos])
             prediction_prob_valid[str(name)] = np.array([int(numeric_string) for numeric_string in prob_pos_valid])
             prediction[str(name)] = np.array([int(numeric_string) for numeric_string in clf.predict(X_test)])
             prediction_valid[str(name)] = np.array([int(numeric_string) for numeric_string in clf.predict(X_valid)])
-            sum_array[str(name)] = y_test_np + prediction[str(name)]
-            sum_array_valid[str(name)] = y_valid_np + prediction_valid[str(name)]
-            accuracy[str(name)] = (sum(i == 2 for i in sum_array[str(name)]) + sum(i == 0 for i in sum_array[str(name)]))/len(y_test) 
-            accuracy_valid[str(name)] = (sum(i == 2 for i in sum_array_valid[str(name)]) + sum(i == 0 for i in sum_array_valid[str(name)]))/len(y_valid) 
-            c_matrix[str(name)] = confusion_matrix(y_test_np, prediction[str(name)])
-            c_matrix_valid[str(name)] = confusion_matrix(y_valid_np, prediction_valid[str(name)])
-            c_matrix1[str(name)+' predicted L-mode correctly'] = c_matrix[str(name)][0][0]/(c_matrix[str(name)][0][0] + (c_matrix[str(name)][1][0]))
-            c_matrix1[str(name)+' predicted H-mode correctly'] = c_matrix[str(name)][1][1]/(c_matrix[str(name)][1][1] + (c_matrix[str(name)][0][1]))
-            c_matrix1_valid[str(name)+' predicted L-mode correctly'] = c_matrix_valid[str(name)][0][0]/(c_matrix_valid[str(name)][0][0] + (c_matrix_valid[str(name)][1][0]))
-            c_matrix1_valid[str(name)+' predicted H-mode correctly'] = c_matrix_valid[str(name)][1][1]/(c_matrix_valid[str(name)][1][1] + (c_matrix_valid[str(name)][0][1]))
+        
+        sum_array[str(name)] = y_test_np + prediction[str(name)]
+        sum_array_valid[str(name)] = y_valid_np + prediction_valid[str(name)]
+        accuracy[str(name)] = (sum(i == 2 for i in sum_array[str(name)]) + sum(i == 0 for i in sum_array[str(name)]))/len(y_test) 
+        accuracy_valid[str(name)] = (sum(i == 2 for i in sum_array_valid[str(name)]) + sum(i == 0 for i in sum_array_valid[str(name)]))/len(y_valid) 
+        c_matrix[str(name)] = confusion_matrix(y_test_np, prediction[str(name)])
+        c_matrix_valid[str(name)] = confusion_matrix(y_valid_np, prediction_valid[str(name)])
+        c_matrix1[str(name)+' predicted L-mode correctly'] = c_matrix[str(name)][0][0]/(c_matrix[str(name)][0][0] + (c_matrix[str(name)][1][0]))
+        c_matrix1[str(name)+' predicted H-mode correctly'] = c_matrix[str(name)][1][1]/(c_matrix[str(name)][1][1] + (c_matrix[str(name)][0][1]))
+        c_matrix1_valid[str(name)+' predicted L-mode correctly'] = c_matrix_valid[str(name)][0][0]/(c_matrix_valid[str(name)][0][0] + (c_matrix_valid[str(name)][1][0]))
+        c_matrix1_valid[str(name)+' predicted H-mode correctly'] = c_matrix_valid[str(name)][1][1]/(c_matrix_valid[str(name)][1][1] + (c_matrix_valid[str(name)][0][1]))
     #2 is H-mode correctly classified; 0 is L-mode correctly classified; 1 is misclassfication     
-        else:  # use decision function
-            prediction[str(name)] = np.array([int(numeric_string) for numeric_string in clf.predict(X_test)])
-            sum_array[str(name)] = y_test_np + prediction[str(name)]
-            accuracy[str(name)] = (sum(i == 2 for i in sum_array[str(name)]) + sum(i == 0 for i in sum_array[str(name)]))/len(y_test) 
-            c_matrix[str(name)] = confusion_matrix(y_test_np, prediction[str(name)])
-            c_matrix1[str(name)+' predicted L-mode correctly'] = c_matrix[str(name)][0][0]/(c_matrix[str(name)][0][0] + (c_matrix[str(name)][1][0]))
-            c_matrix1[str(name)+' predicted H-mode correctly'] = c_matrix[str(name)][1][1]/(c_matrix[str(name)][1][1] + (c_matrix[str(name)][0][1]))
-            prediction_valid[str(name)] = np.array([int(numeric_string) for numeric_string in clf.predict(X_valid)])
-            sum_array_valid[str(name)] = y_valid_np + prediction_valid[str(name)]
-            accuracy_valid[str(name)] = (sum(i == 2 for i in sum_array_valid[str(name)]) + sum(i == 0 for i in sum_array_valid[str(name)]))/len(y_valid) 
-            c_matrix_valid[str(name)] = confusion_matrix(y_valid_np, prediction_valid[str(name)])
-            c_matrix1_valid[str(name)+' predicted L-mode correctly'] = c_matrix_valid[str(name)][0][0]/(c_matrix_valid[str(name)][0][0] + (c_matrix_valid[str(name)][1][0]))
-            c_matrix1_valid[str(name)+' predicted H-mode correctly'] = c_matrix_valid[str(name)][1][1]/(c_matrix_valid[str(name)][1][1] + (c_matrix_valid[str(name)][0][1]))
-    #2 is H-mode correctly classified; 0 is L-mode correctly classified; 1 is misclassfication
-            prob_pos = clf.decision_function(X_test)
-            prob_pos = (prob_pos - prob_pos.min()) / (prob_pos.max() - prob_pos.min())    
-            prob_pos_valid = clf.decision_function(X_valid)
-            prob_pos_valid = (prob_pos_valid - prob_pos_valid.min()) / (prob_pos_valid.max() - prob_pos_valid.min())
         
         fraction_of_positives, mean_predicted_value = calibration_curve(y_test, prob_pos, n_bins=20)
         fraction_of_positives_valid, mean_predicted_value_valid = calibration_curve(y_valid, prob_pos_valid, n_bins=20)
@@ -311,6 +319,10 @@ while update_index < 10:
     false_H_NB.append(c_matrix['Naive Bayes'][0][1]/(c_matrix['Naive Bayes'][0][0] + c_matrix['Naive Bayes'][0][1]))
     false_L_NB.append(c_matrix['Naive Bayes'][1][0]/(c_matrix['Naive Bayes'][1][0] + c_matrix['Naive Bayes'][1][1]))
     true_H_NB.append(c_matrix['Naive Bayes'][1][1]/(c_matrix['Naive Bayes'][1][0] + c_matrix['Naive Bayes'][1][1]))
+    true_L_NN.append(c_matrix['NeuralNet'][0][0]/(c_matrix['NeuralNet'][0][0] + c_matrix['NeuralNet'][0][1]))
+    false_H_NN.append(c_matrix['NeuralNet'][0][1]/(c_matrix['NeuralNet'][0][0] + c_matrix['NeuralNet'][0][1]))
+    false_L_NN.append(c_matrix['NeuralNet'][1][0]/(c_matrix['NeuralNet'][1][0] + c_matrix['NeuralNet'][1][1]))
+    true_H_NN.append(c_matrix['NeuralNet'][1][1]/(c_matrix['NeuralNet'][1][0] + c_matrix['NeuralNet'][1][1]))
     true_L_Logistic.append(c_matrix['Logistic'][0][0]/(c_matrix['Logistic'][0][0] + c_matrix['Logistic'][0][1]))
     false_H_Logistic.append(c_matrix['Logistic'][0][1]/(c_matrix['Logistic'][0][0] + c_matrix['Logistic'][0][1]))
     false_L_Logistic.append(c_matrix['Logistic'][1][0]/(c_matrix['Logistic'][1][0] + c_matrix['Logistic'][1][1]))
@@ -360,65 +372,55 @@ while update_index < 10:
     # Plot non-normalized confusion matrix
     plt.figure()
     plot_confusion_matrix(c_matrix['Logistic'], classes=class_names,
-                          title='Confusion matrix, without normalization, Logistic')
-    # Plot normalized confusion matrix
+                          title='Confusion matrix, without normalization, Logistic') 
     plt.figure()
     plot_confusion_matrix(c_matrix['Logistic'], classes=class_names, normalize=True,
                           title='Normalized confusion matrix, Logistic')
     plt.figure()
     plot_confusion_matrix(c_matrix['Naive Bayes'], classes=class_names,
-                          title='Confusion matrix, without normalization, NB')
-    # Plot normalized confusion matrix
+                          title='Confusion matrix, without normalization, NB') 
     plt.figure()
     plot_confusion_matrix(c_matrix['Naive Bayes'], classes=class_names, normalize=True,
-                          title='Normalized confusion matrix, NB')
-    #plt.figure()
-    #plot_confusion_matrix(c_matrix['Support Vector Classification'], classes=class_names,
-    #                      title='Confusion matrix, without normalization, SVC')
-    # Plot normalized confusion matrix
-    #plt.figure()
-    #plot_confusion_matrix(c_matrix['Support Vector Classification'], classes=class_names, normalize=True,
-    #                      title='Normalized confusion matrix, SVC')
+                          title='Normalized confusion matrix, NB') 
     plt.figure()
     plot_confusion_matrix(c_matrix['Random Forest'], classes=class_names,
-                          title='Confusion matrix, without normalization, RF')
-    # Plot normalized confusion matrix
+                          title='Confusion matrix, without normalization, RF') 
     plt.figure()
     plot_confusion_matrix(c_matrix['Random Forest'], classes=class_names, normalize=True,
                           title='Normalized confusion matrix, RF')
+    plt.figure()
+    plot_confusion_matrix(c_matrix['NeuralNet'], classes=class_names,
+                          title='Confusion matrix, without normalization, NN') 
+    plt.figure()
+    plot_confusion_matrix(c_matrix['NeuralNet'], classes=class_names, normalize=True,
+                          title='Normalized confusion matrix, NN')
     plt.show()
 
-
-
-    # Plot non-normalized confusion matrix
+    # Plot normalized confusion matrix
     plt.figure()
     plot_confusion_matrix(c_matrix_valid['Logistic'], classes=class_names,
-                          title='Confusion matrix (validation), without normalization, Logistic')
-    # Plot normalized confusion matrix
+                          title='Confusion matrix (validation), without normalization, Logistic') 
     plt.figure()
     plot_confusion_matrix(c_matrix_valid['Logistic'], classes=class_names, normalize=True,
                           title='Normalized confusion matrix (validation), Logistic')
     plt.figure()
     plot_confusion_matrix(c_matrix_valid['Naive Bayes'], classes=class_names,
-                          title='Confusion matrix (validation), without normalization, NB')
-    # Plot normalized confusion matrix
+                          title='Confusion matrix (validation), without normalization, NB') 
     plt.figure()
     plot_confusion_matrix(c_matrix_valid['Naive Bayes'], classes=class_names, normalize=True,
-                          title='Normalized confusion matrix (validation), NB')
-    #plt.figure()
-    #plot_confusion_matrix(c_matrix['Support Vector Classification'], classes=class_names,
-    #                      title='Confusion matrix, without normalization, SVC')
-    # Plot normalized confusion matrix
-    #plt.figure()
-    #plot_confusion_matrix(c_matrix['Support Vector Classification'], classes=class_names, normalize=True,
-    #                      title='Normalized confusion matrix, SVC')
+                          title='Normalized confusion matrix (validation), NB') 
     plt.figure()
     plot_confusion_matrix(c_matrix_valid['Random Forest'], classes=class_names,
-                          title='Confusion matrix (validation), without normalization, RF')
-    # Plot normalized confusion matrix
+                          title='Confusion matrix (validation), without normalization, RF') 
     plt.figure()
     plot_confusion_matrix(c_matrix_valid['Random Forest'], classes=class_names, normalize=True,
                           title='Normalized confusion matrix (validation), RF')
+    plt.figure()
+    plot_confusion_matrix(c_matrix_valid['NeuralNet'], classes=class_names,
+                          title='Confusion matrix (validation), without normalization, NN') 
+    plt.figure()
+    plot_confusion_matrix(c_matrix_valid['NeuralNet'], classes=class_names, normalize=True,
+                          title='Normalized confusion matrix (validation), NN')
     plt.show()
     
     
@@ -711,6 +713,8 @@ print(best_features)
 #feature importance via bagged decision trees
 model = ExtraTreesClassifier()
 model.fit(X, Y)
+best_features = []
+i = 0
 while i < len(names): 
     best_features.append([model.feature_importances_[i],names[i]])
     i = i + 1
@@ -735,6 +739,13 @@ print(best_features)
 #    mutation_independent_proba=0.05,tournament_size=3,caching=True,n_jobs=-1)
 #selector = selector.fit(X, Y)
 #print(selector.support_)
+#best_features = []
+#i = 0
+#while i < len(names): 
+#    best_features.append([selector.support_[i],names[i]])
+#    i = i + 1
+#best_features = sorted(best_features, key=lambda x: x[0], reverse=True)
+#print(best_features)
 
 n, bins, patches = plt.hist(true_H_RF, 20, label = 'Correctly predicted H-mode', alpha=0.75) 
 n, bins, patches = plt.hist(false_H_RF, 20, label = 'Incorrectly predicted H-mode', alpha=0.75) 
@@ -750,10 +761,38 @@ n, bins, patches = plt.hist(false_L_NB, 20, label = 'Incorrectly predicted L-mod
 plt.title('Gaussian Naive Bayes')
 plt.legend()
 plt.show()
+n, bins, patches = plt.hist(true_H_NN, 20, label = 'Correctly predicted H-mode', alpha=0.75) 
+n, bins, patches = plt.hist(false_H_NN, 20, label = 'Incorrectly predicted H-mode', alpha=0.75) 
+n, bins, patches = plt.hist(true_L_NN, 20, label = 'Correctly predicted L-mode', alpha=0.75) 
+n, bins, patches = plt.hist(false_L_NN, 20, label = 'Incorrectly predicted L-mode', alpha=0.75) 
+plt.title('NeuralNet')
+plt.legend()
+plt.show()
 n, bins, patches = plt.hist(true_H_Logistic, 20, label = 'Correctly predicted H-mode', alpha=0.75) 
 n, bins, patches = plt.hist(false_H_Logistic, 20, label = 'Incorrectly predicted H-mode', alpha=0.75) 
 n, bins, patches = plt.hist(true_L_Logistic, 20, label = 'Correctly predicted L-mode', alpha=0.75) 
 n, bins, patches = plt.hist(false_L_Logistic, 20, label = 'Incorrectly predicted L-mode', alpha=0.75) 
 plt.title('Logistic Regression')
 plt.legend()
-plt.show()
+plt.show() 
+
+print('Logistic') 
+print('trueH - ',np.mean(true_H_Logistic),' +/- ',np.std(true_H_Logistic))
+print('FalseH - ',np.mean(false_H_Logistic),' +/- ',np.std(false_H_Logistic))
+print('trueL - ',np.mean(true_L_Logistic),' +/- ',np.std(true_L_Logistic))
+print('falseL - ',np.mean(false_L_Logistic),' +/- ',np.std(false_L_Logistic))
+print('Gaussian Naive Bayes')
+print('trueH - ',np.mean(true_H_NB),' +/- ',np.std(true_H_NB))
+print('FalseH - ',np.mean(false_H_NB),' +/- ',np.std(false_H_NB))
+print('trueL - ',np.mean(true_L_NB),' +/- ',np.std(true_L_NB))
+print('falseL - ',np.mean(false_L_NB),' +/- ',np.std(false_L_NB))
+print('NeuralNet')
+print('trueH - ',np.mean(true_H_NN),' +/- ',np.std(true_H_NN))
+print('FalseH - ',np.mean(false_H_NN),' +/- ',np.std(false_H_NN))
+print('trueL - ',np.mean(true_L_NN),' +/- ',np.std(true_L_NN))
+print('falseL - ',np.mean(false_L_NN),' +/- ',np.std(false_L_NN))
+print('Random Forest')
+print('trueH - ',np.mean(true_H_RF),' +/- ',np.std(true_H_RF))
+print('FalseH - ',np.mean(false_H_RF),' +/- ',np.std(false_H_RF))
+print('trueL - ',np.mean(true_L_RF),' +/- ',np.std(true_L_RF))
+print('falseL - ',np.mean(false_L_RF),' +/- ',np.std(false_L_RF))
