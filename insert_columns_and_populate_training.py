@@ -26,7 +26,7 @@ def main(shot):
     column5 = 'time'
     column6 = 'time_at_transition'
     
-    new_columns = [['ip','REAL'],['btor','REAL'],['p_lh','REAL'],['p_icrf','REAL'],
+    new_columns = [['ip','REAL'],['btor','REAL'],['p_lh','REAL'],['i_beam','REAL'],['p_icrf','REAL'],
     ['p_icrf_d','REAL'],['p_icrf_e','REAL'],['p_icrf_j3','REAL'],['p_icrf_j4','REAL'],
     ['freq_icrf_d','REAL'],['freq_icrf_e','REAL'],['freq_icrf_j','REAL'],['beta_N','REAL'],
     ['beta_p','REAL'],['beta_t','REAL'],['kappa','REAL'],['triang_l','REAL'],['triang_u','REAL'],
@@ -34,7 +34,7 @@ def main(shot):
     ['rout','REAL'],['zout','REAL'],['zmag','REAL'],['rmag','REAL'],['zsep_lower','REAL'],['zsep_upper','REAL'],
     ['rsep_lower','REAL'],['rsep_upper','REAL'],['zvsin','REAL'],['rvsin','REAL'],['zvsout','REAL'],['rvsout','REAL'],
     ['upper_gap','REAL'],['lower_gap','REAL'],['q0','REAL'],['qstar','REAL'],['q95','REAL'],
-    ['V_loop_efit','REAL'],['V_surf_efit','REAL'],['Wmhd','REAL'],['cpasma','REAL'],
+    ['V_loop_efit','REAL'],['V_surf_efit','REAL'],['rgap','REAL'],['lgap','REAL'],['Wmhd','REAL'],['cpasma','REAL'],
     ['ssep','REAL'],['P_ohm','REAL'],['HoverHD','REAL'],['Halpha','REAL'],['Dalpha','REAL'],
     ['z_ave','REAL'],['p_rad','REAL'],['p_rad_core','REAL'],['nLave_04','REAL'],['NL_04','REAL'],
     ['nebar_efit','REAL'],['piezo_4_gas_input','REAL'],['g_side_rat','REAL'],['e_bot_mks','REAL'],

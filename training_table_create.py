@@ -7,7 +7,7 @@ Created on Wed Jan 24 23:44:07 2018
 
 This code utilizes scripts for running a fast efit (<5000 steps, 129x129), if
 trees efit06 OR efit07 are available. It then calls upon a script to acquire MDSplus
-data and then populates a designated table with that information. It is initalized by
+data and then populates a newly created table with that information. It is initalized by
 grabbing data from a TRAINING TABLE where every time slice is either L,H,I, or end,
 and only time slices for transitions (i.e. mode changes) are included.
 """
@@ -19,18 +19,27 @@ import os
 import sys
 from os import getenv
 from datetime import datetime
-sys.path.append('/home/mathewsa/Desktop/')
+sys.path.append('/home/mathewsa/Desktop/confinement_table/codes+/')
 import fast_efit06
 from fast_efit06 import path_shot
-sys.path.append('/home/mathewsa/Desktop/')
+sys.path.append('/home/mathewsa/Desktop/confinement_table/codes+/')
 import data_acquire_MDSplus 
-sys.path.append('/home/mathewsa/')
+sys.path.append('/home/mathewsa/Desktop/confinement_table/codes+/')
 import insert_columns_and_populate_training 
+sys.path.append('/home/mathewsa/Desktop/confinement_table/codes+/')
+import create_database
+sys.path.append('/home/mathewsa/Desktop/confinement_table/codes+/')
+import populate_new_database
 import sqlite3
 
 sqlite_old_file = '/home/mathewsa/Desktop/am_transitions.db' #location of old database
+try:
+    create_database.main() #creates confinement_table in database (old = new = same database here)
+except:
+    print('Table already exists')
+populate_new_database.main() #inserts rows at every 1ms in confinement table of database
 sqlite_new_file = '/home/mathewsa/Desktop/am_transitions.db' #location of new database
-table_old_name = 'transitions_20171207'  #name of old table in old db
+table_old_name = 'transitions'  #name of old table in old db
 table_new_name = 'confinement_table' #name of new table in new db
 column1 = 'shot'
 column2 = 'id'
@@ -53,11 +62,11 @@ end_times = []
 list1 = [] #number of shots that start
 list2 = [] #number of shots that end
 x_old = 'start'
-for x in rows: 
-    if x[0] != x_old: 
+for x in rows:
+    if x[0] != x_old:
         print('Start time for '+str(x[0])+' is '+str(x[4]))
         start_times.append(x[4])
-        list1.append(x[0]) 
+        list1.append(x[0])
         x_old = x[0]
     else:
         continue
@@ -71,7 +80,7 @@ for x in rows:
 i = 0  
 timebases = []
 if len(list1) == len(list2):
-    while i < len(list1): 
+    while i < len(list1):
         timebases.append([list1[i],np.arange(round(start_times[i],3),round(end_times[i]+0.001,3),0.001)])
         i = i + 1
         
@@ -82,9 +91,10 @@ def returnNotMatches(a, b):
     return output
 returnNotMatches(list1,list2) #ensures same number of shots with start and end
 
-#making table for training set
-shots = list1 #[1120920026,1120824016] # input for shots from confinement training table 
 
+#making table for training set
+shots = list1[130:] #[1080523020] # input for shots from confinement training table 
+#if individual shots, store in ascending order by id 
 i = 0
 index_i = 0 #additional index if shots != timebase shots
 while i < len(shots):
@@ -116,11 +126,14 @@ while i < len(shots):
             insert_columns_and_populate_training.main(shot) 
             break 
         except:
-            print("Unexpected error")
+            print("Unexpected error in shot")
             print(shot)
-            raise       
+            if (shot == 1091014015) or (shot == 1160616018) or (shot == 1000511018) or (shot == 1050623010):
+                pass
+            else:
+                raise       
     #can define an alternative timebase if desired, but using this
-    #definition of > 100kA as start/end condition currently for table
+    #definition of > ~100kA as start/end condition currently for table
     i = i + 1
 
     

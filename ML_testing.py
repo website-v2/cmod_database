@@ -36,7 +36,7 @@ import sys
 import matplotlib.pyplot as plt 
 from mpl_toolkits.mplot3d import Axes3D 
  
-sqlite_file = '/Users/Abhilash/Desktop/am_transitions.db'
+sqlite_file = '/home/mathewsa/Desktop/confinement_table/tables/am_transitions.db'
 table_name = 'confinement_table'
 table_name_transitions = 'transitions' 
 
@@ -116,9 +116,17 @@ while i < len(rows):
                     print(rows[i][0])
                     bad_shot = rows[i][0] 
             Y_data0.append((values['present_mode'])[i])
-            X_data0.append([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
-                      (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
-                      (values['beta_p'])[i],(values['P_ohm'])[i]])
+            X_data0.append([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],                      
+                        (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],                      
+                        (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],                      
+                        (values['beta_t'])[i],(values['kappa'])[i],(values['triang'])[i],                      
+                        (values['areao'])[i],(values['vout'])[i],(values['aout'])[i],                      
+                        (values['rout'])[i],(values['zout'])[i],(values['zmag'])[i],
+                        (values['rmag'])[i],(values['zsep_lower'])[i],(values['zsep_upper'])[i],
+                        (values['rsep_lower'])[i],(values['rsep_upper'])[i],(values['zvsin'])[i],
+                        (values['rvsin'])[i],(values['zvsout'])[i],(values['rvsout'])[i],
+                        (values['upper_gap'])[i],(values['lower_gap'])[i], (values['ssep'])[i],
+                        (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i]])
             total_x_data.append([(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
                       (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
                       (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
@@ -182,11 +190,14 @@ false_L_Logistic = []
 false_H_Logistic = []
 fraction_ = 0.80
 train_valid_frac = 0.80
-update_index = 0
-while update_index < 10:
-    print('Fraction of total data for training + validation = ',train_valid_frac)
+update_index = 0(spectroscopy.getNode('\SPECTROSCOPY::z_ave')).units_of()
+cycles = 100 #runs
+while update_index < cycles:
+    print('Fraction of total d[1.7191,-0.000179664]ata for training + validation = ',train_valid_frac)
     print('Fraction of training + validation data used for training = ',fraction_)
     #use below 4 lines if randomizing shots AND time slices for train/validation set
+    print("ML_testing_all_normalized_NN_100x100x100_layers_([(values['shot'])[i],(values['Wmhd'])[i],(values['b_bot_mks'])[i],
+                            (values['nebar_efit'])[i],(values['beta_p'])[i],(values['P_ohm'])[i]]), cycles =",cycles)    
     data = np.insert(X_data0, len(X_data0[0]), values=Y_data0, axis=-1)
     together = [list(i) for _, i in itertools.groupby(data, operator.itemgetter(0))]
     random.shuffle(together)
@@ -210,11 +221,17 @@ while update_index < 10:
     X_validNN = scaler.transform(X_valid)
     X_testNN = scaler.transform(X_test)
     
+    #uncommenting below 3 lines ensures all algorithms get normalized data
+    #this means subtracting mean and dividing by standard deviation
+    X_train_valid = X_train_validNN
+    X_valid = X_validNN
+    X_test = X_testNN 
+    
     # Create classifiers
     lr = LogisticRegression()
     gnb = GaussianNB() 
     rfc = RandomForestClassifier(n_estimators=100,max_features="sqrt")
-    mlp = MLPClassifier(hidden_layer_sizes=(30,30,30))
+    mlp = MLPClassifier(hidden_layer_sizes=(100,100,100))
     
     tree_depth_max = [estimator.tree_.depth for estimator in rfc.estimators_]
     
@@ -246,7 +263,7 @@ while update_index < 10:
     #                  (svc, 'Support Vector Classification'),
                       (rfc, 'Random Forest'),
                       (mlp, 'NeuralNet')]:
-        if name == 'NeuralNet':
+        if name == 'NeuralNet1':
             clf.fit(X_train_validNN, y_train_valid)
             prob_pos = clf.predict_proba(X_testNN)[:, 1] #probability of 1, or H-mode
             prob_pos_valid = clf.predict_proba(X_validNN)[:, 1]
@@ -269,14 +286,14 @@ while update_index < 10:
         
         sum_array[str(name)] = y_test_np + prediction[str(name)]
         sum_array_valid[str(name)] = y_valid_np + prediction_valid[str(name)]
-        accuracy[str(name)] = (sum(i == 2 for i in sum_array[str(name)]) + sum(i == 0 for i in sum_array[str(name)]))/len(y_test) 
-        accuracy_valid[str(name)] = (sum(i == 2 for i in sum_array_valid[str(name)]) + sum(i == 0 for i in sum_array_valid[str(name)]))/len(y_valid) 
+        accuracy[str(name)] = (sum(i == 2 for i in sum_array[str(name)]) + sum(i == 0 for i in sum_array[str(name)]))/float(len(y_test))
+        accuracy_valid[str(name)] = (sum(i == 2 for i in sum_array_valid[str(name)]) + sum(i == 0 for i in sum_array_valid[str(name)]))/float(len(y_valid))
         c_matrix[str(name)] = confusion_matrix(y_test_np, prediction[str(name)])
         c_matrix_valid[str(name)] = confusion_matrix(y_valid_np, prediction_valid[str(name)])
-        c_matrix1[str(name)+' predicted L-mode correctly'] = c_matrix[str(name)][0][0]/(c_matrix[str(name)][0][0] + (c_matrix[str(name)][1][0]))
-        c_matrix1[str(name)+' predicted H-mode correctly'] = c_matrix[str(name)][1][1]/(c_matrix[str(name)][1][1] + (c_matrix[str(name)][0][1]))
-        c_matrix1_valid[str(name)+' predicted L-mode correctly'] = c_matrix_valid[str(name)][0][0]/(c_matrix_valid[str(name)][0][0] + (c_matrix_valid[str(name)][1][0]))
-        c_matrix1_valid[str(name)+' predicted H-mode correctly'] = c_matrix_valid[str(name)][1][1]/(c_matrix_valid[str(name)][1][1] + (c_matrix_valid[str(name)][0][1]))
+        c_matrix1[str(name)+' predicted L-mode correctly'] = c_matrix[str(name)][0][0]/float(c_matrix[str(name)][0][0] + (c_matrix[str(name)][1][0]))
+        c_matrix1[str(name)+' predicted H-mode correctly'] = c_matrix[str(name)][1][1]/float(c_matrix[str(name)][1][1] + (c_matrix[str(name)][0][1]))
+        c_matrix1_valid[str(name)+' predicted L-mode correctly'] = c_matrix_valid[str(name)][0][0]/float(c_matrix_valid[str(name)][0][0] + (c_matrix_valid[str(name)][1][0]))
+        c_matrix1_valid[str(name)+' predicted H-mode correctly'] = c_matrix_valid[str(name)][1][1]/float(c_matrix_valid[str(name)][1][1] + (c_matrix_valid[str(name)][0][1]))
     #2 is H-mode correctly classified; 0 is L-mode correctly classified; 1 is misclassfication     
         
         fraction_of_positives, mean_predicted_value = calibration_curve(y_test, prob_pos, n_bins=20)
@@ -311,22 +328,22 @@ while update_index < 10:
     plt.tight_layout()
     plt.show() 
     
-    true_L_RF.append(c_matrix['Random Forest'][0][0]/(c_matrix['Random Forest'][0][0] + c_matrix['Random Forest'][0][1]))
-    false_H_RF.append(c_matrix['Random Forest'][0][1]/(c_matrix['Random Forest'][0][0] + c_matrix['Random Forest'][0][1]))
-    false_L_RF.append(c_matrix['Random Forest'][1][0]/(c_matrix['Random Forest'][1][0] + c_matrix['Random Forest'][1][1]))
-    true_H_RF.append(c_matrix['Random Forest'][1][1]/(c_matrix['Random Forest'][1][0] + c_matrix['Random Forest'][1][1]))
-    true_L_NB.append(c_matrix['Naive Bayes'][0][0]/(c_matrix['Naive Bayes'][0][0] + c_matrix['Naive Bayes'][0][1]))
-    false_H_NB.append(c_matrix['Naive Bayes'][0][1]/(c_matrix['Naive Bayes'][0][0] + c_matrix['Naive Bayes'][0][1]))
-    false_L_NB.append(c_matrix['Naive Bayes'][1][0]/(c_matrix['Naive Bayes'][1][0] + c_matrix['Naive Bayes'][1][1]))
-    true_H_NB.append(c_matrix['Naive Bayes'][1][1]/(c_matrix['Naive Bayes'][1][0] + c_matrix['Naive Bayes'][1][1]))
-    true_L_NN.append(c_matrix['NeuralNet'][0][0]/(c_matrix['NeuralNet'][0][0] + c_matrix['NeuralNet'][0][1]))
-    false_H_NN.append(c_matrix['NeuralNet'][0][1]/(c_matrix['NeuralNet'][0][0] + c_matrix['NeuralNet'][0][1]))
-    false_L_NN.append(c_matrix['NeuralNet'][1][0]/(c_matrix['NeuralNet'][1][0] + c_matrix['NeuralNet'][1][1]))
-    true_H_NN.append(c_matrix['NeuralNet'][1][1]/(c_matrix['NeuralNet'][1][0] + c_matrix['NeuralNet'][1][1]))
-    true_L_Logistic.append(c_matrix['Logistic'][0][0]/(c_matrix['Logistic'][0][0] + c_matrix['Logistic'][0][1]))
-    false_H_Logistic.append(c_matrix['Logistic'][0][1]/(c_matrix['Logistic'][0][0] + c_matrix['Logistic'][0][1]))
-    false_L_Logistic.append(c_matrix['Logistic'][1][0]/(c_matrix['Logistic'][1][0] + c_matrix['Logistic'][1][1]))
-    true_H_Logistic.append(c_matrix['Logistic'][1][1]/(c_matrix['Logistic'][1][0] + c_matrix['Logistic'][1][1]))
+    true_L_RF.append(c_matrix['Random Forest'][0][0]/float(c_matrix['Random Forest'][0][0] + c_matrix['Random Forest'][0][1])) #true negative
+    false_H_RF.append(c_matrix['Random Forest'][0][1]/float(c_matrix['Random Forest'][0][0] + c_matrix['Random Forest'][0][1])) #false positive rate
+    false_L_RF.append(c_matrix['Random Forest'][1][0]/float(c_matrix['Random Forest'][1][0] + c_matrix['Random Forest'][1][1])) #false negative rate
+    true_H_RF.append(c_matrix['Random Forest'][1][1]/float(c_matrix['Random Forest'][1][0] + c_matrix['Random Forest'][1][1])) #true positive
+    true_L_NB.append(c_matrix['Naive Bayes'][0][0]/float(c_matrix['Naive Bayes'][0][0] + c_matrix['Naive Bayes'][0][1]))
+    false_H_NB.append(c_matrix['Naive Bayes'][0][1]/float(c_matrix['Naive Bayes'][0][0] + c_matrix['Naive Bayes'][0][1]))
+    false_L_NB.append(c_matrix['Naive Bayes'][1][0]/float(c_matrix['Naive Bayes'][1][0] + c_matrix['Naive Bayes'][1][1]))
+    true_H_NB.append(c_matrix['Naive Bayes'][1][1]/float(c_matrix['Naive Bayes'][1][0] + c_matrix['Naive Bayes'][1][1]))
+    true_L_NN.append(c_matrix['NeuralNet'][0][0]/float(c_matrix['NeuralNet'][0][0] + c_matrix['NeuralNet'][0][1]))
+    false_H_NN.append(c_matrix['NeuralNet'][0][1]/float(c_matrix['NeuralNet'][0][0] + c_matrix['NeuralNet'][0][1]))
+    false_L_NN.append(c_matrix['NeuralNet'][1][0]/float(c_matrix['NeuralNet'][1][0] + c_matrix['NeuralNet'][1][1]))
+    true_H_NN.append(c_matrix['NeuralNet'][1][1]/float(c_matrix['NeuralNet'][1][0] + c_matrix['NeuralNet'][1][1]))
+    true_L_Logistic.append(c_matrix['Logistic'][0][0]/float(c_matrix['Logistic'][0][0] + c_matrix['Logistic'][0][1]))
+    false_H_Logistic.append(c_matrix['Logistic'][0][1]/float(c_matrix['Logistic'][0][0] + c_matrix['Logistic'][0][1]))
+    false_L_Logistic.append(c_matrix['Logistic'][1][0]/float(c_matrix['Logistic'][1][0] + c_matrix['Logistic'][1][1]))
+    true_H_Logistic.append(c_matrix['Logistic'][1][1]/float(c_matrix['Logistic'][1][0] + c_matrix['Logistic'][1][1]))
     
     print('Total accuracy: ', accuracy)
     #print(c_matrix)
@@ -426,38 +443,38 @@ while update_index < 10:
     
     X_test = np.array(X_test)
     X_train_valid = np.array(X_train_valid)
-    n, bins, patches = plt.hist(X_train_valid[:,0], 20, label = 'Ip, train', facecolor='g', alpha=0.75)
-    n, bins, patches = plt.hist(X_test[:,0], 20, label = 'Ip, test', facecolor='r', alpha=0.75)
-    plt.legend()
-    plt.show()
-    n, bins, patches = plt.hist(X_train_valid[:,1], 20,  label = 'Btor, train', facecolor='g', alpha=0.75)
-    n, bins, patches = plt.hist(X_test[:,1], 20, label = 'Btor, test', facecolor='r', alpha=0.75)
-    plt.legend()
-    plt.show()
-    n, bins, patches = plt.hist(X_train_valid[:,2], 20, label = 'li, train', facecolor='g', alpha=0.75)
-    n, bins, patches = plt.hist(X_test[:,2], 20, label = 'li, test', facecolor='r', alpha=0.75)
-    plt.legend()
-    plt.show()
-    n, bins, patches = plt.hist(X_train_valid[:,3], 20, label = 'q95, train', facecolor='g', alpha=0.75)
-    n, bins, patches = plt.hist(X_test[:,3], 20, label = 'q95, test', facecolor='r', alpha=0.75)
-    plt.legend()
-    plt.show()
-    n, bins, patches = plt.hist(X_train_valid[:,4], 20, label = 'Wmhd, train', facecolor='g', alpha=0.75)
-    n, bins, patches = plt.hist(X_test[:,4], 20, label = 'Wmhd, test', facecolor='r', alpha=0.75)
-    plt.legend()
-    plt.show()
-    n, bins, patches = plt.hist(X_train_valid[:,5], 20, label = 'p_icrf, train', facecolor='g', alpha=0.75)
-    n, bins, patches = plt.hist(X_test[:,5], 20, label = 'p_icrf, test', facecolor='r', alpha=0.75)
-    plt.legend()
-    plt.show()
-    n, bins, patches = plt.hist(X_train_valid[:,6], 20, label = 'beta_p, train', facecolor='g', alpha=0.75)
-    n, bins, patches = plt.hist(X_test[:,6], 20, label = 'beta_p, test', facecolor='r', alpha=0.75)
-    plt.legend()
-    plt.show() 
-    n, bins, patches = plt.hist(X_train_valid[:,7], 20, label = 'P_ohm, train', facecolor='g', alpha=0.75)
-    n, bins, patches = plt.hist(X_test[:,7], 20, label = 'P_ohm, test', facecolor='r', alpha=0.75)
-    plt.legend()
-    plt.show() 
+#    n, bins, patches = plt.hist(X_train_valid[:,0], 20, label = 'Ip, train', facecolor='g', alpha=0.75)
+#    n, bins, patches = plt.hist(X_test[:,0], 20, label = 'Ip, test', facecolor='r', alpha=0.75)
+#    plt.legend()
+#    plt.show()
+#    n, bins, patches = plt.hist(X_train_valid[:,1], 20,  label = 'Btor, train', facecolor='g', alpha=0.75)
+#    n, bins, patches = plt.hist(X_test[:,1], 20, label = 'Btor, test', facecolor='r', alpha=0.75)
+#    plt.legend()
+#    plt.show()
+#    n, bins, patches = plt.hist(X_train_valid[:,2], 20, label = 'li, train', facecolor='g', alpha=0.75)
+#    n, bins, patches = plt.hist(X_test[:,2], 20, label = 'li, test', facecolor='r', alpha=0.75)
+#    plt.legend()
+#    plt.show()
+#    n, bins, patches = plt.hist(X_train_valid[:,3], 20, label = 'q95, train', facecolor='g', alpha=0.75)
+#    n, bins, patches = plt.hist(X_test[:,3], 20, label = 'q95, test', facecolor='r', alpha=0.75)
+#    plt.legend()
+#    plt.show()
+#    n, bins, patches = plt.hist(X_train_valid[:,4], 20, label = 'Wmhd, train', facecolor='g', alpha=0.75)
+#    n, bins, patches = plt.hist(X_test[:,4], 20, label = 'Wmhd, test', facecolor='r', alpha=0.75)
+#    plt.legend()
+#    plt.show()
+#    n, bins, patches = plt.hist(X_train_valid[:,5], 20, label = 'p_icrf, train', facecolor='g', alpha=0.75)
+#    n, bins, patches = plt.hist(X_test[:,5], 20, label = 'p_icrf, test', facecolor='r', alpha=0.75)
+#    plt.legend()
+#    plt.show()
+#    n, bins, patches = plt.hist(X_train_valid[:,6], 20, label = 'beta_p, train', facecolor='g', alpha=0.75)
+#    n, bins, patches = plt.hist(X_test[:,6], 20, label = 'beta_p, test', facecolor='r', alpha=0.75)
+#    plt.legend()
+#    plt.show() 
+#    n, bins, patches = plt.hist(X_train_valid[:,7], 20, label = 'P_ohm, train', facecolor='g', alpha=0.75)
+#    n, bins, patches = plt.hist(X_test[:,7], 20, label = 'P_ohm, test', facecolor='r', alpha=0.75)
+#    plt.legend()
+#    plt.show() 
     
     X_std = StandardScaler().fit_transform(total_x_data)
     mean_vec = np.mean(X_std, axis=0)
@@ -635,8 +652,8 @@ for label, clf in ensemble_clfs:
         clf.fit(np.array(X_train1), np.array(y_train1))
         prediction0[str(label)+','+str(i)] = np.array([int(numeric_string) for numeric_string in clf.predict(X_test1)])
         c_matrix0[str(label)+','+str(i)] = confusion_matrix(y_test_np1, prediction0[str(label)+','+str(i)])
-        c_matrix10[str(label)+','+str(i)+' predicted H-mode correctly'] = c_matrix0[str(label)+','+str(i)][1][1]/(c_matrix0[str(label)+','+str(i)][1][1] + (c_matrix0[str(label)+','+str(i)][0][1]))
-        c_matrix10[str(label)+','+str(i)+' predicted L-mode correctly'] = c_matrix0[str(label)+','+str(i)][0][0]/(c_matrix0[str(label)+','+str(i)][0][0] + (c_matrix0[str(label)+','+str(i)][1][0]))
+        c_matrix10[str(label)+','+str(i)+' predicted H-mode correctly'] = c_matrix0[str(label)+','+str(i)][1][1]/float(c_matrix0[str(label)+','+str(i)][1][1] + (c_matrix0[str(label)+','+str(i)][0][1]))
+        c_matrix10[str(label)+','+str(i)+' predicted L-mode correctly'] = c_matrix0[str(label)+','+str(i)][0][0]/float(c_matrix0[str(label)+','+str(i)][0][0] + (c_matrix0[str(label)+','+str(i)][1][0]))
         L_mode_acc.append([label,i,(c_matrix10[str(label)+','+str(i)+' predicted L-mode correctly'])])
         H_mode_acc.append([label,i,(c_matrix10[str(label)+','+str(i)+' predicted H-mode correctly'])])
 # Record the OOB error for each `n_estimators=i` setting.
@@ -671,7 +688,7 @@ plt.plot(xs,column(L_mode_acc_None,2),label='m = None')
 plt.title('L-mode accuracy vs trees')
 plt.ylabel('Accuracy (correct prediction/(correct + incorrect prediction)')
 plt.xlabel('Trees')
-plt.legend()
+plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 plt.show()
 
 plt.figure()
@@ -681,7 +698,7 @@ plt.plot(xs,column(H_mode_acc_None,2),label='m = None')
 plt.title('H-mode accuracy vs trees')
 plt.ylabel('Accuracy (correct prediction/(correct + incorrect prediction)')
 plt.xlabel('Trees')
-plt.legend()
+plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 plt.show()
 
 
@@ -747,33 +764,33 @@ print(best_features)
 #best_features = sorted(best_features, key=lambda x: x[0], reverse=True)
 #print(best_features)
 
-n, bins, patches = plt.hist(true_H_RF, 20, label = 'Correctly predicted H-mode', alpha=0.75) 
-n, bins, patches = plt.hist(false_H_RF, 20, label = 'Incorrectly predicted H-mode', alpha=0.75) 
-n, bins, patches = plt.hist(true_L_RF, 20, label = 'Correctly predicted L-mode', alpha=0.75) 
-n, bins, patches = plt.hist(false_L_RF, 20, label = 'Incorrectly predicted L-mode', alpha=0.75) 
+n, bins, patches = plt.hist(true_H_RF, 20, label = 'TP/(TP+FN)', alpha=0.75) 
+n, bins, patches = plt.hist(false_H_RF, 20, label = 'FP/(TN+FP)', alpha=0.75) 
+n, bins, patches = plt.hist(true_L_RF, 20, label = 'TN/(TN+FP)', alpha=0.75) 
+n, bins, patches = plt.hist(false_L_RF, 20, label = 'FN/(TN+FP)', alpha=0.75) 
 plt.title('Random Forest')
-plt.legend()
+plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 plt.show()
-n, bins, patches = plt.hist(true_H_NB, 20, label = 'Correctly predicted H-mode', alpha=0.75) 
-n, bins, patches = plt.hist(false_H_NB, 20, label = 'Incorrectly predicted H-mode', alpha=0.75) 
-n, bins, patches = plt.hist(true_L_NB, 20, label = 'Correctly predicted L-mode', alpha=0.75) 
-n, bins, patches = plt.hist(false_L_NB, 20, label = 'Incorrectly predicted L-mode', alpha=0.75) 
+n, bins, patches = plt.hist(true_H_NB, 20, label = 'TP/(TP+FN)', alpha=0.75) 
+n, bins, patches = plt.hist(false_H_NB, 20, label = 'FP/(TN+FP)', alpha=0.75) 
+n, bins, patches = plt.hist(true_L_NB, 20, label = 'TN/(TN+FP)', alpha=0.75) 
+n, bins, patches = plt.hist(false_L_NB, 20, label = 'FN/(TN+FP)', alpha=0.75) 
 plt.title('Gaussian Naive Bayes')
-plt.legend()
+plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 plt.show()
-n, bins, patches = plt.hist(true_H_NN, 20, label = 'Correctly predicted H-mode', alpha=0.75) 
-n, bins, patches = plt.hist(false_H_NN, 20, label = 'Incorrectly predicted H-mode', alpha=0.75) 
-n, bins, patches = plt.hist(true_L_NN, 20, label = 'Correctly predicted L-mode', alpha=0.75) 
-n, bins, patches = plt.hist(false_L_NN, 20, label = 'Incorrectly predicted L-mode', alpha=0.75) 
+n, bins, patches = plt.hist(true_H_NN, 20, label = 'TP/(TP+FN)', alpha=0.75) 
+n, bins, patches = plt.hist(false_H_NN, 20, label = 'FP/(TN+FP)', alpha=0.75) 
+n, bins, patches = plt.hist(true_L_NN, 20, label = 'TN/(TN+FP)', alpha=0.75) 
+n, bins, patches = plt.hist(false_L_NN, 20, label = 'FN/(TN+FP)', alpha=0.75) 
 plt.title('NeuralNet')
-plt.legend()
+plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 plt.show()
-n, bins, patches = plt.hist(true_H_Logistic, 20, label = 'Correctly predicted H-mode', alpha=0.75) 
-n, bins, patches = plt.hist(false_H_Logistic, 20, label = 'Incorrectly predicted H-mode', alpha=0.75) 
-n, bins, patches = plt.hist(true_L_Logistic, 20, label = 'Correctly predicted L-mode', alpha=0.75) 
-n, bins, patches = plt.hist(false_L_Logistic, 20, label = 'Incorrectly predicted L-mode', alpha=0.75) 
+n, bins, patches = plt.hist(true_H_Logistic, 20, label = 'TP/(TP+FN)', alpha=0.75) 
+n, bins, patches = plt.hist(false_H_Logistic, 20, label = 'FP/(TN+FP)', alpha=0.75) 
+n, bins, patches = plt.hist(true_L_Logistic, 20, label = 'TN/(TN+FP)', alpha=0.75) 
+n, bins, patches = plt.hist(false_L_Logistic, 20, label = 'FN/(TN+FP)', alpha=0.75) 
 plt.title('Logistic Regression')
-plt.legend()
+plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 plt.show() 
 
 print('Logistic') 
