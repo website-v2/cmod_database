@@ -4,6 +4,9 @@
 Created on Sun Mar 18 02:20:13 2018
 
 @author: Abhilash
+
+This code is only used for binary classification of L-H confinement
+modes using supervised machine learning methods from scikit learn
 """ 
 from sklearn.datasets import make_blobs
 from sklearn.naive_bayes import GaussianNB
@@ -113,11 +116,23 @@ while i < len(rows):
         if (rows[i][4] < (transitions_end['{}'.format(rows[i][0])] - 0.2)): 
             if (((values['q95'])[i]) < 2.0) or (((values['li'])[i]) < 1.0) or (((values['e_bot_mks'])[i]) > 200.0):
                 if rows[i][0] != bad_shot:
-                    print(rows[i][0])
+                    print(rows[i][0],' is a bad shot')
                     bad_shot = rows[i][0] 
             Y_data0.append((values['present_mode'])[i])
-            X_data0.append([(values['Wmhd'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
-                        (values['P_ohm'])[i],(values['b_bot_mks'])[i]])
+            X_data0.append([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
+                      (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
+                      (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
+                      (values['beta_t'])[i],(values['kappa'])[i],(values['triang'])[i],
+                      (values['areao'])[i],(values['vout'])[i],(values['aout'])[i],
+                      (values['rout'])[i],(values['zout'])[i],
+                      (values['zmag'])[i],(values['rmag'])[i],(values['zsep_lower'])[i],
+                      (values['zsep_upper'])[i],(values['rsep_lower'])[i],(values['rsep_upper'])[i],
+                      (values['zvsin'])[i],(values['rvsin'])[i],(values['zvsout'])[i],
+                      (values['rvsout'])[i],(values['upper_gap'])[i],(values['lower_gap'])[i],
+                      (values['qstar'])[i],(values['V_loop_efit'])[i],
+                      (values['V_surf_efit'])[i],(values['cpasma'])[i],(values['ssep'])[i],
+                      (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],
+                      (values['e_bot_mks'])[i],(values['b_bot_mks'])[i]]) #rfirst element must be shot!
             total_x_data.append([(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
                       (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
                       (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
@@ -187,12 +202,23 @@ while update_index < cycles:
     print('Fraction of total data for training + validation = ',train_valid_frac)
     print('Fraction of training + validation data used for training = ',fraction_)
     #use below 4 lines if randomizing shots AND time slices for train/validation set
-    print("ML_testing_all_normalized_NN_100x100x100_layers_([(values['Wmhd'])[i],\
-    (values['nebar_efit'])[i],(values['beta_p'])[i],\
-    (values['P_ohm'])[i],(values['b_bot_mks'])[i]]), cycles =",cycles)    
+    print("ML_testing_all_normalized_NN_100x100x100_layers_([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],\
+                      (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],\
+                      (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],\
+                      (values['beta_t'])[i],(values['kappa'])[i],(values['triang'])[i],\
+                      (values['areao'])[i],(values['vout'])[i],(values['aout'])[i],\
+                      (values['rout'])[i],(values['zout'])[i],\
+                      (values['zmag'])[i],(values['rmag'])[i],(values['zsep_lower'])[i],\
+                      (values['zsep_upper'])[i],(values['rsep_lower'])[i],(values['rsep_upper'])[i],\
+                      (values['zvsin'])[i],(values['rvsin'])[i],(values['zvsout'])[i],\
+                      (values['rvsout'])[i],(values['upper_gap'])[i],(values['lower_gap'])[i],\
+                      (values['qstar'])[i],(values['V_loop_efit'])[i],\
+                      (values['V_surf_efit'])[i],(values['cpasma'])[i],(values['ssep'])[i],\
+                      (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],\
+                      (values['e_bot_mks'])[i],(values['b_bot_mks'])[i]]), cycles =",cycles)    
     data = np.insert(X_data0, len(X_data0[0]), values=Y_data0, axis=-1)
     together = [list(i) for _, i in itertools.groupby(data, operator.itemgetter(0))]
-    random.shuffle(together)
+    random.shuffle(together) #groups based on first item of x_data, which should be shot!
     final_random = [i for j in together for i in j]
     X_data = (np.array(final_random))[:,1:-1]
     Y_data = (np.array(final_random))[:,-1]
@@ -431,7 +457,6 @@ while update_index < cycles:
     plot_confusion_matrix(c_matrix_valid['NeuralNet'], classes=class_names, normalize=True,
                           title='Normalized confusion matrix (validation), NN')
     plt.show()
-    
     
     X_test = np.array(X_test)
     X_train_valid = np.array(X_train_valid)
@@ -805,3 +830,48 @@ print('trueH - ',np.mean(true_H_RF),' +/- ',np.std(true_H_RF))
 print('FalseH - ',np.mean(false_H_RF),' +/- ',np.std(false_H_RF))
 print('trueL - ',np.mean(true_L_RF),' +/- ',np.std(true_L_RF))
 print('falseL - ',np.mean(false_L_RF),' +/- ',np.std(false_L_RF))
+
+import pickle
+#Saving created RF model
+RF_LH_pkl_filename = '/home/mathewsa/Desktop/RF_classifier_LH.pkl'
+RF_LH_model_pkl = open(RF_LH_pkl_filename, 'wb')
+pickle.dump(rfc, RF_LH_model_pkl)
+RF_LH_model_pkl.close()
+
+#Loading saved model
+RF_LH_model_pkl = open(RF_LH_pkl_filename, 'rb')
+RF_LH_model = pickle.load(RF_LH_model_pkl)
+print("Loaded model :: ", RF_LH_model)
+
+#Saving created NN model 
+NN_LH_pkl_filename = '/home/mathewsa/Desktop/NN_classifier_LH.pkl'
+NN_LH_model_pkl = open(NN_LH_pkl_filename, 'wb')
+pickle.dump(mlp, NN_LH_model_pkl)
+NN_LH_model_pkl.close()
+
+#Loading saved model
+NN_LH_model_pkl = open(NN_LH_pkl_filename, 'rb')
+NN_LH_model = pickle.load(NN_LH_model_pkl)
+print("Loaded model :: ", NN_LH_model)
+
+#Saving created GNB model 
+GNB_LH_pkl_filename = '/home/mathewsa/Desktop/GNB_classifier_LH.pkl'
+GNB_LH_model_pkl = open(GNB_LH_pkl_filename, 'wb')
+pickle.dump(gnb, GNB_LH_model_pkl)
+GNB_LH_model_pkl.close()
+
+#Loading saved model
+GNB_LH_model_pkl = open(GNB_LH_pkl_filename, 'rb')
+GNB_LH_model = pickle.load(GNB_LH_model_pkl)
+print("Loaded model :: ", GNB_LH_model)
+
+#Saving created LR model 
+LR_LH_pkl_filename = '/home/mathewsa/Desktop/LR_classifier_LH.pkl'
+LR_LH_model_pkl = open(LR_LH_pkl_filename, 'wb')
+pickle.dump(lr, LR_LH_model_pkl)
+LR_LH_model_pkl.close()
+
+#Loading saved model
+LR_LH_model_pkl = open(LR_LH_pkl_filename, 'rb')
+LR_LH_model = pickle.load(LR_LH_model_pkl)
+print("Loaded model :: ", LR_LH_model)
