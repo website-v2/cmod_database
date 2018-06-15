@@ -36,7 +36,7 @@ def run_efit(efit_,shot,tstart,tend,dt):
             iterations = iterations + 1
             file_handler.write("{},{},{}\n".format(tstart,dt,ntimes))
             tstart = tstart + ntimes*dt 
-        if iterations != number:
+        if iterations != number: #shouldn't this always raise an error?
             print('ERROR')
             raise
         file_handler.close() 
@@ -70,7 +70,7 @@ def main(shot,tstart,tend,dt):
                 path_shot['{}'.format(shot)] = efit_,date_created.split(' ')[0]
                 print('3')
                 break
-    # the date if statement will allow overwrite if last updated in 2018
+    # the date if statement below will allow overwrite if last updated in 2018
             else:  
                 print('4')
 #                if ((date_created.split(" ")[0].split("-")[2]) == '2018') and (((date_created.split(" ")[0].split("-"))[1]) == 'JAN'):  
@@ -105,7 +105,7 @@ def main(shot,tstart,tend,dt):
 #                            run_efit(efit_,shot,tstart,tend,dt)
 #                            break
 #                        else:
-                        if shot == 1160803022: #special case of overwriting only efit07
+                        if shot == 1160803022: #special case(s) of overwriting only efit07
                             efit_ = efits[1]
                             print('Writing {} to {}'.format(shot,efit_))  
                             path_shot['{}'.format(shot)] = efit_,date_created.split(' ')[0]

@@ -658,7 +658,8 @@ def main(shot,timebase,path_shot):
     NL_04=NL_04,nebar_efit=nebar_efit,piezo_4_gas_input=piezo_4_gas_input,g_side_rat=g_side_rat,
     e_bot_mks=e_bot_mks,b_bot_mks=b_bot_mks,rgap=rgap,lgap=lgap)
     
-    np.savez('/home/mathewsa/Desktop/extra_variables.npz', timebase=timebase)
+    np.savez('/home/mathewsa/Desktop/extra_variables.npz', timebase=timebase,
+    gpc2_te0=gpc2_te0,gpc_te8=gpc_te8,NL_04=NL_04,ne_t=ne_t)
      
     #omitted edge and core (which are not yet interpolated), engineering,QUICKFIT data, 
     #60/70/80/90/95,NL01-NL10, and cxrs data make certain arrays 0 if not called/unavailable    

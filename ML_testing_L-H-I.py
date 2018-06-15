@@ -77,6 +77,17 @@ rows_transitions = cursor.fetchall()
 conn.commit()
 conn.close()
 
+def array3x3(array_): #converts 2x2 to 3x3
+    if len(array_) == 2:
+        zeros_v = np.array([0.,0.])
+        zeros_h = np.array([[0.],[0.],[0.]])
+        new_ = np.vstack((array_,zeros_v))
+        output_ = np.hstack((new_,zeros_h))
+    else:
+        output_ = array_
+    output_ = np.array(output_,dtype=np.int64)
+    return output_
+    
 transitions_start = {}
 transitions_end = {}
 i_t = 0
@@ -110,15 +121,27 @@ while i < len(rows):
             i = i + 1  
         #the above for loop just ensures there is stored value for
         #those quantities being indexed, otherwise skip that column
-    if (rows[i][2] == 'I') or (rows[i][4] > (transitions_start['{}'.format(rows[i][0])] + 0.2)):
-        if (rows[i][2] == 'I') or (rows[i][4] < (transitions_end['{}'.format(rows[i][0])] - 0.2)): 
+    if (rows[i][2] == 'I') or (rows[i][2] == 'H') or (rows[i][4] > (transitions_start['{}'.format(rows[i][0])] + 0.2)):
+        if (rows[i][2] == 'I') or (rows[i][2] == 'H') or (rows[i][4] < (transitions_end['{}'.format(rows[i][0])] - 0.2)): 
             if (((values['q95'])[i]) < 2.0) or (((values['li'])[i]) < 1.0) or (((values['e_bot_mks'])[i]) > 200.0):
                 if rows[i][0] != bad_shot:
                     print(rows[i][0],' is a possibly bad shot')
                     bad_shot = rows[i][0] 
             Y_data0.append((values['present_mode'])[i])
-            X_data0.append([(values['shot'])[i],(values['Wmhd'])[i],(values['nebar_efit'])[i],
-                      (values['beta_p'])[i],(values['P_ohm'])[i]]) #first element must be shot!
+            X_data0.append([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
+                      (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
+                      (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
+                      (values['beta_t'])[i],(values['kappa'])[i],(values['triang'])[i],
+                      (values['areao'])[i],(values['vout'])[i],(values['aout'])[i],
+                      (values['rout'])[i],(values['zout'])[i],
+                      (values['zmag'])[i],(values['rmag'])[i],(values['zsep_lower'])[i],
+                      (values['zsep_upper'])[i],(values['rsep_lower'])[i],(values['rsep_upper'])[i],
+                      (values['zvsin'])[i],(values['rvsin'])[i],(values['zvsout'])[i],
+                      (values['rvsout'])[i],(values['upper_gap'])[i],(values['lower_gap'])[i],
+                      (values['qstar'])[i],(values['V_loop_efit'])[i],
+                      (values['V_surf_efit'])[i],(values['cpasma'])[i],(values['ssep'])[i],
+                      (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],
+                      (values['e_bot_mks'])[i],(values['b_bot_mks'])[i]]) #first element must be shot!
             total_x_data.append([(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
                       (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
                       (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
@@ -167,9 +190,20 @@ while update_index < cycles:
     print('Fraction of total data for training + validation = ',train_valid_frac)
     print('Fraction of training + validation data used for training = ',fraction_)
     #use below 4 lines if randomizing shots AND time slices for train/validation set
-    print("ML_testing_all_normalized_NN_100x100x100_layers_([(values['shot'])[i],\
-    (values['Wmhd'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],\
-    (values['P_ohm'])[i],(values['b_bot_mks'])[i]])")    
+    print("ML_testing_all_normalized_NN_100x100x100_layers_([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],\
+                      (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],\
+                      (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],\
+                      (values['beta_t'])[i],(values['kappa'])[i],(values['triang'])[i],\
+                      (values['areao'])[i],(values['vout'])[i],(values['aout'])[i],\
+                      (values['rout'])[i],(values['zout'])[i],\
+                      (values['zmag'])[i],(values['rmag'])[i],(values['zsep_lower'])[i],\
+                      (values['zsep_upper'])[i],(values['rsep_lower'])[i],(values['rsep_upper'])[i],\
+                      (values['zvsin'])[i],(values['rvsin'])[i],(values['zvsout'])[i],\
+                      (values['rvsout'])[i],(values['upper_gap'])[i],(values['lower_gap'])[i],\
+                      (values['qstar'])[i],(values['V_loop_efit'])[i],\
+                      (values['V_surf_efit'])[i],(values['cpasma'])[i],(values['ssep'])[i],\
+                      (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],\
+                      (values['e_bot_mks'])[i],(values['b_bot_mks'])[i]])")    
     data = np.insert(X_data0, len(X_data0[0]), values=Y_data0, axis=-1)
     together = [list(i) for _, i in itertools.groupby(data, operator.itemgetter(0))]
     random.shuffle(together) #groups based on first item of x_data, which should be shot!
@@ -263,8 +297,8 @@ while update_index < cycles:
     prediction[str(name)] = np.array([int(numeric_string) for numeric_string in clf.predict(X_test)])
     prediction_valid[str(name)] = np.array([int(numeric_string) for numeric_string in clf.predict(X_valid)])
 
-    c_matrix[str(name)] = confusion_matrix(y_test_np, prediction[str(name)])
-    c_matrix_valid[str(name)] = confusion_matrix(y_valid_np, prediction_valid[str(name)])
+    c_matrix[str(name)] = array3x3(confusion_matrix(y_test_np, prediction[str(name)]))
+    c_matrix_valid[str(name)] = array3x3(confusion_matrix(y_valid_np, prediction_valid[str(name)]))
     
     def plot_confusion_matrix(cm, classes,
                               normalize=False,
@@ -450,30 +484,34 @@ I_mode_accuracy_valid = []
 
 i = 0 
 while i < cycles:
-    L_mode_accuracy.append((c_matrix_RF[i][0,0]/(c_matrix_RF[i][0,0] + c_matrix_RF[i][0,1] + c_matrix_RF[i][0,2])))
-    H_mode_accuracy.append((c_matrix_RF[i][1,1]/(c_matrix_RF[i][1,0] + c_matrix_RF[i][1,1] + c_matrix_RF[i][1,2])))
-    I_mode_accuracy.append((c_matrix_RF[i][2,2]/(c_matrix_RF[i][2,0] + c_matrix_RF[i][2,1] + c_matrix_RF[i][2,2])))
-    L_mode_accuracy_valid.append((c_matrix_valid_RF[i][0,0]/(c_matrix_valid_RF[i][0,0] + c_matrix_valid_RF[i][0,1] + c_matrix_valid_RF[i][0,2])))
-    H_mode_accuracy_valid.append((c_matrix_valid_RF[i][1,1]/(c_matrix_valid_RF[i][1,0] + c_matrix_valid_RF[i][1,1] + c_matrix_valid_RF[i][1,2])))
-    I_mode_accuracy_valid.append((c_matrix_valid_RF[i][2,2]/(c_matrix_valid_RF[i][2,0] + c_matrix_valid_RF[i][2,1] + c_matrix_valid_RF[i][2,2])))
+    L_mode_accuracy.append((c_matrix_RF[i][0,0]*1./(c_matrix_RF[i][0,0] + c_matrix_RF[i][0,1] + c_matrix_RF[i][0,2])))
+    H_mode_accuracy.append((c_matrix_RF[i][1,1]*1./(c_matrix_RF[i][1,0] + c_matrix_RF[i][1,1] + c_matrix_RF[i][1,2])))
+    I_mode_accuracy.append((c_matrix_RF[i][2,2]*1./(c_matrix_RF[i][2,0] + c_matrix_RF[i][2,1] + c_matrix_RF[i][2,2])))
+    L_mode_accuracy_valid.append((c_matrix_valid_RF[i][0,0]*1./(c_matrix_valid_RF[i][0,0] + c_matrix_valid_RF[i][0,1] + c_matrix_valid_RF[i][0,2])))
+    H_mode_accuracy_valid.append((c_matrix_valid_RF[i][1,1]*1./(c_matrix_valid_RF[i][1,0] + c_matrix_valid_RF[i][1,1] + c_matrix_valid_RF[i][1,2])))
+    I_mode_accuracy_valid.append((c_matrix_valid_RF[i][2,2]*1./(c_matrix_valid_RF[i][2,0] + c_matrix_valid_RF[i][2,1] + c_matrix_valid_RF[i][2,2])))
     i = i + 1 
     
 print('Random Forest')
 print('L-mode accuracy ',np.mean(L_mode_accuracy),' +/- ',np.std(L_mode_accuracy))
 print('H-mode accuracy ',np.mean(H_mode_accuracy),' +/- ',np.std(H_mode_accuracy))
-print('I-mode accuracy ',np.mean(I_mode_accuracy),' +/- ',np.std(I_mode_accuracy))
+print('I-mode accuracy ',np.nanmean(I_mode_accuracy),' +/- ',np.nanstd(I_mode_accuracy)) #use nanmean to account for nan present for I-modes
 print('L-mode accuracy (validation) ',np.mean(L_mode_accuracy_valid),' +/- ',np.std(L_mode_accuracy_valid))
 print('H-mode accuracy (validation) ',np.mean(H_mode_accuracy_valid),' +/- ',np.std(H_mode_accuracy_valid))
-print('I-mode accuracy (validation) ',np.mean(I_mode_accuracy_valid),' +/- ',np.std(I_mode_accuracy_valid))
+print('I-mode accuracy (validation) ',np.nanmean(I_mode_accuracy_valid),' +/- ',np.nanstd(I_mode_accuracy_valid))
 
 import pickle
 #Saving created RF model
-RF_LH_pkl_filename = '/home/mathewsa/Desktop/RF_classifier_LH.pkl'
-RF_LH_model_pkl = open(RF_LH_pkl_filename, 'wb')
-pickle.dump(rfc, RF_LH_model_pkl)
-RF_LH_model_pkl.close()
+RF_LHI_pkl_filename = '/home/mathewsa/Desktop/RF_classifier_LHI.pkl'
+RF_LHI_model_pkl = open(RF_LHI_pkl_filename, 'wb')
+pickle.dump(rfc, RF_LHI_model_pkl)
+RF_LHI_model_pkl.close()
+scalerfile = '/home/mathewsa/Desktop/scaler.sav'
+pickle.dump(scaler, open(scalerfile, 'wb'))
 
 #Loading saved model
-RF_LH_model_pkl = open(RF_LH_pkl_filename, 'rb')
-RF_LH_model = pickle.load(RF_LH_model_pkl)
-print("Loaded model :: ", RF_LH_model)
+RF_LHI_model_pkl = open(RF_LHI_pkl_filename, 'rb')
+RF_LHI_model = pickle.load(RF_LHI_model_pkl)
+print("Loaded model :: ", RF_LHI_model)
+scalerfile = '/home/mathewsa/Desktop/scaler.sav'
+scaler = pickle.load(open(scalerfile, 'rb')) 

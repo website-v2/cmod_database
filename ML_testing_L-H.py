@@ -875,3 +875,9 @@ LR_LH_model_pkl.close()
 LR_LH_model_pkl = open(LR_LH_pkl_filename, 'rb')
 LR_LH_model = pickle.load(LR_LH_model_pkl)
 print("Loaded model :: ", LR_LH_model)
+
+scalerfile = '/home/mathewsa/Desktop/scaler.sav'
+pickle.dump(scaler, open(scalerfile, 'wb'))
+
+scalerfile = '/home/mathewsa/Desktop/scaler.sav'
+scaler = pickle.load(open(scalerfile, 'rb')) 
