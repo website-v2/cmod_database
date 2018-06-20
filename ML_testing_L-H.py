@@ -38,6 +38,8 @@ import numpy as np
 import sys
 import matplotlib.pyplot as plt 
 from mpl_toolkits.mplot3d import Axes3D 
+import seaborn as sns
+import pandas as pd
  
 sqlite_file = '/home/mathewsa/Desktop/confinement_table/tables/am_transitions.db'
 table_name = 'confinement_table'
@@ -105,7 +107,7 @@ total_x_data = []
 bad_shot = 0 #initialize
 i = 0 
 while i < len(rows):
-    for index in ['ip','btor','li','q95','Wmhd','p_icrf','beta_N','nebar_efit','cpasma']:
+    for index in ['ip','btor','li','q95','Wmhd','p_icrf','beta_N','nebar_efit','cpasma','Dalpha']:
         while (values[index][i] == None) and ((i+1) < len(rows)):  
             i = i + 1 
         while values['present_mode'][i] == 'I': #not considering I-modes right now
@@ -132,8 +134,8 @@ while i < len(rows):
                       (values['qstar'])[i],(values['V_loop_efit'])[i],
                       (values['V_surf_efit'])[i],(values['cpasma'])[i],(values['ssep'])[i],
                       (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],
-                      (values['e_bot_mks'])[i],(values['b_bot_mks'])[i]]) #rfirst element must be shot!
-            total_x_data.append([(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
+                      (values['e_bot_mks'])[i],(values['b_bot_mks'])[i],(values['Halpha'])[i],(values['Dalpha'])[i]]) #first element must be shot!
+            total_x_data.append([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
                       (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
                       (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
                       (values['beta_t'])[i],(values['kappa'])[i],(values['triang'])[i],
@@ -146,7 +148,7 @@ while i < len(rows):
                       (values['qstar'])[i],(values['V_loop_efit'])[i],
                       (values['V_surf_efit'])[i],(values['cpasma'])[i],(values['ssep'])[i],
                       (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],
-                      (values['e_bot_mks'])[i],(values['b_bot_mks'])[i]])
+                      (values['e_bot_mks'])[i],(values['b_bot_mks'])[i],(values['Halpha'])[i],(values['Dalpha'])[i]])
     i = i + 1
 
 Y_data0 = np.where(np.array(Y_data0) == 'L', 0, Y_data0)
@@ -202,7 +204,7 @@ while update_index < cycles:
     print('Fraction of total data for training + validation = ',train_valid_frac)
     print('Fraction of training + validation data used for training = ',fraction_)
     #use below 4 lines if randomizing shots AND time slices for train/validation set
-    print("ML_testing_all_normalized_NN_100x100x100_layers_([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],\
+    print("ML_testing_all_normalized_200trees_NN_100x100x100_layers_([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],\
                       (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],\
                       (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],\
                       (values['beta_t'])[i],(values['kappa'])[i],(values['triang'])[i],\
@@ -215,7 +217,7 @@ while update_index < cycles:
                       (values['qstar'])[i],(values['V_loop_efit'])[i],\
                       (values['V_surf_efit'])[i],(values['cpasma'])[i],(values['ssep'])[i],\
                       (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],\
-                      (values['e_bot_mks'])[i],(values['b_bot_mks'])[i]]), cycles =",cycles)    
+                      (values['e_bot_mks'])[i],(values['b_bot_mks'])[i],(values['Halpha'])[i],(values['Dalpha'])[i]]), cycles =",cycles)    
     data = np.insert(X_data0, len(X_data0[0]), values=Y_data0, axis=-1)
     together = [list(i) for _, i in itertools.groupby(data, operator.itemgetter(0))]
     random.shuffle(together) #groups based on first item of x_data, which should be shot!
@@ -248,7 +250,7 @@ while update_index < cycles:
     # Create classifiers
     lr = LogisticRegression()
     gnb = GaussianNB() 
-    rfc = RandomForestClassifier(n_estimators=100,max_features="sqrt")
+    rfc = RandomForestClassifier(n_estimators=200,max_features="sqrt")
     mlp = MLPClassifier(hidden_layer_sizes=(100,100,100))
     
     tree_depth_max = [estimator.tree_.depth for estimator in rfc.estimators_]
@@ -525,7 +527,7 @@ while update_index < cycles:
     
     
     #list_vector = []
-    names = ['ip','btor','li','q95','Wmhd','p_icrf','beta_N','nebar_efit','beta_p','beta_t','kappa','triang','areao','vout','aout','rout','zout','zmag','rmag','zsep_lower','zsep_upper','rsep_lower','rsep_upper','zvsin','rvsin','zvsout','rvsout','upper_gap','lower_gap','qstar','V_loop_efit','V_surf_efit','cpasma','ssep','P_ohm','NL_04','g_side_rat','e_bot_mks','b_bot_mks']
+    names = ['ip','btor','li','q95','Wmhd','p_icrf','beta_N','nebar_efit','beta_p','beta_t','kappa','triang','areao','vout','aout','rout','zout','zmag','rmag','zsep_lower','zsep_upper','rsep_lower','rsep_upper','zvsin','rvsin','zvsout','rvsout','upper_gap','lower_gap','qstar','V_loop_efit','V_surf_efit','cpasma','ssep','P_ohm','NL_04','g_side_rat','e_bot_mks','b_bot_mks','Halpha','Dalpha']
     #k = 0 
     #while k < len(eig_vecs):
     #    j = 0
@@ -541,33 +543,23 @@ while update_index < cycles:
     #    print(temp_sort[0:20])
     #    k = k + 1
     #    
+    importances = rfc.feature_importances_
+    std = np.std([tree.feature_importances_ for tree in rfc.estimators_],
+             axis=0)
+    indices = np.argsort(importances)[::-1]
+    # Print the feature ranking
+    print("Feature ranking:")
+
+    for f in range(len(X_test[0])):
+        print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
     
-#    forest = ExtraTreesClassifier(n_estimators=100,
-#                                  random_state=0)
-#    X = np.array(total_x_data)
-#    y = np.array(Y_data)
-#    forest.fit(X, y)
-#    importances = forest.feature_importances_
-#    std = np.std([tree.feature_importances_ for tree in forest.estimators_],
-#                 axis=0)
-#    indices = np.argsort(importances)[::-1]
-#    
-#    # Print the feature ranking
-#    print("Feature ranking:")
-#    
-#    for f in range(X.shape[1]):
-#        print("%d. feature %d (%f), %s" % (f + 1, indices[f], importances[indices[f]], names[indices[f]]))
-#    
-#    # Plot the feature importances of the forest
-#    plt.figure()
-#    plt.title("Feature importances")
-#    plt.bar(range(X.shape[1]), importances[indices],
-#           color="r", yerr=std[indices], align="center")
-#    plt.xticks(range(X.shape[1]), indices)
-#    plt.xlim([-1, X.shape[1]])
-#    plt.show()
-    
-    
+    plt.figure()
+    plt.title("Feature importances")
+    plt.bar(range(len(X_test[0])), importances[indices],
+           color="r", yerr=std[indices], align="center")
+    plt.xticks(range(len(X_test[0])), indices)
+    plt.xlim([-1,len(X_test[0])])
+    plt.show()
 #    model = LogisticRegression()
 #    rfe = RFE(model, 1)
 #    fit = rfe.fit(X, y) 
@@ -881,3 +873,11 @@ pickle.dump(scaler, open(scalerfile, 'wb'))
 
 scalerfile = '/home/mathewsa/Desktop/scaler.sav'
 scaler = pickle.load(open(scalerfile, 'rb')) 
+
+df = pd.DataFrame(X_data0)
+corr = df.corr()
+corr.style.background_gradient().set_precision(3)
+f, ax = plt.subplots(figsize=(10, 8))
+sns.heatmap(corr, annot=True, fmt='.3f', mask=np.zeros_like(corr, dtype=np.bool), cmap=sns.diverging_palette(220, 10, as_cmap=True),
+            square=True, ax=ax)
+             
