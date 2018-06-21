@@ -41,7 +41,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sns
 import pandas as pd
  
-sqlite_file = '/home/mathewsa/Desktop/confinement_table/tables/am_transitions.db'
+sqlite_file = '/home/mathewsa/Desktop/am_transitions.db'
 table_name = 'confinement_table'
 table_name_transitions = 'transitions' 
 
@@ -106,50 +106,55 @@ X_data0 = []
 total_x_data = []
 bad_shot = 0 #initialize
 i = 0 
-while i < len(rows):
-    for index in ['ip','btor','li','q95','Wmhd','p_icrf','beta_N','nebar_efit','cpasma','Dalpha']:
-        while (values[index][i] == None) and ((i+1) < len(rows)):  
-            i = i + 1 
-        while values['present_mode'][i] == 'I': #not considering I-modes right now
-            i = i + 1
-        #the above for loop just ensures there is stored value for
-        #those quantities being indexed, otherwise skip that column
-    if (rows[i][4] > (transitions_start['{}'.format(rows[i][0])] + 0.2)):
-        if (rows[i][4] < (transitions_end['{}'.format(rows[i][0])] - 0.2)): 
-            if (((values['q95'])[i]) < 2.0) or (((values['li'])[i]) < 1.0) or (((values['e_bot_mks'])[i]) > 200.0):
-                if rows[i][0] != bad_shot:
-                    print(rows[i][0],' is a bad shot')
-                    bad_shot = rows[i][0] 
+while i < len(rows):  
+    if (values['ip'][i] != None) and (values['btor'][i] != None) and (values['Wmhd'][i] != None) and (values['nebar_efit'][i] != None) and (values['beta_p'][i] != None) and (values['P_ohm'][i] != None) and (values['li'][i] != None) and (values['rmag'][i] != None) and (values['Halpha'][i] != None) and (values['p_icrf'][i] != None) and (values['b_bot_mks'][i] != None):
+        if values['present_mode'][i] != 'I': #not considering I-modes right now
             Y_data0.append((values['present_mode'])[i])
             X_data0.append([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
-                      (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
-                      (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
-                      (values['beta_t'])[i],(values['kappa'])[i],(values['triang'])[i],
-                      (values['areao'])[i],(values['vout'])[i],(values['aout'])[i],
-                      (values['rout'])[i],(values['zout'])[i],
-                      (values['zmag'])[i],(values['rmag'])[i],(values['zsep_lower'])[i],
-                      (values['zsep_upper'])[i],(values['rsep_lower'])[i],(values['rsep_upper'])[i],
-                      (values['zvsin'])[i],(values['rvsin'])[i],(values['zvsout'])[i],
-                      (values['rvsout'])[i],(values['upper_gap'])[i],(values['lower_gap'])[i],
-                      (values['qstar'])[i],(values['V_loop_efit'])[i],
-                      (values['V_surf_efit'])[i],(values['cpasma'])[i],(values['ssep'])[i],
-                      (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],
-                      (values['e_bot_mks'])[i],(values['b_bot_mks'])[i],(values['Halpha'])[i],(values['Dalpha'])[i]]) #first element must be shot!
+                  (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
+                  (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
+                  (values['beta_t'])[i],(values['kappa'])[i],(values['triang'])[i],
+                  (values['areao'])[i],(values['vout'])[i],(values['aout'])[i],
+                  (values['rout'])[i],(values['zout'])[i],
+                  (values['zmag'])[i],(values['rmag'])[i],(values['zsep_lower'])[i],
+                  (values['zsep_upper'])[i],(values['rsep_lower'])[i],(values['rsep_upper'])[i],
+                  (values['zvsin'])[i],(values['rvsin'])[i],(values['zvsout'])[i],
+                  (values['rvsout'])[i],(values['upper_gap'])[i],(values['lower_gap'])[i],
+                  (values['qstar'])[i],(values['V_loop_efit'])[i],
+                  (values['V_surf_efit'])[i],(values['cpasma'])[i],(values['ssep'])[i],
+                  (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],
+                  (values['e_bot_mks'])[i],(values['b_bot_mks'])[i]]) #first element must be shot!
             total_x_data.append([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
-                      (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
-                      (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
-                      (values['beta_t'])[i],(values['kappa'])[i],(values['triang'])[i],
-                      (values['areao'])[i],(values['vout'])[i],(values['aout'])[i],
-                      (values['rout'])[i],(values['zout'])[i],
-                      (values['zmag'])[i],(values['rmag'])[i],(values['zsep_lower'])[i],
-                      (values['zsep_upper'])[i],(values['rsep_lower'])[i],(values['rsep_upper'])[i],
-                      (values['zvsin'])[i],(values['rvsin'])[i],(values['zvsout'])[i],
-                      (values['rvsout'])[i],(values['upper_gap'])[i],(values['lower_gap'])[i],
-                      (values['qstar'])[i],(values['V_loop_efit'])[i],
-                      (values['V_surf_efit'])[i],(values['cpasma'])[i],(values['ssep'])[i],
-                      (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],
-                      (values['e_bot_mks'])[i],(values['b_bot_mks'])[i],(values['Halpha'])[i],(values['Dalpha'])[i]])
+                  (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
+                  (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
+                  (values['beta_t'])[i],(values['kappa'])[i],(values['triang'])[i],
+                  (values['areao'])[i],(values['vout'])[i],(values['aout'])[i],
+                  (values['rout'])[i],(values['zout'])[i],
+                  (values['zmag'])[i],(values['rmag'])[i],(values['zsep_lower'])[i],
+                  (values['zsep_upper'])[i],(values['rsep_lower'])[i],(values['rsep_upper'])[i],
+                  (values['zvsin'])[i],(values['rvsin'])[i],(values['zvsout'])[i],
+                  (values['rvsout'])[i],(values['upper_gap'])[i],(values['lower_gap'])[i],
+                  (values['qstar'])[i],(values['V_loop_efit'])[i],
+                  (values['V_surf_efit'])[i],(values['cpasma'])[i],(values['ssep'])[i],
+                  (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],
+                  (values['e_bot_mks'])[i],(values['b_bot_mks'])[i]])
+        #the above for loop just ensures there is stored value for
+        #those quantities being indexed, otherwise skip that column 
+    if (((values['q95'])[i]) < 2.0) or (((values['li'])[i]) < 1.0) or (((values['e_bot_mks'])[i]) > 200.0):
+        if rows[i][0] != bad_shot:
+            print('Possibly check ',rows[i][0])
+            bad_shot = rows[i][0] 
     i = i + 1
+    
+i = 0
+shots_number = 0
+shot_old = 0
+while i < len(X_data0):
+    if X_data0[i][0] != shot_old:
+        shots_number = shots_number + 1
+        shot_old = X_data0[i][0]
+    i = i + 1
+print(shots_number,' distinct shots in this dataset being considered')
 
 Y_data0 = np.where(np.array(Y_data0) == 'L', 0, Y_data0)
 Y_data0 = np.where(Y_data0 == 'H', 1, Y_data0)
@@ -204,20 +209,22 @@ while update_index < cycles:
     print('Fraction of total data for training + validation = ',train_valid_frac)
     print('Fraction of training + validation data used for training = ',fraction_)
     #use below 4 lines if randomizing shots AND time slices for train/validation set
-    print("ML_testing_all_normalized_200trees_NN_100x100x100_layers_([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],\
-                      (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],\
-                      (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],\
-                      (values['beta_t'])[i],(values['kappa'])[i],(values['triang'])[i],\
-                      (values['areao'])[i],(values['vout'])[i],(values['aout'])[i],\
-                      (values['rout'])[i],(values['zout'])[i],\
-                      (values['zmag'])[i],(values['rmag'])[i],(values['zsep_lower'])[i],\
-                      (values['zsep_upper'])[i],(values['rsep_lower'])[i],(values['rsep_upper'])[i],\
-                      (values['zvsin'])[i],(values['rvsin'])[i],(values['zvsout'])[i],\
-                      (values['rvsout'])[i],(values['upper_gap'])[i],(values['lower_gap'])[i],\
-                      (values['qstar'])[i],(values['V_loop_efit'])[i],\
-                      (values['V_surf_efit'])[i],(values['cpasma'])[i],(values['ssep'])[i],\
-                      (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],\
-                      (values['e_bot_mks'])[i],(values['b_bot_mks'])[i],(values['Halpha'])[i],(values['Dalpha'])[i]]), cycles =",cycles)    
+    print("ML_testing_all_normalized_100trees_NN_100x100x100_layers_([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],\
+                  (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],\
+                  (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],\
+                  (values['beta_t'])[i],(values['kappa'])[i],(values['triang'])[i],\
+                  (values['areao'])[i],(values['vout'])[i],(values['aout'])[i],\
+                  (values['rout'])[i],(values['zout'])[i],\
+                  (values['zmag'])[i],(values['rmag'])[i],(values['zsep_lower'])[i],\
+                  (values['zsep_upper'])[i],(values['rsep_lower'])[i],(values['rsep_upper'])[i],\
+                  (values['zvsin'])[i],(values['rvsin'])[i],(values['zvsout'])[i],\
+                  (values['rvsout'])[i],(values['upper_gap'])[i],(values['lower_gap'])[i],\
+                  (values['qstar'])[i],(values['V_loop_efit'])[i],\
+                  (values['V_surf_efit'])[i],(values['cpasma'])[i],(values['ssep'])[i],\
+                  (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],\
+                  (values['e_bot_mks'])[i],(values['b_bot_mks'])[i]]), cycles =",cycles,\
+                    shots_number,' distinct shots in this dataset being considered',\
+                    'H-mode fraction to total dataset time slices: ',p,'/',len(Y_data0))    
     data = np.insert(X_data0, len(X_data0[0]), values=Y_data0, axis=-1)
     together = [list(i) for _, i in itertools.groupby(data, operator.itemgetter(0))]
     random.shuffle(together) #groups based on first item of x_data, which should be shot!
@@ -250,7 +257,7 @@ while update_index < cycles:
     # Create classifiers
     lr = LogisticRegression()
     gnb = GaussianNB() 
-    rfc = RandomForestClassifier(n_estimators=200,max_features="sqrt")
+    rfc = RandomForestClassifier(n_estimators=100,max_features="sqrt")
     mlp = MLPClassifier(hidden_layer_sizes=(100,100,100))
     
     tree_depth_max = [estimator.tree_.depth for estimator in rfc.estimators_]
@@ -495,28 +502,28 @@ while update_index < cycles:
 #    plt.legend()
 #    plt.show() 
     
-    X_std = StandardScaler().fit_transform(total_x_data)
-    mean_vec = np.mean(X_std, axis=0)
-    cov_mat = (X_std - mean_vec).T.dot((X_std - mean_vec)) / (X_std.shape[0]-1)
-    #print('Covariance matrix \n%s' %cov_mat)
-    eig_vals, eig_vecs = np.linalg.eig(cov_mat)
-    #print('Eigenvectors \n%s' %eig_vecs)
-    #print('\nEigenvalues \n%s' %eig_vals)
-    # Make a list of (eigenvalue, eigenvector) tuples
-    eig_pairs = [(np.abs(eig_vals[i]), eig_vecs[:,i]) for i in range(len(eig_vals))]
-    
-    # Sort the (eigenvalue, eigenvector) tuples from high to low
-    eig_pairs.sort()
-    eig_pairs.reverse()
-    
-    # Visually confirm that the list is correctly sorted by decreasing eigenvalues
-    #print('Eigenvalues in descending order:')
-    #for i in eig_pairs:
-    #    print(i[0])
-        
-    tot = sum(eig_vals)
-    var_exp = [(i / tot)*100 for i in sorted(eig_vals, reverse=True)]
-    cum_var_exp = np.cumsum(var_exp) 
+#    X_std = StandardScaler().fit_transform(total_x_data)
+#    mean_vec = np.mean(X_std, axis=0)
+#    cov_mat = (X_std - mean_vec).T.dot((X_std - mean_vec)) / (X_std.shape[0]-1)
+#    #print('Covariance matrix \n%s' %cov_mat)
+#    eig_vals, eig_vecs = np.linalg.eig(cov_mat)
+#    #print('Eigenvectors \n%s' %eig_vecs)
+#    #print('\nEigenvalues \n%s' %eig_vals)
+#    # Make a list of (eigenvalue, eigenvector) tuples
+#    eig_pairs = [(np.abs(eig_vals[i]), eig_vecs[:,i]) for i in range(len(eig_vals))]
+#    
+#    # Sort the (eigenvalue, eigenvector) tuples from high to low
+#    eig_pairs.sort()
+#    eig_pairs.reverse()
+#    
+#    # Visually confirm that the list is correctly sorted by decreasing eigenvalues
+#    #print('Eigenvalues in descending order:')
+#    #for i in eig_pairs:
+#    #    print(i[0])
+#        
+#    tot = sum(eig_vals)
+#    var_exp = [(i / tot)*100 for i in sorted(eig_vals, reverse=True)]
+#    cum_var_exp = np.cumsum(var_exp) 
     
 #    plt.plot(range(0,len(total_x_data[0])),var_exp)
 #    plt.plot(range(0,len(total_x_data[0])),cum_var_exp,label='cumulative explained variance')
@@ -527,7 +534,7 @@ while update_index < cycles:
     
     
     #list_vector = []
-    names = ['ip','btor','li','q95','Wmhd','p_icrf','beta_N','nebar_efit','beta_p','beta_t','kappa','triang','areao','vout','aout','rout','zout','zmag','rmag','zsep_lower','zsep_upper','rsep_lower','rsep_upper','zvsin','rvsin','zvsout','rvsout','upper_gap','lower_gap','qstar','V_loop_efit','V_surf_efit','cpasma','ssep','P_ohm','NL_04','g_side_rat','e_bot_mks','b_bot_mks','Halpha','Dalpha']
+#    names = ['ip','btor','li','q95','Wmhd','p_icrf','beta_N','nebar_efit','beta_p','beta_t','kappa','triang','areao','vout','aout','rout','zout','zmag','rmag','zsep_lower','zsep_upper','rsep_lower','rsep_upper','zvsin','rvsin','zvsout','rvsout','upper_gap','lower_gap','qstar','V_loop_efit','V_surf_efit','cpasma','ssep','P_ohm','NL_04','g_side_rat','e_bot_mks','b_bot_mks','Halpha','Dalpha']
     #k = 0 
     #while k < len(eig_vecs):
     #    j = 0
@@ -711,41 +718,41 @@ plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 plt.show()
 
 
-#univariate selection via chi-square statistical test for non-negative features
-X = np.array(total_x_data)
-Y = np.array(Y_data0)
-test = SelectKBest(score_func=chi2, k=8)
-fit = test.fit(np.abs(X), Y)
-np.set_printoptions(precision=3) 
-features = fit.transform(X)
-best_features = []
-i = 0
-while i < len(names): 
-    best_features.append([fit.scores_[i],names[i]])
-    i = i + 1
-best_features = sorted(best_features, key=lambda x: x[0], reverse=True)
-print(best_features)
-#recursive feature elimination on logistic regression
-model = LogisticRegression()
-rfe = RFE(model, 8)
-fit = rfe.fit(X, Y)
-best_features = []
-i = 0
-while i < len(names): 
-    best_features.append([fit.ranking_[i],names[i]])
-    i = i + 1
-best_features = sorted(best_features, key=lambda x: x[0], reverse=True)
-print(best_features) 
-#feature importance via bagged decision trees
-model = ExtraTreesClassifier()
-model.fit(X, Y)
-best_features = []
-i = 0
-while i < len(names): 
-    best_features.append([model.feature_importances_[i],names[i]])
-    i = i + 1
-best_features = sorted(best_features, key=lambda x: x[0], reverse=True)
-print(best_features) 
+##univariate selection via chi-square statistical test for non-negative features
+#X = np.array(total_x_data)
+#Y = np.array(Y_data0)
+#test = SelectKBest(score_func=chi2, k=8)
+#fit = test.fit(np.abs(X), Y)
+#np.set_printoptions(precision=3) 
+#features = fit.transform(X)
+#best_features = []
+#i = 0
+#while i < len(names): 
+#    best_features.append([fit.scores_[i],names[i]])
+#    i = i + 1
+#best_features = sorted(best_features, key=lambda x: x[0], reverse=True)
+#print(best_features)
+##recursive feature elimination on logistic regression
+#model = LogisticRegression()
+#rfe = RFE(model, 8)
+#fit = rfe.fit(X, Y)
+#best_features = []
+#i = 0
+#while i < len(names): 
+#    best_features.append([fit.ranking_[i],names[i]])
+#    i = i + 1
+#best_features = sorted(best_features, key=lambda x: x[0], reverse=True)
+#print(best_features) 
+##feature importance via bagged decision trees
+#model = ExtraTreesClassifier()
+#model.fit(X, Y)
+#best_features = []
+#i = 0
+#while i < len(names): 
+#    best_features.append([model.feature_importances_[i],names[i]])
+#    i = i + 1
+#best_features = sorted(best_features, key=lambda x: x[0], reverse=True)
+#print(best_features) 
 ##recursive feature elimination on random forest using scikit-learn
 #class RandomForestClassifierWithCoef(RandomForestClassifier):
 #    def fit(self, *args, **kwargs):
@@ -880,4 +887,3 @@ corr.style.background_gradient().set_precision(3)
 f, ax = plt.subplots(figsize=(10, 8))
 sns.heatmap(corr, annot=True, fmt='.3f', mask=np.zeros_like(corr, dtype=np.bool), cmap=sns.diverging_palette(220, 10, as_cmap=True),
             square=True, ax=ax)
-             

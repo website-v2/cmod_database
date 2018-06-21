@@ -39,7 +39,7 @@ import sys
 import matplotlib.pyplot as plt 
 from mpl_toolkits.mplot3d import Axes3D 
  
-sqlite_file = '/home/mathewsa/Desktop/confinement_table/tables/am_transitions.db'
+sqlite_file = '/home/mathewsa/Desktop/am_transitions.db'
 table_name = 'confinement_table'
 table_name_transitions = 'transitions' 
 
@@ -115,48 +115,55 @@ X_data0 = []
 total_x_data = []
 bad_shot = 0 #initialize
 i = 0 
-while i < len(rows):
-    for index in ['ip','btor','li','q95','Wmhd','p_icrf','beta_N','nebar_efit','cpasma']:
-        while (values[index][i] == None) and ((i+1) < len(rows)):  
-            i = i + 1  
+while i < len(rows):  
+    if (values['ip'][i] != None) and (values['btor'][i] != None) and (values['Wmhd'][i] != None) and (values['nebar_efit'][i] != None) and (values['beta_p'][i] != None) and (values['P_ohm'][i] != None) and (values['li'][i] != None) and (values['rmag'][i] != None) and (values['Halpha'][i] != None) and (values['p_icrf'][i] != None) and (values['b_bot_mks'][i] != None):
+        Y_data0.append((values['present_mode'])[i])
+        X_data0.append([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
+              (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
+              (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
+              (values['beta_t'])[i],(values['kappa'])[i],(values['triang'])[i],
+              (values['areao'])[i],(values['vout'])[i],(values['aout'])[i],
+              (values['rout'])[i],(values['zout'])[i],
+              (values['zmag'])[i],(values['rmag'])[i],(values['zsep_lower'])[i],
+              (values['zsep_upper'])[i],(values['rsep_lower'])[i],(values['rsep_upper'])[i],
+              (values['zvsin'])[i],(values['rvsin'])[i],(values['zvsout'])[i],
+              (values['rvsout'])[i],(values['upper_gap'])[i],(values['lower_gap'])[i],
+              (values['qstar'])[i],(values['V_loop_efit'])[i],
+              (values['V_surf_efit'])[i],(values['cpasma'])[i],(values['ssep'])[i],
+              (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],
+              (values['e_bot_mks'])[i],(values['b_bot_mks'])[i]]) #first element must be shot!
+        total_x_data.append([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
+              (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
+              (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
+              (values['beta_t'])[i],(values['kappa'])[i],(values['triang'])[i],
+              (values['areao'])[i],(values['vout'])[i],(values['aout'])[i],
+              (values['rout'])[i],(values['zout'])[i],
+              (values['zmag'])[i],(values['rmag'])[i],(values['zsep_lower'])[i],
+              (values['zsep_upper'])[i],(values['rsep_lower'])[i],(values['rsep_upper'])[i],
+              (values['zvsin'])[i],(values['rvsin'])[i],(values['zvsout'])[i],
+              (values['rvsout'])[i],(values['upper_gap'])[i],(values['lower_gap'])[i],
+              (values['qstar'])[i],(values['V_loop_efit'])[i],
+              (values['V_surf_efit'])[i],(values['cpasma'])[i],(values['ssep'])[i],
+              (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],
+              (values['e_bot_mks'])[i],(values['b_bot_mks'])[i]])
         #the above for loop just ensures there is stored value for
-        #those quantities being indexed, otherwise skip that column
-    if (rows[i][2] == 'I') or (rows[i][2] == 'H') or (rows[i][4] > (transitions_start['{}'.format(rows[i][0])] + 0.2)):
-        if (rows[i][2] == 'I') or (rows[i][2] == 'H') or (rows[i][4] < (transitions_end['{}'.format(rows[i][0])] - 0.2)): 
-            if (((values['q95'])[i]) < 2.0) or (((values['li'])[i]) < 1.0) or (((values['e_bot_mks'])[i]) > 200.0):
-                if rows[i][0] != bad_shot:
-                    print(rows[i][0],' is a possibly bad shot')
-                    bad_shot = rows[i][0] 
-            Y_data0.append((values['present_mode'])[i])
-            X_data0.append([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
-                      (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
-                      (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
-                      (values['beta_t'])[i],(values['kappa'])[i],(values['triang'])[i],
-                      (values['areao'])[i],(values['vout'])[i],(values['aout'])[i],
-                      (values['rout'])[i],(values['zout'])[i],
-                      (values['zmag'])[i],(values['rmag'])[i],(values['zsep_lower'])[i],
-                      (values['zsep_upper'])[i],(values['rsep_lower'])[i],(values['rsep_upper'])[i],
-                      (values['zvsin'])[i],(values['rvsin'])[i],(values['zvsout'])[i],
-                      (values['rvsout'])[i],(values['upper_gap'])[i],(values['lower_gap'])[i],
-                      (values['qstar'])[i],(values['V_loop_efit'])[i],
-                      (values['V_surf_efit'])[i],(values['cpasma'])[i],(values['ssep'])[i],
-                      (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],
-                      (values['e_bot_mks'])[i],(values['b_bot_mks'])[i]]) #first element must be shot!
-            total_x_data.append([(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
-                      (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
-                      (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
-                      (values['beta_t'])[i],(values['kappa'])[i],(values['triang'])[i],
-                      (values['areao'])[i],(values['vout'])[i],(values['aout'])[i],
-                      (values['rout'])[i],(values['zout'])[i],
-                      (values['zmag'])[i],(values['rmag'])[i],(values['zsep_lower'])[i],
-                      (values['zsep_upper'])[i],(values['rsep_lower'])[i],(values['rsep_upper'])[i],
-                      (values['zvsin'])[i],(values['rvsin'])[i],(values['zvsout'])[i],
-                      (values['rvsout'])[i],(values['upper_gap'])[i],(values['lower_gap'])[i],
-                      (values['qstar'])[i],(values['V_loop_efit'])[i],
-                      (values['V_surf_efit'])[i],(values['cpasma'])[i],(values['ssep'])[i],
-                      (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],
-                      (values['e_bot_mks'])[i],(values['b_bot_mks'])[i]])
+        #those quantities being indexed, otherwise skip that column 
+    if (((values['q95'])[i]) < 2.0) or (((values['li'])[i]) < 1.0) or (((values['e_bot_mks'])[i]) > 200.0):
+        if rows[i][0] != bad_shot:
+            print('Possibly check ',rows[i][0])
+            bad_shot = rows[i][0] 
     i = i + 1
+
+i = 0
+shots_number = 0
+shot_old = 0
+while i < len(X_data0):
+    if X_data0[i][0] != shot_old:
+        shots_number = shots_number + 1
+        shot_old = X_data0[i][0]
+    i = i + 1
+print(shots_number,' distinct shots in this dataset being considered')
+
 
 Y_data0 = np.where(np.array(Y_data0) == 'L', 0, Y_data0)
 Y_data0 = np.where(Y_data0 == 'H', 1, Y_data0)
@@ -190,20 +197,10 @@ while update_index < cycles:
     print('Fraction of total data for training + validation = ',train_valid_frac)
     print('Fraction of training + validation data used for training = ',fraction_)
     #use below 4 lines if randomizing shots AND time slices for train/validation set
-    print("ML_testing_all_normalized_NN_100x100x100_layers_([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],\
-                      (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],\
-                      (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],\
-                      (values['beta_t'])[i],(values['kappa'])[i],(values['triang'])[i],\
-                      (values['areao'])[i],(values['vout'])[i],(values['aout'])[i],\
-                      (values['rout'])[i],(values['zout'])[i],\
-                      (values['zmag'])[i],(values['rmag'])[i],(values['zsep_lower'])[i],\
-                      (values['zsep_upper'])[i],(values['rsep_lower'])[i],(values['rsep_upper'])[i],\
-                      (values['zvsin'])[i],(values['rvsin'])[i],(values['zvsout'])[i],\
-                      (values['rvsout'])[i],(values['upper_gap'])[i],(values['lower_gap'])[i],\
-                      (values['qstar'])[i],(values['V_loop_efit'])[i],\
-                      (values['V_surf_efit'])[i],(values['cpasma'])[i],(values['ssep'])[i],\
-                      (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],\
-                      (values['e_bot_mks'])[i],(values['b_bot_mks'])[i]])")    
+    print("ML_testing_all_normalized_NN_100x100x100_layers_([(values['shot'])[i],(values['Wmhd'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],\
+    (values['P_ohm'])[i],(values['Halpha'])[i],(values['li'])[i],(values['rmag'])[i]]), cycles =",cycles,\
+    shots_number,' distinct shots in this dataset being considered',\
+    'H-mode fraction to total dataset time slices: ',p,'/',len(Y_data0))    
     data = np.insert(X_data0, len(X_data0[0]), values=Y_data0, axis=-1)
     together = [list(i) for _, i in itertools.groupby(data, operator.itemgetter(0))]
     random.shuffle(together) #groups based on first item of x_data, which should be shot!
