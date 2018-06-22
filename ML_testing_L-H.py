@@ -107,23 +107,12 @@ total_x_data = []
 bad_shot = 0 #initialize
 i = 0 
 while i < len(rows):  
-    if (values['ip'][i] != None) and (values['btor'][i] != None) and (values['Wmhd'][i] != None) and (values['nebar_efit'][i] != None) and (values['beta_p'][i] != None) and (values['P_ohm'][i] != None) and (values['li'][i] != None) and (values['rmag'][i] != None) and (values['Halpha'][i] != None) and (values['p_icrf'][i] != None) and (values['b_bot_mks'][i] != None):
+    if (values['ip'][i] != None) and (values['btor'][i] != None) and (values['nebar_efit'][i] != None) and (values['aout'][i] != None) and (values['P_ohm'][i] != None) and (values['li'][i] != None) and (values['p_icrf'][i] != None) and (values['ssep'][i] != None) and (values['zvsin'][i] != None) and (values['zvsout'][i] != None) and (values['rvsin'][i] != None) and (values['rvsout'][i] != None):
         if values['present_mode'][i] != 'I': #not considering I-modes right now
             Y_data0.append((values['present_mode'])[i])
-            X_data0.append([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
-                  (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
-                  (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
-                  (values['beta_t'])[i],(values['kappa'])[i],(values['triang'])[i],
-                  (values['areao'])[i],(values['vout'])[i],(values['aout'])[i],
-                  (values['rout'])[i],(values['zout'])[i],
-                  (values['zmag'])[i],(values['rmag'])[i],(values['zsep_lower'])[i],
-                  (values['zsep_upper'])[i],(values['rsep_lower'])[i],(values['rsep_upper'])[i],
-                  (values['zvsin'])[i],(values['rvsin'])[i],(values['zvsout'])[i],
-                  (values['rvsout'])[i],(values['upper_gap'])[i],(values['lower_gap'])[i],
-                  (values['qstar'])[i],(values['V_loop_efit'])[i],
-                  (values['V_surf_efit'])[i],(values['cpasma'])[i],(values['ssep'])[i],
-                  (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],
-                  (values['e_bot_mks'])[i],(values['b_bot_mks'])[i]]) #first element must be shot!
+            X_data0.append([(values['shot'])[i],(values['btor'])[i],(values['nebar_efit'])[i],(values['aout'])[i],
+                            (values['P_ohm'])[i],(values['p_icrf'])[i],(values['ssep'])[i],(values['zvsin'])[i],
+                            (values['zvsout'])[i],(values['rvsin'])[i],(values['rvsout'])[i]]) #first element must be shot!
             total_x_data.append([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
                   (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
                   (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
@@ -209,20 +198,9 @@ while update_index < cycles:
     print('Fraction of total data for training + validation = ',train_valid_frac)
     print('Fraction of training + validation data used for training = ',fraction_)
     #use below 4 lines if randomizing shots AND time slices for train/validation set
-    print("ML_testing_all_normalized_100trees_NN_100x100x100_layers_([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],\
-                  (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],\
-                  (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],\
-                  (values['beta_t'])[i],(values['kappa'])[i],(values['triang'])[i],\
-                  (values['areao'])[i],(values['vout'])[i],(values['aout'])[i],\
-                  (values['rout'])[i],(values['zout'])[i],\
-                  (values['zmag'])[i],(values['rmag'])[i],(values['zsep_lower'])[i],\
-                  (values['zsep_upper'])[i],(values['rsep_lower'])[i],(values['rsep_upper'])[i],\
-                  (values['zvsin'])[i],(values['rvsin'])[i],(values['zvsout'])[i],\
-                  (values['rvsout'])[i],(values['upper_gap'])[i],(values['lower_gap'])[i],\
-                  (values['qstar'])[i],(values['V_loop_efit'])[i],\
-                  (values['V_surf_efit'])[i],(values['cpasma'])[i],(values['ssep'])[i],\
-                  (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],\
-                  (values['e_bot_mks'])[i],(values['b_bot_mks'])[i]]), cycles =",cycles,\
+    print("ML_testing_all_normalized_100trees_NN_100x100x100_layers_([(values['shot'])[i],(values['btor'])[i],(values['nebar_efit'])[i],(values['aout'])[i],\
+                            (values['P_ohm'])[i],(values['p_icrf'])[i],(values['ssep'])[i],(values['zvsin'])[i],\
+                            (values['zvsout'])[i],(values['rvsin'])[i],(values['rvsout'])[i]]), cycles =",cycles,\
                     shots_number,' distinct shots in this dataset being considered',\
                     'H-mode fraction to total dataset time slices: ',p,'/',len(Y_data0))    
     data = np.insert(X_data0, len(X_data0[0]), values=Y_data0, axis=-1)
