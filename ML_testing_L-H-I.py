@@ -38,6 +38,8 @@ import numpy as np
 import sys
 import matplotlib.pyplot as plt 
 from mpl_toolkits.mplot3d import Axes3D 
+import seaborn as sns
+import pandas as pd
  
 sqlite_file = '/home/mathewsa/Desktop/am_transitions.db'
 table_name = 'confinement_table'
@@ -49,7 +51,7 @@ cursor = conn.cursor()
 cursor.execute('select shot,id,present_mode,next_mode,time,time_at_transition,ip,\
                btor,p_lh,p_icrf,p_icrf_d,p_icrf_e,p_icrf_j3,p_icrf_j4,freq_icrf_d,\
                freq_icrf_e,freq_icrf_j,beta_N,beta_p,beta_t,kappa,triang_l,triang_u,\
-               triang,li,areao,vout,aout,rout,zout,zmag,rmag,zsep_lower,zsep_upper,\
+               triang,li,psurfa,areao,vout,aout,rout,zout,zmag,rmag,zsep_lower,zsep_upper,\
                rsep_lower,rsep_upper,zvsin,rvsin,zvsout,rvsout,upper_gap,lower_gap,\
                q0,qstar,q95,V_loop_efit,V_surf_efit,Wmhd,cpasma,ssep,P_ohm,HoverHD,\
                Halpha,Dalpha,z_ave,p_rad,p_rad_core,nLave_04,NL_04,nebar_efit,\
@@ -62,7 +64,7 @@ conn.close()
 columns = ['shot','id','present_mode','next_mode','time','time_at_transition','ip',\
         'btor','p_lh','p_icrf','p_icrf_d','p_icrf_e','p_icrf_j3','p_icrf_j4','freq_icrf_d',\
         'freq_icrf_e','freq_icrf_j','beta_N','beta_p','beta_t','kappa','triang_l','triang_u',\
-        'triang','li','areao','vout','aout','rout','zout','zmag','rmag','zsep_lower','zsep_upper',\
+        'triang','li','psurfa','areao','vout','aout','rout','zout','zmag','rmag','zsep_lower','zsep_upper',\
         'rsep_lower','rsep_upper','zvsin','rvsin','zvsout','rvsout','upper_gap','lower_gap',\
         'q0','qstar','q95','V_loop_efit','V_surf_efit','Wmhd','cpasma','ssep','P_ohm','HoverHD',\
         'Halpha','Dalpha','z_ave','p_rad','p_rad_core','nLave_04','NL_04','nebar_efit',\
@@ -116,27 +118,15 @@ total_x_data = []
 bad_shot = 0 #initialize
 i = 0 
 while i < len(rows):  
-    if (values['ip'][i] != None) and (values['btor'][i] != None) and (values['Wmhd'][i] != None) and (values['nebar_efit'][i] != None) and (values['beta_p'][i] != None) and (values['P_ohm'][i] != None) and (values['li'][i] != None) and (values['rmag'][i] != None) and (values['Halpha'][i] != None) and (values['p_icrf'][i] != None) and (values['b_bot_mks'][i] != None):
+    if (values['ip'][i] != None) and (values['btor'][i] != None) and (values['Wmhd'][i] != None) and (values['nebar_efit'][i] != None) and (values['beta_p'][i] != None) and (values['P_ohm'][i] != None) and (values['li'][i] != None) and (values['rmag'][i] != None) and (values['Halpha'][i] != None) and (values['psurfa'][i] != None):
         Y_data0.append((values['present_mode'])[i])
-        X_data0.append([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
-              (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
-              (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
-              (values['beta_t'])[i],(values['kappa'])[i],(values['triang'])[i],
-              (values['areao'])[i],(values['vout'])[i],(values['aout'])[i],
-              (values['rout'])[i],(values['zout'])[i],
-              (values['zmag'])[i],(values['rmag'])[i],(values['zsep_lower'])[i],
-              (values['zsep_upper'])[i],(values['rsep_lower'])[i],(values['rsep_upper'])[i],
-              (values['zvsin'])[i],(values['rvsin'])[i],(values['zvsout'])[i],
-              (values['rvsout'])[i],(values['upper_gap'])[i],(values['lower_gap'])[i],
-              (values['qstar'])[i],(values['V_loop_efit'])[i],
-              (values['V_surf_efit'])[i],(values['cpasma'])[i],(values['ssep'])[i],
-              (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],
-              (values['e_bot_mks'])[i],(values['b_bot_mks'])[i]]) #first element must be shot!
+        X_data0.append([(values['shot'])[i],(values['Wmhd'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
+                            (values['P_ohm'])[i],(values['li'])[i],(values['rmag'])[i],(values['Halpha'])[i],(values['psurfa'])[i]]) #first element must be shot!
         total_x_data.append([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
               (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
               (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
               (values['beta_t'])[i],(values['kappa'])[i],(values['triang'])[i],
-              (values['areao'])[i],(values['vout'])[i],(values['aout'])[i],
+              (values['psurfa'])[i],(values['areao'])[i],(values['vout'])[i],(values['aout'])[i],
               (values['rout'])[i],(values['zout'])[i],
               (values['zmag'])[i],(values['rmag'])[i],(values['zsep_lower'])[i],
               (values['zsep_upper'])[i],(values['rsep_lower'])[i],(values['rsep_upper'])[i],
@@ -180,15 +170,21 @@ print('H-mode fraction to total dataset time slices: ',p,'/',len(Y_data0))
 
 
 q = 0
-p = 0
+p_i = 0
 while q < len(Y_data0):
     if (Y_data0[q] == '2') or (Y_data0[q] == 2):
-        p = p + 1
+        p_i = p_i + 1
     q = q + 1
-print('I-mode fraction to total dataset time slices: ',p,'/',len(Y_data0))
+print('I-mode fraction to total dataset time slices: ',p_i,'/',len(Y_data0))
 
-c_matrix_RF= []
+c_matrix_RF = []
 c_matrix_valid_RF = [] 
+c_matrix_LR = []
+c_matrix_valid_LR = []
+c_matrix_NB = []
+c_matrix_valid_NB = []
+c_matrix_NN = []
+c_matrix_valid_NN = []
 fraction_ = 0.80
 train_valid_frac = 0.80
 update_index = 0#(spectroscopy.getNode('\SPECTROSCOPY::z_ave')).units_of()
@@ -198,9 +194,10 @@ while update_index < cycles:
     print('Fraction of training + validation data used for training = ',fraction_)
     #use below 4 lines if randomizing shots AND time slices for train/validation set
     print("ML_testing_all_normalized_NN_100x100x100_layers_([(values['shot'])[i],(values['Wmhd'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],\
-    (values['P_ohm'])[i],(values['Halpha'])[i],(values['li'])[i],(values['rmag'])[i]]), cycles =",cycles,\
+                            (values['P_ohm'])[i],(values['li'])[i],(values['rmag'])[i],(values['Halpha'])[i],(values['psurfa'])[i]]), cycles =",cycles,\
     shots_number,' distinct shots in this dataset being considered',\
-    'H-mode fraction to total dataset time slices: ',p,'/',len(Y_data0))    
+    'H-mode fraction to total dataset time slices: ',p,'/',len(Y_data0),\
+    'I-mode fraction to total dataset time slices: ',p_i,'/',len(Y_data0))    
     data = np.insert(X_data0, len(X_data0[0]), values=Y_data0, axis=-1)
     together = [list(i) for _, i in itertools.groupby(data, operator.itemgetter(0))]
     random.shuffle(together) #groups based on first item of x_data, which should be shot!
@@ -271,6 +268,9 @@ while update_index < cycles:
     
 #    print('--------------------RF--------------------')
     rfc = RandomForestClassifier(n_estimators=100,max_features="sqrt")
+    lr = LogisticRegression()
+    gnb = GaussianNB()  
+    mlp = MLPClassifier(hidden_layer_sizes=(100,100,100))
     
     prediction_prob = {}
     prediction = {}
@@ -284,19 +284,24 @@ while update_index < cycles:
     accuracy_valid = {}
     c_matrix_valid = {} #confusion matrix
     c_matrix1_valid = {}
-    clf, name = (rfc, 'Random Forest')
-    clf.fit(X_train_valid, y_train_valid)
-#   if hasattr(clf, "predict_proba"):
-    prob_pos = clf.predict_proba(X_test)[:, 1] #probability of 1, or H-mode
-    prob_pos_valid = clf.predict_proba(X_valid)[:, 1]
-    prediction_prob[str(name)] = np.array([int(numeric_string) for numeric_string in prob_pos])
-    prediction_prob_valid[str(name)] = np.array([int(numeric_string) for numeric_string in prob_pos_valid])
-    prediction[str(name)] = np.array([int(numeric_string) for numeric_string in clf.predict(X_test)])
-    prediction_valid[str(name)] = np.array([int(numeric_string) for numeric_string in clf.predict(X_valid)])
 
-    c_matrix[str(name)] = array3x3(confusion_matrix(y_test_np, prediction[str(name)]))
-    c_matrix_valid[str(name)] = array3x3(confusion_matrix(y_valid_np, prediction_valid[str(name)]))
+    for clf, name in [(lr, 'Logistic'),
+                  (gnb, 'Naive Bayes'),
+#                  (svc, 'Support Vector Classification'),
+                  (rfc, 'Random Forest'),
+                  (mlp, 'NeuralNet')]: 
+        clf.fit(X_train_valid, y_train_valid)
+    #   if hasattr(clf, "predict_proba"):
+        prob_pos = clf.predict_proba(X_test)[:, 1] #probability of 1, or H-mode
+        prob_pos_valid = clf.predict_proba(X_valid)[:, 1]
+        prediction_prob[str(name)] = np.array([int(numeric_string) for numeric_string in prob_pos])
+        prediction_prob_valid[str(name)] = np.array([int(numeric_string) for numeric_string in prob_pos_valid])
+        prediction[str(name)] = np.array([int(numeric_string) for numeric_string in clf.predict(X_test)])
+        prediction_valid[str(name)] = np.array([int(numeric_string) for numeric_string in clf.predict(X_valid)])
     
+        c_matrix[str(name)] = array3x3(confusion_matrix(y_test_np, prediction[str(name)]))
+        c_matrix_valid[str(name)] = array3x3(confusion_matrix(y_valid_np, prediction_valid[str(name)]))
+        
     def plot_confusion_matrix(cm, classes,
                               normalize=False,
                               title='Confusion matrix',
@@ -331,23 +336,68 @@ while update_index < cycles:
         plt.ylabel('True label')
         plt.xlabel('Predicted label') 
         
+    # Plot non-normalized confusion matrix
+    plt.figure()
+    plot_confusion_matrix(c_matrix['Logistic'], classes=class_names,
+                          title='Confusion matrix, without normalization, Logistic') 
+    plt.figure()
+    plot_confusion_matrix(c_matrix['Logistic'], classes=class_names, normalize=True,
+                          title='Normalized confusion matrix, Logistic')
+    plt.figure()
+    plot_confusion_matrix(c_matrix['Naive Bayes'], classes=class_names,
+                          title='Confusion matrix, without normalization, NB') 
+    plt.figure()
+    plot_confusion_matrix(c_matrix['Naive Bayes'], classes=class_names, normalize=True,
+                          title='Normalized confusion matrix, NB') 
     plt.figure()
     plot_confusion_matrix(c_matrix['Random Forest'], classes=class_names,
                           title='Confusion matrix, without normalization, RF') 
     plt.figure()
     plot_confusion_matrix(c_matrix['Random Forest'], classes=class_names, normalize=True,
                           title='Normalized confusion matrix, RF')
+    plt.figure()
+    plot_confusion_matrix(c_matrix['NeuralNet'], classes=class_names,
+                          title='Confusion matrix, without normalization, NN') 
+    plt.figure()
+    plot_confusion_matrix(c_matrix['NeuralNet'], classes=class_names, normalize=True,
+                          title='Normalized confusion matrix, NN')
+    plt.show()
 
+    # Plot normalized confusion matrix
+    plt.figure()
+    plot_confusion_matrix(c_matrix_valid['Logistic'], classes=class_names,
+                          title='Confusion matrix (validation), without normalization, Logistic') 
+    plt.figure()
+    plot_confusion_matrix(c_matrix_valid['Logistic'], classes=class_names, normalize=True,
+                          title='Normalized confusion matrix (validation), Logistic')
+    plt.figure()
+    plot_confusion_matrix(c_matrix_valid['Naive Bayes'], classes=class_names,
+                          title='Confusion matrix (validation), without normalization, NB') 
+    plt.figure()
+    plot_confusion_matrix(c_matrix_valid['Naive Bayes'], classes=class_names, normalize=True,
+                          title='Normalized confusion matrix (validation), NB') 
     plt.figure()
     plot_confusion_matrix(c_matrix_valid['Random Forest'], classes=class_names,
                           title='Confusion matrix (validation), without normalization, RF') 
     plt.figure()
     plot_confusion_matrix(c_matrix_valid['Random Forest'], classes=class_names, normalize=True,
                           title='Normalized confusion matrix (validation), RF')
+    plt.figure()
+    plot_confusion_matrix(c_matrix_valid['NeuralNet'], classes=class_names,
+                          title='Confusion matrix (validation), without normalization, NN') 
+    plt.figure()
+    plot_confusion_matrix(c_matrix_valid['NeuralNet'], classes=class_names, normalize=True,
+                          title='Normalized confusion matrix (validation), NN')
     plt.show()
 
     c_matrix_RF.append(c_matrix['Random Forest'])
     c_matrix_valid_RF.append(c_matrix_valid['Random Forest'])
+    c_matrix_LR.append(c_matrix['Logistic'])
+    c_matrix_valid_LR.append(c_matrix_valid['Logistic'])
+    c_matrix_NB.append(c_matrix['Naive Bayes'])
+    c_matrix_valid_NB.append(c_matrix_valid['Naive Bayes'])
+    c_matrix_NN.append(c_matrix['NeuralNet'])
+    c_matrix_valid_NN.append(c_matrix_valid['NeuralNet'])
 
 #    clf = RandomForestClassifier(n_estimators=25)
 #    clf.fit(X_train_valid, y_train_valid)
@@ -380,7 +430,23 @@ while update_index < cycles:
 #    
 #    # Plot boundaries of unit simplex
 #    plt.plot([0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], 'k', label="Simplex")
-#    
+    importances = rfc.feature_importances_
+    std = np.std([tree.feature_importances_ for tree in rfc.estimators_],
+             axis=0)
+    indices = np.argsort(importances)[::-1]
+    # Print the feature ranking
+    print("Feature ranking:")
+
+    for f in range(len(X_test[0])):
+        print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
+    
+    plt.figure()
+    plt.title("Feature importances")
+    plt.bar(range(len(X_test[0])), importances[indices],
+           color="r", yerr=std[indices], align="center")
+    plt.xticks(range(len(X_test[0])), indices)
+    plt.xlim([-1,len(X_test[0])])
+    plt.show()
 #    # Annotate points on the simplex
 #    plt.annotate(r'($\frac{1}{3}$, $\frac{1}{3}$, $\frac{1}{3}$)',
 #                 xy=(1.0/3, 1.0/3), xytext=(1.0/3, .23), xycoords='data',
@@ -472,43 +538,131 @@ while update_index < cycles:
     
     update_index = update_index + 1
      
-L_mode_accuracy = []
-H_mode_accuracy = []
-I_mode_accuracy = []
-L_mode_accuracy_valid = []
-H_mode_accuracy_valid = []
-I_mode_accuracy_valid = []
+L_mode_accuracy_RF = []
+H_mode_accuracy_RF = []
+I_mode_accuracy_RF = []
+L_mode_accuracy_valid_RF = []
+H_mode_accuracy_valid_RF = []
+I_mode_accuracy_valid_RF = []
 
 i = 0 
 while i < cycles:
-    L_mode_accuracy.append((c_matrix_RF[i][0,0]*1./(c_matrix_RF[i][0,0] + c_matrix_RF[i][0,1] + c_matrix_RF[i][0,2])))
-    H_mode_accuracy.append((c_matrix_RF[i][1,1]*1./(c_matrix_RF[i][1,0] + c_matrix_RF[i][1,1] + c_matrix_RF[i][1,2])))
-    I_mode_accuracy.append((c_matrix_RF[i][2,2]*1./(c_matrix_RF[i][2,0] + c_matrix_RF[i][2,1] + c_matrix_RF[i][2,2])))
-    L_mode_accuracy_valid.append((c_matrix_valid_RF[i][0,0]*1./(c_matrix_valid_RF[i][0,0] + c_matrix_valid_RF[i][0,1] + c_matrix_valid_RF[i][0,2])))
-    H_mode_accuracy_valid.append((c_matrix_valid_RF[i][1,1]*1./(c_matrix_valid_RF[i][1,0] + c_matrix_valid_RF[i][1,1] + c_matrix_valid_RF[i][1,2])))
-    I_mode_accuracy_valid.append((c_matrix_valid_RF[i][2,2]*1./(c_matrix_valid_RF[i][2,0] + c_matrix_valid_RF[i][2,1] + c_matrix_valid_RF[i][2,2])))
+    L_mode_accuracy_RF.append((c_matrix_RF[i][0,0]*1./(c_matrix_RF[i][0,0] + c_matrix_RF[i][0,1] + c_matrix_RF[i][0,2])))
+    H_mode_accuracy_RF.append((c_matrix_RF[i][1,1]*1./(c_matrix_RF[i][1,0] + c_matrix_RF[i][1,1] + c_matrix_RF[i][1,2])))
+    I_mode_accuracy_RF.append((c_matrix_RF[i][2,2]*1./(c_matrix_RF[i][2,0] + c_matrix_RF[i][2,1] + c_matrix_RF[i][2,2])))
+    L_mode_accuracy_valid_RF.append((c_matrix_valid_RF[i][0,0]*1./(c_matrix_valid_RF[i][0,0] + c_matrix_valid_RF[i][0,1] + c_matrix_valid_RF[i][0,2])))
+    H_mode_accuracy_valid_RF.append((c_matrix_valid_RF[i][1,1]*1./(c_matrix_valid_RF[i][1,0] + c_matrix_valid_RF[i][1,1] + c_matrix_valid_RF[i][1,2])))
+    I_mode_accuracy_valid_RF.append((c_matrix_valid_RF[i][2,2]*1./(c_matrix_valid_RF[i][2,0] + c_matrix_valid_RF[i][2,1] + c_matrix_valid_RF[i][2,2])))
     i = i + 1 
     
 print('Random Forest')
-print('L-mode accuracy ',np.mean(L_mode_accuracy),' +/- ',np.std(L_mode_accuracy))
-print('H-mode accuracy ',np.mean(H_mode_accuracy),' +/- ',np.std(H_mode_accuracy))
-print('I-mode accuracy ',np.nanmean(I_mode_accuracy),' +/- ',np.nanstd(I_mode_accuracy)) #use nanmean to account for nan present for I-modes
-print('L-mode accuracy (validation) ',np.mean(L_mode_accuracy_valid),' +/- ',np.std(L_mode_accuracy_valid))
-print('H-mode accuracy (validation) ',np.mean(H_mode_accuracy_valid),' +/- ',np.std(H_mode_accuracy_valid))
-print('I-mode accuracy (validation) ',np.nanmean(I_mode_accuracy_valid),' +/- ',np.nanstd(I_mode_accuracy_valid))
+print('L-mode accuracy ',np.mean(L_mode_accuracy_RF),' +/- ',np.std(L_mode_accuracy_RF))
+print('H-mode accuracy ',np.mean(H_mode_accuracy_RF),' +/- ',np.std(H_mode_accuracy_RF))
+print('I-mode accuracy ',np.nanmean(I_mode_accuracy_RF),' +/- ',np.nanstd(I_mode_accuracy_RF)) #use nanmean to account for nan present for I-modes
+print('L-mode accuracy (validation) ',np.mean(L_mode_accuracy_valid_RF),' +/- ',np.std(L_mode_accuracy_valid_RF))
+print('H-mode accuracy (validation) ',np.mean(H_mode_accuracy_valid_RF),' +/- ',np.std(H_mode_accuracy_valid_RF))
+print('I-mode accuracy (validation) ',np.nanmean(I_mode_accuracy_valid_RF),' +/- ',np.nanstd(I_mode_accuracy_valid_RF))
+
+L_mode_accuracy_LR = []
+H_mode_accuracy_LR = []
+I_mode_accuracy_LR = []
+L_mode_accuracy_valid_LR = []
+H_mode_accuracy_valid_LR = []
+I_mode_accuracy_valid_LR = []
+
+i = 0 
+while i < cycles:
+    L_mode_accuracy_LR.append((c_matrix_LR[i][0,0]*1./(c_matrix_LR[i][0,0] + c_matrix_LR[i][0,1] + c_matrix_LR[i][0,2])))
+    H_mode_accuracy_LR.append((c_matrix_LR[i][1,1]*1./(c_matrix_LR[i][1,0] + c_matrix_LR[i][1,1] + c_matrix_LR[i][1,2])))
+    I_mode_accuracy_LR.append((c_matrix_LR[i][2,2]*1./(c_matrix_LR[i][2,0] + c_matrix_LR[i][2,1] + c_matrix_LR[i][2,2])))
+    L_mode_accuracy_valid_LR.append((c_matrix_valid_LR[i][0,0]*1./(c_matrix_valid_LR[i][0,0] + c_matrix_valid_LR[i][0,1] + c_matrix_valid_LR[i][0,2])))
+    H_mode_accuracy_valid_LR.append((c_matrix_valid_LR[i][1,1]*1./(c_matrix_valid_LR[i][1,0] + c_matrix_valid_LR[i][1,1] + c_matrix_valid_LR[i][1,2])))
+    I_mode_accuracy_valid_LR.append((c_matrix_valid_LR[i][2,2]*1./(c_matrix_valid_LR[i][2,0] + c_matrix_valid_LR[i][2,1] + c_matrix_valid_LR[i][2,2])))
+    i = i + 1 
+    
+print('Logistic Regression')
+print('L-mode accuracy ',np.mean(L_mode_accuracy_LR),' +/- ',np.std(L_mode_accuracy_LR))
+print('H-mode accuracy ',np.mean(H_mode_accuracy_LR),' +/- ',np.std(H_mode_accuracy_LR))
+print('I-mode accuracy ',np.nanmean(I_mode_accuracy_LR),' +/- ',np.nanstd(I_mode_accuracy_LR)) #use nanmean to account for nan present for I-modes
+print('L-mode accuracy (validation) ',np.mean(L_mode_accuracy_valid_LR),' +/- ',np.std(L_mode_accuracy_valid_LR))
+print('H-mode accuracy (validation) ',np.mean(H_mode_accuracy_valid_LR),' +/- ',np.std(H_mode_accuracy_valid_LR))
+print('I-mode accuracy (validation) ',np.nanmean(I_mode_accuracy_valid_LR),' +/- ',np.nanstd(I_mode_accuracy_valid_LR))
+
+L_mode_accuracy_NB = []
+H_mode_accuracy_NB = []
+I_mode_accuracy_NB = []
+L_mode_accuracy_valid_NB = []
+H_mode_accuracy_valid_NB = []
+I_mode_accuracy_valid_NB = []
+
+i = 0 
+while i < cycles:
+    L_mode_accuracy_NB.append((c_matrix_NB[i][0,0]*1./(c_matrix_NB[i][0,0] + c_matrix_NB[i][0,1] + c_matrix_NB[i][0,2])))
+    H_mode_accuracy_NB.append((c_matrix_NB[i][1,1]*1./(c_matrix_NB[i][1,0] + c_matrix_NB[i][1,1] + c_matrix_NB[i][1,2])))
+    I_mode_accuracy_NB.append((c_matrix_NB[i][2,2]*1./(c_matrix_NB[i][2,0] + c_matrix_NB[i][2,1] + c_matrix_NB[i][2,2])))
+    L_mode_accuracy_valid_NB.append((c_matrix_valid_NB[i][0,0]*1./(c_matrix_valid_NB[i][0,0] + c_matrix_valid_NB[i][0,1] + c_matrix_valid_NB[i][0,2])))
+    H_mode_accuracy_valid_NB.append((c_matrix_valid_NB[i][1,1]*1./(c_matrix_valid_NB[i][1,0] + c_matrix_valid_NB[i][1,1] + c_matrix_valid_NB[i][1,2])))
+    I_mode_accuracy_valid_NB.append((c_matrix_valid_NB[i][2,2]*1./(c_matrix_valid_NB[i][2,0] + c_matrix_valid_NB[i][2,1] + c_matrix_valid_NB[i][2,2])))
+    i = i + 1 
+    
+print('Naive Bayes')
+print('L-mode accuracy ',np.mean(L_mode_accuracy_NB),' +/- ',np.std(L_mode_accuracy_NB))
+print('H-mode accuracy ',np.mean(H_mode_accuracy_NB),' +/- ',np.std(H_mode_accuracy_NB))
+print('I-mode accuracy ',np.nanmean(I_mode_accuracy_NB),' +/- ',np.nanstd(I_mode_accuracy_NB)) #use nanmean to account for nan present for I-modes
+print('L-mode accuracy (validation) ',np.mean(L_mode_accuracy_valid_NB),' +/- ',np.std(L_mode_accuracy_valid_NB))
+print('H-mode accuracy (validation) ',np.mean(H_mode_accuracy_valid_NB),' +/- ',np.std(H_mode_accuracy_valid_NB))
+print('I-mode accuracy (validation) ',np.nanmean(I_mode_accuracy_valid_NB),' +/- ',np.nanstd(I_mode_accuracy_valid_NB))
+
+L_mode_accuracy_NN = []
+H_mode_accuracy_NN = []
+I_mode_accuracy_NN = []
+L_mode_accuracy_valid_NN = []
+H_mode_accuracy_valid_NN = []
+I_mode_accuracy_valid_NN = []
+
+i = 0 
+while i < cycles:
+    L_mode_accuracy_NN.append((c_matrix_NN[i][0,0]*1./(c_matrix_NN[i][0,0] + c_matrix_NN[i][0,1] + c_matrix_NN[i][0,2])))
+    H_mode_accuracy_NN.append((c_matrix_NN[i][1,1]*1./(c_matrix_NN[i][1,0] + c_matrix_NN[i][1,1] + c_matrix_NN[i][1,2])))
+    I_mode_accuracy_NN.append((c_matrix_NN[i][2,2]*1./(c_matrix_NN[i][2,0] + c_matrix_NN[i][2,1] + c_matrix_NN[i][2,2])))
+    L_mode_accuracy_valid_NN.append((c_matrix_valid_NN[i][0,0]*1./(c_matrix_valid_NN[i][0,0] + c_matrix_valid_NN[i][0,1] + c_matrix_valid_NN[i][0,2])))
+    H_mode_accuracy_valid_NN.append((c_matrix_valid_NN[i][1,1]*1./(c_matrix_valid_NN[i][1,0] + c_matrix_valid_NN[i][1,1] + c_matrix_valid_NN[i][1,2])))
+    I_mode_accuracy_valid_NN.append((c_matrix_valid_NN[i][2,2]*1./(c_matrix_valid_NN[i][2,0] + c_matrix_valid_NN[i][2,1] + c_matrix_valid_NN[i][2,2])))
+    i = i + 1 
+    
+print('NeuralNet')
+print('L-mode accuracy ',np.mean(L_mode_accuracy_NN),' +/- ',np.std(L_mode_accuracy_NN))
+print('H-mode accuracy ',np.mean(H_mode_accuracy_NN),' +/- ',np.std(H_mode_accuracy_NN))
+print('I-mode accuracy ',np.nanmean(I_mode_accuracy_NN),' +/- ',np.nanstd(I_mode_accuracy_NN)) #use nanmean to account for nan present for I-modes
+print('L-mode accuracy (validation) ',np.mean(L_mode_accuracy_valid_NN),' +/- ',np.std(L_mode_accuracy_valid_NN))
+print('H-mode accuracy (validation) ',np.mean(H_mode_accuracy_valid_NN),' +/- ',np.std(H_mode_accuracy_valid_NN))
+print('I-mode accuracy (validation) ',np.nanmean(I_mode_accuracy_valid_NN),' +/- ',np.nanstd(I_mode_accuracy_valid_NN))
+
 
 import pickle
-#Saving created RF model
+#Saving created model
 RF_LHI_pkl_filename = '/home/mathewsa/Desktop/RF_classifier_LHI.pkl'
 RF_LHI_model_pkl = open(RF_LHI_pkl_filename, 'wb')
 pickle.dump(rfc, RF_LHI_model_pkl)
 RF_LHI_model_pkl.close()
+LR_LHI_pkl_filename = '/home/mathewsa/Desktop/LR_classifier_LHI.pkl'
+LR_LHI_model_pkl = open(LR_LHI_pkl_filename, 'wb')
+pickle.dump(lr, LR_LHI_model_pkl)
+LR_LHI_model_pkl.close()
+NB_LHI_pkl_filename = '/home/mathewsa/Desktop/NB_classifier_LHI.pkl'
+NB_LHI_model_pkl = open(NB_LHI_pkl_filename, 'wb')
+pickle.dump(gnb, NB_LHI_model_pkl)
+NB_LHI_model_pkl.close()
+NN_LHI_pkl_filename = '/home/mathewsa/Desktop/NN_classifier_LHI.pkl'
+NN_LHI_model_pkl = open(NN_LHI_pkl_filename, 'wb')
+pickle.dump(mlp, NN_LHI_model_pkl)
+NN_LHI_model_pkl.close()
 scalerfile = '/home/mathewsa/Desktop/scaler.sav'
 pickle.dump(scaler, open(scalerfile, 'wb'))
 
 #Loading saved model
-RF_LHI_model_pkl = open(RF_LHI_pkl_filename, 'rb')
-RF_LHI_model = pickle.load(RF_LHI_model_pkl)
-print("Loaded model :: ", RF_LHI_model)
-scalerfile = '/home/mathewsa/Desktop/scaler.sav'
-scaler = pickle.load(open(scalerfile, 'rb')) 
+#RF_LHI_model_pkl = open(RF_LHI_pkl_filename, 'rb')
+#RF_LHI_model = pickle.load(RF_LHI_model_pkl)
+#print("Loaded model :: ", RF_LHI_model)
+#scalerfile = '/home/mathewsa/Desktop/scaler.sav'
+#scaler = pickle.load(open(scalerfile, 'rb')) 

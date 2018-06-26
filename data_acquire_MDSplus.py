@@ -187,7 +187,9 @@ def main(shot,timebase,path_shot):
             triang = (triang_u + triang_l)/2. #overall triangularity - horizontal (major radius)
             li = (efit.getNode('\efit_aeqdsk:li')).data()[good_time_slices]; #internal inductance
             li = np.interp(timebase,time_efit,li,left=np.nan,right=np.nan)
-            areao = (efit.getNode('\efit_aeqdsk:areao')).data()[good_time_slices]/(100.*100.); #area of lcfs
+            psurfa = (efit.getNode('\efit_aeqdsk:psurfa')).data()[good_time_slices]; #surface area of lcfs
+            psurfa = np.interp(timebase,time_efit,psurfa,left=np.nan,right=np.nan)  
+            areao = (efit.getNode('\efit_aeqdsk:areao')).data()[good_time_slices]/(100.*100.); #cross-sectional area of lcfs
             areao = np.interp(timebase,time_efit,areao,left=np.nan,right=np.nan)
             vout = (efit.getNode('\efit_aeqdsk:vout')).data()[good_time_slices]/(100.*100.*100.); #volume of lcfs
             vout = np.interp(timebase,time_efit,vout,left=np.nan,right=np.nan)
@@ -291,7 +293,7 @@ def main(shot,timebase,path_shot):
         except TreeNODATA:
             time_efit = timebase
             beta_N = beta_p = beta_t = kappa = triang_l = triang_u =\
-            triang = li = areao = vout = aout = rout = zmag =\
+            triang = li = psurfa = areao = vout = aout = rout = zmag =\
             zout = zseps = zvsin = zvsout = upper_gap = lower_gap =\
             q0 = qstar = q95 = qout = BtVac = BtPlasma = BpAvg = V_loop_efit =\
             V_surf_efit = Wmhd = ssep = n_over_ncrit = P_ohm = chord_4_v_len = NaN
@@ -649,7 +651,7 @@ def main(shot,timebase,path_shot):
     btor=btor,p_lh=p_lh,p_icrf=p_icrf,p_icrf_d=p_icrf_d,p_icrf_e=p_icrf_e,p_icrf_j3=p_icrf_j3,
     p_icrf_j4=p_icrf_j4,freq_icrf_d=freq_icrf_d,freq_icrf_e=freq_icrf_e,freq_icrf_j=freq_icrf_j,
     beta_N=beta_N,beta_p=beta_p,beta_t=beta_t,kappa=kappa,triang_l=triang_l,triang_u=triang_u,
-    triang=triang,li=li,areao=areao,vout=vout,aout=aout,rout=rout,zout=zout,zmag=zmag,
+    triang=triang,li=li,psurfa=psurfa,areao=areao,vout=vout,aout=aout,rout=rout,zout=zout,zmag=zmag,
     rmag=rmag,zsep_lower=zsep_lower,zsep_upper=zsep_upper,rsep_lower=rsep_lower,
     rsep_upper=rsep_upper,zvsin=zvsin,rvsin=rvsin,zvsout=zvsout,rvsout=rvsout,
     upper_gap=upper_gap,lower_gap=lower_gap,q0=q0,qstar=qstar,q95=q95,V_loop_efit=V_loop_efit,

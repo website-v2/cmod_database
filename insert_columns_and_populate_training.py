@@ -30,7 +30,7 @@ def main(shot):
     ['p_icrf_d','REAL'],['p_icrf_e','REAL'],['p_icrf_j3','REAL'],['p_icrf_j4','REAL'],
     ['freq_icrf_d','REAL'],['freq_icrf_e','REAL'],['freq_icrf_j','REAL'],['beta_N','REAL'],
     ['beta_p','REAL'],['beta_t','REAL'],['kappa','REAL'],['triang_l','REAL'],['triang_u','REAL'],
-    ['triang','REAL'],['li','REAL'],['areao','REAL'],['vout','REAL'],['aout','REAL'],
+    ['triang','REAL'],['li','REAL'],['psurfa','REAL'],['areao','REAL'],['vout','REAL'],['aout','REAL'],
     ['rout','REAL'],['zout','REAL'],['zmag','REAL'],['rmag','REAL'],['zsep_lower','REAL'],['zsep_upper','REAL'],
     ['rsep_lower','REAL'],['rsep_upper','REAL'],['zvsin','REAL'],['rvsin','REAL'],['zvsout','REAL'],['rvsout','REAL'],
     ['upper_gap','REAL'],['lower_gap','REAL'],['q0','REAL'],['qstar','REAL'],['q95','REAL'],

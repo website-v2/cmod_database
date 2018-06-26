@@ -51,7 +51,7 @@ cursor = conn.cursor()
 cursor.execute('select shot,id,present_mode,next_mode,time,time_at_transition,ip,\
                btor,p_lh,p_icrf,p_icrf_d,p_icrf_e,p_icrf_j3,p_icrf_j4,freq_icrf_d,\
                freq_icrf_e,freq_icrf_j,beta_N,beta_p,beta_t,kappa,triang_l,triang_u,\
-               triang,li,areao,vout,aout,rout,zout,zmag,rmag,zsep_lower,zsep_upper,\
+               triang,li,psurfa,areao,vout,aout,rout,zout,zmag,rmag,zsep_lower,zsep_upper,\
                rsep_lower,rsep_upper,zvsin,rvsin,zvsout,rvsout,upper_gap,lower_gap,\
                q0,qstar,q95,V_loop_efit,V_surf_efit,Wmhd,cpasma,ssep,P_ohm,HoverHD,\
                Halpha,Dalpha,z_ave,p_rad,p_rad_core,nLave_04,NL_04,nebar_efit,\
@@ -64,7 +64,7 @@ conn.close()
 columns = ['shot','id','present_mode','next_mode','time','time_at_transition','ip',\
         'btor','p_lh','p_icrf','p_icrf_d','p_icrf_e','p_icrf_j3','p_icrf_j4','freq_icrf_d',\
         'freq_icrf_e','freq_icrf_j','beta_N','beta_p','beta_t','kappa','triang_l','triang_u',\
-        'triang','li','areao','vout','aout','rout','zout','zmag','rmag','zsep_lower','zsep_upper',\
+        'triang','li','psurfa','areao','vout','aout','rout','zout','zmag','rmag','zsep_lower','zsep_upper',\
         'rsep_lower','rsep_upper','zvsin','rvsin','zvsout','rvsout','upper_gap','lower_gap',\
         'q0','qstar','q95','V_loop_efit','V_surf_efit','Wmhd','cpasma','ssep','P_ohm','HoverHD',\
         'Halpha','Dalpha','z_ave','p_rad','p_rad_core','nLave_04','NL_04','nebar_efit',\
@@ -107,17 +107,16 @@ total_x_data = []
 bad_shot = 0 #initialize
 i = 0 
 while i < len(rows):  
-    if (values['ip'][i] != None) and (values['btor'][i] != None) and (values['nebar_efit'][i] != None) and (values['aout'][i] != None) and (values['P_ohm'][i] != None) and (values['li'][i] != None) and (values['p_icrf'][i] != None) and (values['ssep'][i] != None) and (values['zvsin'][i] != None) and (values['zvsout'][i] != None) and (values['rvsin'][i] != None) and (values['rvsout'][i] != None):
+    if (values['ip'][i] != None) and (values['btor'][i] != None) and (values['Wmhd'][i] != None) and (values['nebar_efit'][i] != None) and (values['beta_p'][i] != None) and (values['P_ohm'][i] != None) and (values['li'][i] != None) and (values['rmag'][i] != None) and (values['p_icrf'][i] != None) and (values['Halpha'][i] != None) and (values['psurfa'][i] != None):
         if values['present_mode'][i] != 'I': #not considering I-modes right now
             Y_data0.append((values['present_mode'])[i])
-            X_data0.append([(values['shot'])[i],(values['btor'])[i],(values['nebar_efit'])[i],(values['aout'])[i],
-                            (values['P_ohm'])[i],(values['p_icrf'])[i],(values['ssep'])[i],(values['zvsin'])[i],
+            X_data0.append([(values['shot'])[i],(values['btor'])[i],(values['nebar_efit'])[i],(values['psurfa'])[i],                            (values['P_ohm'])[i],(values['p_icrf'])[i],(values['ssep'])[i],(values['zvsin'])[i],
                             (values['zvsout'])[i],(values['rvsin'])[i],(values['rvsout'])[i]]) #first element must be shot!
             total_x_data.append([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
                   (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
                   (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
                   (values['beta_t'])[i],(values['kappa'])[i],(values['triang'])[i],
-                  (values['areao'])[i],(values['vout'])[i],(values['aout'])[i],
+                  (values['psurfa'])[i],(values['areao'])[i],(values['vout'])[i],(values['aout'])[i],
                   (values['rout'])[i],(values['zout'])[i],
                   (values['zmag'])[i],(values['rmag'])[i],(values['zsep_lower'])[i],
                   (values['zsep_upper'])[i],(values['rsep_lower'])[i],(values['rsep_upper'])[i],
@@ -198,7 +197,7 @@ while update_index < cycles:
     print('Fraction of total data for training + validation = ',train_valid_frac)
     print('Fraction of training + validation data used for training = ',fraction_)
     #use below 4 lines if randomizing shots AND time slices for train/validation set
-    print("ML_testing_all_normalized_100trees_NN_100x100x100_layers_([(values['shot'])[i],(values['btor'])[i],(values['nebar_efit'])[i],(values['aout'])[i],\
+    print("ML_testing_all_normalized_100trees_NN_100x100x100_layers_([(values['shot'])[i],(values['btor'])[i],(values['nebar_efit'])[i],(values['psurfa'])[i],\
                             (values['P_ohm'])[i],(values['p_icrf'])[i],(values['ssep'])[i],(values['zvsin'])[i],\
                             (values['zvsout'])[i],(values['rvsin'])[i],(values['rvsout'])[i]]), cycles =",cycles,\
                     shots_number,' distinct shots in this dataset being considered',\
