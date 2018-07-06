@@ -39,6 +39,7 @@ import sys
 import matplotlib.pyplot as plt 
 from mpl_toolkits.mplot3d import Axes3D 
 import seaborn as sns
+sns.set_style("whitegrid",{'axes.facecolor': 'white','axes.grid': True,}) 
 import pandas as pd
  
 sqlite_file = '/home/mathewsa/Desktop/am_transitions.db'
@@ -121,7 +122,7 @@ while i < len(rows):
     if (values['ip'][i] != None) and (values['btor'][i] != None) and (values['Wmhd'][i] != None) and (values['nebar_efit'][i] != None) and (values['beta_p'][i] != None) and (values['P_ohm'][i] != None) and (values['li'][i] != None) and (values['rmag'][i] != None) and (values['Halpha'][i] != None) and (values['psurfa'][i] != None):
         Y_data0.append((values['present_mode'])[i])
         X_data0.append([(values['shot'])[i],(values['Wmhd'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
-                            (values['P_ohm'])[i],(values['li'])[i],(values['rmag'])[i],(values['Halpha'])[i],(values['psurfa'])[i]]) #first element must be shot!
+                        (values['P_ohm'])[i],(values['li'])[i],(values['rmag'])[i],(values['Halpha'])[i]]) #first element must be shot!
         total_x_data.append([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
               (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
               (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
@@ -185,6 +186,44 @@ c_matrix_NB = []
 c_matrix_valid_NB = []
 c_matrix_NN = []
 c_matrix_valid_NN = []
+
+RF_00 = []
+RF_01 = []
+RF_02 = []
+RF_10  = []
+RF_11  = []
+RF_12 = []
+RF_20  = []
+RF_21  = []
+RF_22 = []
+NB_00 = []
+NB_01 = []
+NB_02 = []
+NB_10  = []
+NB_11  = []
+NB_12 = []
+NB_20  = []
+NB_21  = []
+NB_22 = []
+NN_00 = []
+NN_01 = []
+NN_02 = []
+NN_10  = []
+NN_11  = []
+NN_12 = []
+NN_20  = []
+NN_21  = []
+NN_22 = []
+LR_00 = []
+LR_01 = []
+LR_02 = []
+LR_10  = []
+LR_11  = []
+LR_12 = []
+LR_20  = []
+LR_21  = []
+LR_22 = []
+
 fraction_ = 0.80
 train_valid_frac = 0.80
 update_index = 0#(spectroscopy.getNode('\SPECTROSCOPY::z_ave')).units_of()
@@ -194,7 +233,7 @@ while update_index < cycles:
     print('Fraction of training + validation data used for training = ',fraction_)
     #use below 4 lines if randomizing shots AND time slices for train/validation set
     print("ML_testing_all_normalized_NN_100x100x100_layers_([(values['shot'])[i],(values['Wmhd'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],\
-                            (values['P_ohm'])[i],(values['li'])[i],(values['rmag'])[i],(values['Halpha'])[i],(values['psurfa'])[i]]), cycles =",cycles,\
+                        (values['P_ohm'])[i],(values['li'])[i],(values['rmag'])[i],(values['Halpha'])[i]]), cycles =",cycles,\
     shots_number,' distinct shots in this dataset being considered',\
     'H-mode fraction to total dataset time slices: ',p,'/',len(Y_data0),\
     'I-mode fraction to total dataset time slices: ',p_i,'/',len(Y_data0))    
@@ -202,7 +241,7 @@ while update_index < cycles:
     together = [list(i) for _, i in itertools.groupby(data, operator.itemgetter(0))]
     random.shuffle(together) #groups based on first item of x_data, which should be shot!
     final_random = [i for j in together for i in j]
-    X_data = (np.array(final_random))[:,1:-1]
+    X_data = (np.array(final_random))[:,1:-1] #removes shot and last column which is an id
     Y_data = (np.array(final_random, dtype = int))[:,-1]
     #this train_valid is data that is training, then to be validated
     X_train, y_train = X_data[:int(train_valid_frac*len(X_data))], Y_data[:int(train_valid_frac*len(X_data))]
@@ -398,6 +437,43 @@ while update_index < cycles:
     c_matrix_valid_NB.append(c_matrix_valid['Naive Bayes'])
     c_matrix_NN.append(c_matrix['NeuralNet'])
     c_matrix_valid_NN.append(c_matrix_valid['NeuralNet'])
+    
+    RF_00.append(float(c_matrix['Random Forest'][0][0]))
+    RF_01.append(float(c_matrix['Random Forest'][0][1]))
+    RF_02.append(float(c_matrix['Random Forest'][0][2]))
+    RF_10.append(float(c_matrix['Random Forest'][1][0]))
+    RF_11.append(float(c_matrix['Random Forest'][1][1]))
+    RF_12.append(float(c_matrix['Random Forest'][1][2]))
+    RF_20.append(float(c_matrix['Random Forest'][2][0]))
+    RF_21.append(float(c_matrix['Random Forest'][2][1]))
+    RF_22.append(float(c_matrix['Random Forest'][2][2]))
+    NB_00.append(float(c_matrix['Naive Bayes'][0][0]))
+    NB_01.append(float(c_matrix['Naive Bayes'][0][1]))
+    NB_02.append(float(c_matrix['Naive Bayes'][0][2]))
+    NB_10.append(float(c_matrix['Naive Bayes'][1][0]))
+    NB_11.append(float(c_matrix['Naive Bayes'][1][1]))
+    NB_12.append(float(c_matrix['Naive Bayes'][1][2]))
+    NB_20.append(float(c_matrix['Naive Bayes'][2][0]))
+    NB_21.append(float(c_matrix['Naive Bayes'][2][1]))
+    NB_22.append(float(c_matrix['Naive Bayes'][2][2])) 
+    NN_00.append(float(c_matrix['NeuralNet'][0][0]))
+    NN_01.append(float(c_matrix['NeuralNet'][0][1]))
+    NN_02.append(float(c_matrix['NeuralNet'][0][2]))
+    NN_10.append(float(c_matrix['NeuralNet'][1][0]))
+    NN_11.append(float(c_matrix['NeuralNet'][1][1]))
+    NN_12.append(float(c_matrix['NeuralNet'][1][2]))
+    NN_20.append(float(c_matrix['NeuralNet'][2][0]))
+    NN_21.append(float(c_matrix['NeuralNet'][2][1]))
+    NN_22.append(float(c_matrix['NeuralNet'][2][2]))  
+    LR_00.append(float(c_matrix['Logistic'][0][0]))
+    LR_01.append(float(c_matrix['Logistic'][0][1]))
+    LR_02.append(float(c_matrix['Logistic'][0][2]))
+    LR_10.append(float(c_matrix['Logistic'][1][0]))
+    LR_11.append(float(c_matrix['Logistic'][1][1]))
+    LR_12.append(float(c_matrix['Logistic'][1][2]))
+    LR_20.append(float(c_matrix['Logistic'][2][0]))
+    LR_21.append(float(c_matrix['Logistic'][2][1]))
+    LR_22.append(float(c_matrix['Logistic'][2][2])) 
 
 #    clf = RandomForestClassifier(n_estimators=25)
 #    clf.fit(X_train_valid, y_train_valid)
@@ -638,6 +714,156 @@ print('L-mode accuracy (validation) ',np.mean(L_mode_accuracy_valid_NN),' +/- ',
 print('H-mode accuracy (validation) ',np.mean(H_mode_accuracy_valid_NN),' +/- ',np.std(H_mode_accuracy_valid_NN))
 print('I-mode accuracy (validation) ',np.nanmean(I_mode_accuracy_valid_NN),' +/- ',np.nanstd(I_mode_accuracy_valid_NN))
 
+#print('Be wary of below results as mean and std of confusion matrix is\
+#meaningless since different numbers of each mode present in test set in each\
+#cycle; better to calculate average precision/recall/f1 score for each cycle and average that')
+#print('RF confusion matrix 00:', np.mean(RF_00),' +/- ',np.std(RF_00))
+#print('RF confusion matrix 01:', np.mean(RF_01),' +/- ',np.std(RF_01))
+#print('RF confusion matrix 02:', np.mean(RF_02),' +/- ',np.std(RF_02))
+#print('RF confusion matrix 10:', np.mean(RF_10),' +/- ',np.std(RF_10))
+#print('RF confusion matrix 11:', np.mean(RF_11),' +/- ',np.std(RF_11))
+#print('RF confusion matrix 12:', np.mean(RF_12),' +/- ',np.std(RF_12))
+#print('RF confusion matrix 20:', np.mean(RF_20),' +/- ',np.std(RF_20))
+#print('RF confusion matrix 21:', np.mean(RF_21),' +/- ',np.std(RF_21))
+#print('RF confusion matrix 22:', np.mean(RF_22),' +/- ',np.std(RF_22))
+#print('NB confusion matrix 00:', np.mean(NB_00),' +/- ',np.std(NB_00))
+#print('NB confusion matrix 01:', np.mean(NB_01),' +/- ',np.std(NB_01))
+#print('NB confusion matrix 02:', np.mean(NB_02),' +/- ',np.std(NB_02))
+#print('NB confusion matrix 10:', np.mean(NB_10),' +/- ',np.std(NB_10))
+#print('NB confusion matrix 11:', np.mean(NB_11),' +/- ',np.std(NB_11))
+#print('NB confusion matrix 12:', np.mean(NB_12),' +/- ',np.std(NB_12))
+#print('NB confusion matrix 20:', np.mean(NB_20),' +/- ',np.std(NB_20))
+#print('NB confusion matrix 21:', np.mean(NB_21),' +/- ',np.std(NB_21))
+#print('NB confusion matrix 22:', np.mean(NB_22),' +/- ',np.std(NB_22))
+#print('NN confusion matrix 00:', np.mean(NN_00),' +/- ',np.std(NN_00))
+#print('NN confusion matrix 01:', np.mean(NN_01),' +/- ',np.std(NN_01))
+#print('NN confusion matrix 02:', np.mean(NN_02),' +/- ',np.std(NN_02))
+#print('NN confusion matrix 10:', np.mean(NN_10),' +/- ',np.std(NN_10))
+#print('NN confusion matrix 11:', np.mean(NN_11),' +/- ',np.std(NN_11))
+#print('NN confusion matrix 12:', np.mean(NN_12),' +/- ',np.std(NN_12))
+#print('NN confusion matrix 20:', np.mean(NN_20),' +/- ',np.std(NN_20))
+#print('NN confusion matrix 21:', np.mean(NN_21),' +/- ',np.std(NN_21))
+#print('NN confusion matrix 22:', np.mean(NN_22),' +/- ',np.std(NN_22))
+#print('LR confusion matrix 00:', np.mean(LR_00),' +/- ',np.std(LR_00))
+#print('LR confusion matrix 01:', np.mean(LR_01),' +/- ',np.std(LR_01))
+#print('LR confusion matrix 02:', np.mean(LR_02),' +/- ',np.std(LR_02))
+#print('LR confusion matrix 10:', np.mean(LR_10),' +/- ',np.std(LR_10))
+#print('LR confusion matrix 11:', np.mean(LR_11),' +/- ',np.std(LR_11))
+#print('LR confusion matrix 12:', np.mean(LR_12),' +/- ',np.std(LR_12))
+#print('LR confusion matrix 20:', np.mean(LR_20),' +/- ',np.std(LR_20))
+#print('LR confusion matrix 21:', np.mean(LR_21),' +/- ',np.std(LR_21))
+#print('LR confusion matrix 22:', np.mean(LR_22),' +/- ',np.std(LR_22))
+  
+RF_00 = np.array(RF_00)
+RF_01 = np.array(RF_01)
+RF_02 = np.array(RF_02)
+RF_10 = np.array(RF_10)
+RF_11 = np.array(RF_11)
+RF_12 = np.array(RF_12)
+RF_20 = np.array(RF_20)
+RF_21 = np.array(RF_21)
+RF_22 = np.array(RF_22)
+NB_00 = np.array(NB_00)
+NB_01 = np.array(NB_01)
+NB_02 = np.array(NB_02)
+NB_10 = np.array(NB_10)
+NB_11 = np.array(NB_11)
+NB_12 = np.array(NB_12)
+NB_20 = np.array(NB_20)
+NB_21 = np.array(NB_21)
+NB_22 = np.array(NB_22)
+NN_00 = np.array(NN_00)
+NN_01 = np.array(NN_01)
+NN_02 = np.array(NN_02)
+NN_10 = np.array(NN_10)
+NN_11 = np.array(NN_11)
+NN_12 = np.array(NN_12)
+NN_20 = np.array(NN_20)
+NN_21 = np.array(NN_21)
+NN_22 = np.array(NN_22)
+LR_00 = np.array(LR_00)
+LR_01 = np.array(LR_01)
+LR_02 = np.array(LR_02)
+LR_10 = np.array(LR_10)
+LR_11 = np.array(LR_11)
+LR_12 = np.array(LR_12)
+LR_20 = np.array(LR_20)
+LR_21 = np.array(LR_21)
+LR_22 = np.array(LR_22)
+    
+precision_RF_L = RF_00/(RF_20 + RF_10 + RF_00) #actually H-mode out of total predicted H-mode
+recall_RF_L = RF_00/(RF_02 + RF_01 + RF_00) #sensitivity
+F1_score_RF_L = 2.*precision_RF_L*recall_RF_L/(precision_RF_L + recall_RF_L)
+precision_RF_H = RF_11/(RF_21 + RF_11 + RF_01) #actually H-mode out of total predicted H-mode
+recall_RF_H = RF_11/(RF_12 + RF_11 + RF_10) #sensitivity
+F1_score_RF_H = 2.*precision_RF_H*recall_RF_H/(precision_RF_H + recall_RF_H)
+precision_RF_I = RF_22/(RF_22 + RF_12 + RF_02) #actually I-mode out of total predicted H-mode
+recall_RF_I = RF_22/(RF_22 + RF_21 + RF_20) #sensitivity
+F1_score_RF_I = 2.*precision_RF_I*recall_RF_I/(precision_RF_I + recall_RF_I)
+precision_NB_L = NB_00/(NB_20 + NB_10 + NB_00) #actually H-mode out of total predicted H-mode
+recall_NB_L = NB_00/(NB_02 + NB_01 + NB_00) #sensitivity
+F1_score_NB_L = 2.*precision_NB_L*recall_NB_L/(precision_NB_L + recall_NB_L)
+precision_NB_H = NB_11/(NB_21 + NB_11 + NB_01) #actually H-mode out of total predicted H-mode
+recall_NB_H = NB_11/(NB_12 + NB_11 + NB_10) #sensitivity
+F1_score_NB_H = 2.*precision_NB_H*recall_NB_H/(precision_NB_H + recall_NB_H)
+precision_NB_I = NB_22/(NB_22 + NB_12 + NB_02) #actually I-mode out of total predicted H-mode
+recall_NB_I = NB_22/(NB_22 + NB_21 + NB_20) #sensitivity
+F1_score_NB_I = 2.*precision_NB_I*recall_NB_I/(precision_NB_I + recall_NB_I)
+precision_NN_L = NN_00/(NN_20 + NN_10 + NN_00) #actually H-mode out of total predicted H-mode
+recall_NN_L = NN_00/(NN_02 + NN_01 + NN_00) #sensitivity
+F1_score_NN_L = 2.*precision_NN_L*recall_NN_L/(precision_NN_L + recall_NN_L)
+precision_NN_H = NN_11/(NN_21 + NN_11 + NN_01) #actually H-mode out of total predicted H-mode
+recall_NN_H = NN_11/(NN_12 + NN_11 + NN_10) #sensitivity
+F1_score_NN_H = 2.*precision_NN_H*recall_NN_H/(precision_NN_H + recall_NN_H)
+precision_NN_I = NN_22/(NN_22 + NN_12 + NN_02) #actually I-mode out of total predicted H-mode
+recall_NN_I = NN_22/(NN_22 + NN_21 + NN_20) #sensitivity
+F1_score_NN_I = 2.*precision_NN_I*recall_NN_I/(precision_NN_I + recall_NN_I)
+precision_LR_L = LR_00/(LR_20 + LR_10 + LR_00) #actually H-mode out of total predicted H-mode
+recall_LR_L = LR_00/(LR_02 + LR_01 + LR_00) #sensitivity
+F1_score_LR_L = 2.*precision_LR_L*recall_LR_L/(precision_LR_L + recall_LR_L)
+precision_LR_H = LR_11/(LR_21 + LR_11 + LR_01) #actually H-mode out of total predicted H-mode
+recall_LR_H = LR_11/(LR_12 + LR_11 + LR_10) #sensitivity
+F1_score_LR_H = 2.*precision_LR_H*recall_LR_H/(precision_LR_H + recall_LR_H)
+precision_LR_I = LR_22/(LR_22 + LR_12 + LR_02) #actually I-mode out of total predicted H-mode
+recall_LR_I = LR_22/(LR_22 + LR_21 + LR_20) #sensitivity
+F1_score_LR_I = 2.*precision_LR_I*recall_LR_I/(precision_LR_I + recall_LR_I)
+
+print('precision_RF_L:', np.mean(precision_RF_L),' +/- ',np.std(precision_RF_L))
+print('recall_RF_L:', np.mean(recall_RF_L),' +/- ',np.std(recall_RF_L))
+print('F1_score_RF_L:', np.mean(F1_score_RF_L),' +/- ',np.std(F1_score_RF_L)) 
+print('precision_NB_L:', np.mean(precision_NB_L),' +/- ',np.std(precision_NB_L))
+print('recall_NB_L:', np.mean(recall_NB_L),' +/- ',np.std(recall_NB_L))
+print('F1_score_NB_L:', np.mean(F1_score_NB_L),' +/- ',np.std(F1_score_NB_L)) 
+print('precision_NN_L:', np.mean(precision_NN_L),' +/- ',np.std(precision_NN_L))
+print('recall_NN_L:', np.mean(recall_NN_L),' +/- ',np.std(recall_NN_L))
+print('F1_score_NN_L:', np.mean(F1_score_NN_L),' +/- ',np.std(F1_score_NN_L))
+print('precision_LR_L:', np.mean(precision_LR_L),' +/- ',np.std(precision_LR_L))
+print('recall_LR_L:', np.mean(recall_LR_L),' +/- ',np.std(recall_LR_L))
+print('F1_score_LR_L:', np.mean(F1_score_LR_L),' +/- ',np.std(F1_score_LR_L))
+print('precision_RF_H:', np.mean(precision_RF_H),' +/- ',np.std(precision_RF_H))
+print('recall_RF_H:', np.mean(recall_RF_H),' +/- ',np.std(recall_RF_H))
+print('F1_score_RF_H:', np.mean(F1_score_RF_H),' +/- ',np.std(F1_score_RF_H)) 
+print('precision_NB_H:', np.mean(precision_NB_H),' +/- ',np.std(precision_NB_H))
+print('recall_NB_H:', np.mean(recall_NB_H),' +/- ',np.std(recall_NB_H))
+print('F1_score_NB_H:', np.mean(F1_score_NB_H),' +/- ',np.std(F1_score_NB_H)) 
+print('precision_NN_H:', np.mean(precision_NN_H),' +/- ',np.std(precision_NN_H))
+print('recall_NN_H:', np.mean(recall_NN_H),' +/- ',np.std(recall_NN_H))
+print('F1_score_NN_H:', np.mean(F1_score_NN_H),' +/- ',np.std(F1_score_NN_H))
+print('precision_LR_H:', np.mean(precision_LR_H),' +/- ',np.std(precision_LR_H))
+print('recall_LR_H:', np.mean(recall_LR_H),' +/- ',np.std(recall_LR_H))
+print('F1_score_LR_H:', np.mean(F1_score_LR_H),' +/- ',np.std(F1_score_LR_H))
+print('precision_RF_I:', np.mean(precision_RF_I),' +/- ',np.std(precision_RF_I))
+print('recall_RF_I:', np.mean(recall_RF_I),' +/- ',np.std(recall_RF_I))
+print('F1_score_RF_I:', np.mean(F1_score_RF_I),' +/- ',np.std(F1_score_RF_I)) 
+print('precision_NB_I:', np.mean(precision_NB_I),' +/- ',np.std(precision_NB_I))
+print('recall_NB_I:', np.mean(recall_NB_I),' +/- ',np.std(recall_NB_I))
+print('F1_score_NB_I:', np.mean(F1_score_NB_I),' +/- ',np.std(F1_score_NB_I)) 
+print('precision_NN_I:', np.mean(precision_NN_I),' +/- ',np.std(precision_NN_I))
+print('recall_NN_I:', np.mean(recall_NN_I),' +/- ',np.std(recall_NN_I))
+print('F1_score_NN_I:', np.mean(F1_score_NN_I),' +/- ',np.std(F1_score_NN_I))
+print('precision_LR_I:', np.mean(precision_LR_I),' +/- ',np.std(precision_LR_I))
+print('recall_LR_I:', np.mean(recall_LR_I),' +/- ',np.std(recall_LR_I))
+print('F1_score_LR_I:', np.mean(F1_score_LR_I),' +/- ',np.std(F1_score_LR_I))
 
 import pickle
 #Saving created model
