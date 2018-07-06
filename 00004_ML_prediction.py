@@ -45,7 +45,7 @@ def y_fmt(y, pos):
     r"$\! \times  10^{14}$", r"$\! \times  10^{13}$", r"$\! \times  10^{12}$",\
     r"$\! \times 10^{11}$", r"$\! \times 10^{10}$", r"$\! \times 10^{9}$",\
     r"$\! \times  10^{8}$", r"$\! \times  10^{7}$", r"$\! \times 10^{6}$", r"$\! \times  10^{5}$",\
-    r"$\! \times  10^{4}$", r"$\! \times 10^{3}$", r"$\! \times  10^{2}$", r"$\! \times  10^{1}$", r"$\! \times  10^{0}$" ,\
+    r"$\! \times  10^{4}$", r"$\! \times 10^{3}$", r"$\! \times  10^{2}$", r"$\! \times  10^{1}$", "" ,\
     r"$\! \times  10^{-1}$", r"$\! \times  10^{-2}$", r"$\! \times 10^{-3}$",\
     r"$\! \times  10^{-4}$", r"$\! \times  10^{-5}$", r"$\! \times 10^{-6}$",\
     r"$\! \times  10^{-7}$", r"$\! \times  10^{-8}$", r"$\! \times 10^{-9}$",\
@@ -627,7 +627,8 @@ for idx, clf, tt in zip(product([0, 1], [0, 1]),
     axarr[idx[0], idx[1]].set_xlim([np.min(x_input_),np.max(x_input_)])
     axarr[idx[0], idx[1]].set_ylim([np.min(y_input_),np.max(y_input_)]) 
     axarr[idx[0], idx[1]].legend(loc="upper center", ncol=2)
-f.colorbar(cntr, orientation="horizontal", pad=0.25)   
+f.colorbar(cntr, orientation="horizontal", pad=0.25)
+f.autofmt_xdate()     
 plt.show() 
 
 sns.set(style="white")
@@ -656,7 +657,8 @@ for idx, clf, tt in zip(product([0, 1], [0, 1]),
     axarr[idx[0], idx[1]].set_xlim([np.min(x_input_),np.max(x_input_)])
     axarr[idx[0], idx[1]].set_ylim([np.min(y_input_),np.max(y_input_)]) 
     axarr[idx[0], idx[1]].legend(loc="upper center", ncol=2)
-f.colorbar(cntr, orientation="horizontal", pad=0.25)     
+f.colorbar(cntr, orientation="horizontal", pad=0.25)    
+f.autofmt_xdate()   
 plt.show()  
 
 sns.set(style="white")
@@ -687,5 +689,37 @@ for idx, clf, tt in zip(product([0, 1], [0, 1]),
     axarr[idx[0], idx[1]].set_ylim([np.min(y_input_),np.max(y_input_)]) 
     axarr[idx[0], idx[1]].legend(loc="upper center", ncol=2)
 f.colorbar(cntr, orientation="horizontal", pad=0.25) 
+f.autofmt_xdate()  
+plt.show()
+
+f, axarr = plt.subplots(2, 2, sharex='col', sharey='row', figsize=(14, 14))
+
+for idx, clf, tt in zip(product([0, 1], [0, 1]),
+                        [RF_LHI_model, NN_LHI_model, LR_LHI_model, GNB_LHI_model],#, eclf],
+                        ['Random Forest', 'NeuralNet', 'Logistic Regression',\
+                         'Gaussian naive Bayes']):#, 'Soft Voting']):
+
+
+    grid = np.c_[x_input_.ravel(), y_input_.ravel()]
+    probs1 = clf.predict_proba(np.c_[Wmhd_input, nebar_efit_input, beta_p_input, P_ohm_input,
+                          li_input, rmag_input, Halpha_input])[:, 1].reshape((grid_steps,grid_steps))
+    probs2 = clf.predict_proba(np.c_[Wmhd_input, nebar_efit_input, beta_p_input, P_ohm_input,
+                          li_input, rmag_input, Halpha_input])[:, 2].reshape((grid_steps,grid_steps))
+    bounds=np.linspace(0.0,1.0,9)                      
+    cntr1 = axarr[idx[0], idx[1]].contourf(x_input_, y_input_, probs2, vmin = 0.0,    vmax = 1.0, levels = bounds, alpha=0.4, cmap="Reds", origin = origin)
+    cntr2 = axarr[idx[0], idx[1]].contourf(x_input_, y_input_, probs1, vmin = 0.0,    vmax = 1.0, levels = bounds, alpha=0.4, cmap="Greens", origin = origin)   
+
+    axarr[idx[0], idx[1]].set_xticks(x_ticks)    
+    axarr[idx[0], idx[1]].set_xticklabels(x_axis_labels)    
+    axarr[idx[0], idx[1]].set_yticks(y_ticks)                                                           
+    axarr[idx[0], idx[1]].set_yticklabels(y_axis_labels) 
+    axarr[idx[0], idx[1]].set_title(tt)
+    axarr[idx[0], idx[1]].set_xlabel(x_description)
+    axarr[idx[0], idx[1]].set_ylabel(y_description) 
+    axarr[idx[0], idx[1]].set_xlim([np.min(x_input_),np.max(x_input_)])
+    axarr[idx[0], idx[1]].set_ylim([np.min(y_input_),np.max(y_input_)]) 
+    axarr[idx[0], idx[1]].legend(loc="upper center", ncol=2)
+f.colorbar(cntr1, pad=0.25, extend='both')
+f.colorbar(cntr2, orientation="horizontal") 
 f.autofmt_xdate()  
 plt.show()
