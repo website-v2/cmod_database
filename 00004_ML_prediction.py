@@ -45,7 +45,7 @@ def y_fmt(y, pos):
     r"$\! \times  10^{14}$", r"$\! \times  10^{13}$", r"$\! \times  10^{12}$",\
     r"$\! \times 10^{11}$", r"$\! \times 10^{10}$", r"$\! \times 10^{9}$",\
     r"$\! \times  10^{8}$", r"$\! \times  10^{7}$", r"$\! \times 10^{6}$", r"$\! \times  10^{5}$",\
-    r"$\! \times  10^{4}$", r"$\! \times 10^{3}$", r"$\! \times  10^{2}$", r"$\! \times  10^{1}$", "" ,\
+    r"$\! \times  10^{4}$", r"$\! \times 10^{3}$", r"$\! \times  10^{2}$", r"$\! \times  10^{1}$", r"$\! \times  10^{0}$",\
     r"$\! \times  10^{-1}$", r"$\! \times  10^{-2}$", r"$\! \times 10^{-3}$",\
     r"$\! \times  10^{-4}$", r"$\! \times  10^{-5}$", r"$\! \times 10^{-6}$",\
     r"$\! \times  10^{-7}$", r"$\! \times  10^{-8}$", r"$\! \times 10^{-9}$",\
@@ -722,12 +722,14 @@ for idx, clf, tt in zip(product([0, 1], [0, 1]),
     axarr[idx[0], idx[1]].legend(loc="upper center", ncol=2) 
 cbar_ax1 = f.add_axes([1.05, 0.1, 0.03, 0.8])
 cbar_ax2 = f.add_axes([0.95, 0.1, 0.03, 0.8])
-f.colorbar(cntr1, extend='both', cax=cbar_ax1)
-f.colorbar(cntr2, cax=cbar_ax2) 
+cbar1 = f.colorbar(cntr1, extend='both', cax=cbar_ax1) 
+cbar1.set_label(r"$\bf{I-mode}$", labelpad=-40, y=1.03, rotation=0)
+cbar2 = f.colorbar(cntr2, cax=cbar_ax2)
+cbar2.set_label(r"$\bf{H-mode}$", labelpad=-40, y=1.03, rotation=0)  
 f.autofmt_xdate()  
 f.suptitle((r"$\beta_p = $"+y_fmt(beta_p_constant, 1)+
              r", $P_{ohm} = $"+y_fmt(P_ohm_constant, 1)+r"$W$"
              r"$,\ l_{i} = $"+y_fmt(li_constant, 1)+
              r"$,\ r_{mag} = $"+y_fmt(rmag_constant, 1)+"$m$"
-             r"$,\ H_{\alpha} = $"+y_fmt(Halpha_constant, 1)+"$Wm^{-2}sr^{-1}$"),fontsize=25)
+             r"$,\ H_{\alpha} = $"+y_fmt(Halpha_constant, 1)+"$\\frac{W}{m^2 sr}$"),fontsize=25)
 plt.show()
