@@ -589,10 +589,11 @@ li_input = inputs_normalized[4]*np.ones(grid_steps*grid_steps)
 rmag_input = inputs_normalized[5]*np.ones(grid_steps*grid_steps)
 Halpha_input = inputs_normalized[6]*np.ones(grid_steps*grid_steps)
 
-x_labels = list(np.around(np.linspace(min_Wmhd,max_Wmhd,9),decimals=2))
-y_labels = list(np.around(np.linspace(min_nebar_efit,max_nebar_efit,9),decimals=2))
-x_ticks = np.around(np.linspace(np.min(x_input_),np.max(x_input_),9))         
-y_ticks = np.around(np.linspace(np.min(y_input_),np.max(y_input_),9)) 
+number_ticks = 9
+x_labels = list(np.around(np.linspace(min_Wmhd,max_Wmhd,number_ticks),decimals=2))
+y_labels = list(np.around(np.linspace(min_nebar_efit,max_nebar_efit,number_ticks),decimals=2))
+x_ticks = (np.linspace(np.min(x_input_),np.max(x_input_),number_ticks))         
+y_ticks = (np.linspace(np.min(y_input_),np.max(y_input_),number_ticks)) 
 x_description = r"$W_{mhd} \ (J)$"
 y_description = r"$\bar{n} \ (m^{-3})$"
     
@@ -631,66 +632,66 @@ f.colorbar(cntr, orientation="horizontal", pad=0.25)
 f.autofmt_xdate()     
 plt.show() 
 
-sns.set(style="white")
-
-f, axarr = plt.subplots(2, 2, sharex='col', sharey='row', figsize=(14, 14))
-
-for idx, clf, tt in zip(product([0, 1], [0, 1]),
-                        [RF_LHI_model, NN_LHI_model, LR_LHI_model, GNB_LHI_model],#, eclf],
-                        ['Random Forest', 'NeuralNet', 'Logistic Regression',\
-                         'Gaussian naive Bayes']):#, 'Soft Voting']):
-    
-    grid = np.c_[x_input_.ravel(), y_input_.ravel()]
-    probs = clf.predict_proba(np.c_[Wmhd_input, nebar_efit_input, beta_p_input, P_ohm_input,
-                          li_input, rmag_input, Halpha_input])[:, 1].reshape((grid_steps,grid_steps))
-    bounds=np.linspace(0.0,1.0,9)                      
-    cntr = axarr[idx[0], idx[1]].contourf(x_input_, y_input_, probs, vmin = 0.0,\
-    vmax = 1.0, levels = bounds, alpha=0.4, cmap="Greens", origin = origin)   
-    
-    axarr[idx[0], idx[1]].set_xticks(x_ticks)    
-    axarr[idx[0], idx[1]].set_xticklabels(x_axis_labels)    
-    axarr[idx[0], idx[1]].set_yticks(y_ticks)                                                           
-    axarr[idx[0], idx[1]].set_yticklabels(y_axis_labels) 
-    axarr[idx[0], idx[1]].set_title(tt)
-    axarr[idx[0], idx[1]].set_xlabel(x_description)
-    axarr[idx[0], idx[1]].set_ylabel(y_description) 
-    axarr[idx[0], idx[1]].set_xlim([np.min(x_input_),np.max(x_input_)])
-    axarr[idx[0], idx[1]].set_ylim([np.min(y_input_),np.max(y_input_)]) 
-    axarr[idx[0], idx[1]].legend(loc="upper center", ncol=2)
-f.colorbar(cntr, orientation="horizontal", pad=0.25)    
-f.autofmt_xdate()   
-plt.show()  
-
-sns.set(style="white")
-
-f, axarr = plt.subplots(2, 2, sharex='col', sharey='row', figsize=(14, 14))
-
-for idx, clf, tt in zip(product([0, 1], [0, 1]),
-                        [RF_LHI_model, NN_LHI_model, LR_LHI_model, GNB_LHI_model],#, eclf],
-                        ['Random Forest', 'NeuralNet', 'Logistic Regression',\
-                         'Gaussian naive Bayes']):#, 'Soft Voting']):
- 
-    
-    grid = np.c_[x_input_.ravel(), y_input_.ravel()]
-    probs = clf.predict_proba(np.c_[Wmhd_input, nebar_efit_input, beta_p_input, P_ohm_input,
-                          li_input, rmag_input, Halpha_input])[:, 2].reshape((grid_steps,grid_steps))
-    bounds=np.linspace(0.0,1.0,9)                      
-    cntr = axarr[idx[0], idx[1]].contourf(x_input_, y_input_, probs, vmin = 0.0,\
-    vmax = 1.0, levels = bounds, alpha=0.4, cmap="Reds", origin = origin)   
-     
-    axarr[idx[0], idx[1]].set_xticks(x_ticks)    
-    axarr[idx[0], idx[1]].set_xticklabels(x_axis_labels)    
-    axarr[idx[0], idx[1]].set_yticks(y_ticks)                                                           
-    axarr[idx[0], idx[1]].set_yticklabels(y_axis_labels) 
-    axarr[idx[0], idx[1]].set_title(tt)
-    axarr[idx[0], idx[1]].set_xlabel(x_description)
-    axarr[idx[0], idx[1]].set_ylabel(y_description) 
-    axarr[idx[0], idx[1]].set_xlim([np.min(x_input_),np.max(x_input_)])
-    axarr[idx[0], idx[1]].set_ylim([np.min(y_input_),np.max(y_input_)]) 
-    axarr[idx[0], idx[1]].legend(loc="upper center", ncol=2)
-f.colorbar(cntr, orientation="horizontal", pad=0.25) 
-f.autofmt_xdate()  
-plt.show()
+#sns.set(style="white")
+#
+#f, axarr = plt.subplots(2, 2, sharex='col', sharey='row', figsize=(14, 14))
+#
+#for idx, clf, tt in zip(product([0, 1], [0, 1]),
+#                        [RF_LHI_model, NN_LHI_model, LR_LHI_model, GNB_LHI_model],#, eclf],
+#                        ['Random Forest', 'NeuralNet', 'Logistic Regression',\
+#                         'Gaussian naive Bayes']):#, 'Soft Voting']):
+#    
+#    grid = np.c_[x_input_.ravel(), y_input_.ravel()]
+#    probs = clf.predict_proba(np.c_[Wmhd_input, nebar_efit_input, beta_p_input, P_ohm_input,
+#                          li_input, rmag_input, Halpha_input])[:, 1].reshape((grid_steps,grid_steps))
+#    bounds=np.linspace(0.0,1.0,number_ticks)                      
+#    cntr = axarr[idx[0], idx[1]].contourf(x_input_, y_input_, probs, vmin = 0.0,\
+#    vmax = 1.0, levels = bounds, alpha=0.4, cmap="Greens", origin = origin)   
+#    
+#    axarr[idx[0], idx[1]].set_xticks(x_ticks)    
+#    axarr[idx[0], idx[1]].set_xticklabels(x_axis_labels)    
+#    axarr[idx[0], idx[1]].set_yticks(y_ticks)                                                           
+#    axarr[idx[0], idx[1]].set_yticklabels(y_axis_labels) 
+#    axarr[idx[0], idx[1]].set_title(tt)
+#    axarr[idx[0], idx[1]].set_xlabel(x_description)
+#    axarr[idx[0], idx[1]].set_ylabel(y_description) 
+#    axarr[idx[0], idx[1]].set_xlim([np.min(x_input_),np.max(x_input_)])
+#    axarr[idx[0], idx[1]].set_ylim([np.min(y_input_),np.max(y_input_)]) 
+#    axarr[idx[0], idx[1]].legend(loc="upper center", ncol=2)
+#f.colorbar(cntr, orientation="horizontal", pad=0.25)    
+#f.autofmt_xdate()   
+#plt.show()  
+#
+#sns.set(style="white")
+#
+#f, axarr = plt.subplots(2, 2, sharex='col', sharey='row', figsize=(14, 14))
+#
+#for idx, clf, tt in zip(product([0, 1], [0, 1]),
+#                        [RF_LHI_model, NN_LHI_model, LR_LHI_model, GNB_LHI_model],#, eclf],
+#                        ['Random Forest', 'NeuralNet', 'Logistic Regression',\
+#                         'Gaussian naive Bayes']):#, 'Soft Voting']):
+# 
+#    
+#    grid = np.c_[x_input_.ravel(), y_input_.ravel()]
+#    probs = clf.predict_proba(np.c_[Wmhd_input, nebar_efit_input, beta_p_input, P_ohm_input,
+#                          li_input, rmag_input, Halpha_input])[:, 2].reshape((grid_steps,grid_steps))
+#    bounds=np.linspace(0.0,1.0,number_ticks)                      
+#    cntr = axarr[idx[0], idx[1]].contourf(x_input_, y_input_, probs, vmin = 0.0,\
+#    vmax = 1.0, levels = bounds, alpha=0.4, cmap="Reds", origin = origin)   
+#     
+#    axarr[idx[0], idx[1]].set_xticks(x_ticks)    
+#    axarr[idx[0], idx[1]].set_xticklabels(x_axis_labels)    
+#    axarr[idx[0], idx[1]].set_yticks(y_ticks)                                                           
+#    axarr[idx[0], idx[1]].set_yticklabels(y_axis_labels) 
+#    axarr[idx[0], idx[1]].set_title(tt)
+#    axarr[idx[0], idx[1]].set_xlabel(x_description)
+#    axarr[idx[0], idx[1]].set_ylabel(y_description) 
+#    axarr[idx[0], idx[1]].set_xlim([np.min(x_input_),np.max(x_input_)])
+#    axarr[idx[0], idx[1]].set_ylim([np.min(y_input_),np.max(y_input_)]) 
+#    axarr[idx[0], idx[1]].legend(loc="upper center", ncol=2)
+#f.colorbar(cntr, orientation="horizontal", pad=0.25) 
+#f.autofmt_xdate()  
+#plt.show()
 
 f, axarr = plt.subplots(2, 2, sharex='col', sharey='row', figsize=(14, 14))
 
@@ -705,7 +706,7 @@ for idx, clf, tt in zip(product([0, 1], [0, 1]),
                           li_input, rmag_input, Halpha_input])[:, 1].reshape((grid_steps,grid_steps))
     probs2 = clf.predict_proba(np.c_[Wmhd_input, nebar_efit_input, beta_p_input, P_ohm_input,
                           li_input, rmag_input, Halpha_input])[:, 2].reshape((grid_steps,grid_steps))
-    bounds=np.linspace(0.0,1.0,9)                      
+    bounds=np.linspace(0.0,1.0,number_ticks)                      
     cntr1 = axarr[idx[0], idx[1]].contourf(x_input_, y_input_, probs2, vmin = 0.0,    vmax = 1.0, levels = bounds, alpha=0.4, cmap="Reds", origin = origin)
     cntr2 = axarr[idx[0], idx[1]].contourf(x_input_, y_input_, probs1, vmin = 0.0,    vmax = 1.0, levels = bounds, alpha=0.4, cmap="Greens", origin = origin)   
 
@@ -718,8 +719,15 @@ for idx, clf, tt in zip(product([0, 1], [0, 1]),
     axarr[idx[0], idx[1]].set_ylabel(y_description) 
     axarr[idx[0], idx[1]].set_xlim([np.min(x_input_),np.max(x_input_)])
     axarr[idx[0], idx[1]].set_ylim([np.min(y_input_),np.max(y_input_)]) 
-    axarr[idx[0], idx[1]].legend(loc="upper center", ncol=2)
-f.colorbar(cntr1, pad=0.25, extend='both')
-f.colorbar(cntr2, orientation="horizontal") 
+    axarr[idx[0], idx[1]].legend(loc="upper center", ncol=2) 
+cbar_ax1 = f.add_axes([1.05, 0.1, 0.03, 0.8])
+cbar_ax2 = f.add_axes([0.95, 0.1, 0.03, 0.8])
+f.colorbar(cntr1, extend='both', cax=cbar_ax1)
+f.colorbar(cntr2, cax=cbar_ax2) 
 f.autofmt_xdate()  
+f.suptitle((r"$\beta_p = $"+y_fmt(beta_p_constant, 1)+
+             r", $P_{ohm} = $"+y_fmt(P_ohm_constant, 1)+r"$W$"
+             r"$,\ l_{i} = $"+y_fmt(li_constant, 1)+
+             r"$,\ r_{mag} = $"+y_fmt(rmag_constant, 1)+"$m$"
+             r"$,\ H_{\alpha} = $"+y_fmt(Halpha_constant, 1)+"$Wm^{-2}sr^{-1}$"),fontsize=25)
 plt.show()
