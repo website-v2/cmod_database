@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jun 13 14:12:24 2018
+Created on Tue Jul 10 19:22:03 2018
 
 @author: mathewsa
 
-Currently configured to conduct analysis/prediction on a single shot
+Currently configured to conduct analysis/prediction of tau_E on a single shot
 
 """
+
 import matplotlib.pyplot as plt 
 from matplotlib.ticker import FormatStrFormatter
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -82,6 +83,7 @@ data = np.load('/home/mathewsa/Desktop/single_shot_training_table_py.npz')
 extra_variables = np.load('/home/mathewsa/Desktop/extra_variables.npz')
 
 X_data = []
+tau_E_data = []
 j = 0
 time = round(((extra_variables['timebase'])[j]),3)
 while time < round(((extra_variables['timebase'])[-1]),3):  
@@ -89,97 +91,43 @@ while time < round(((extra_variables['timebase'])[-1]),3):
     X_data.append([(data['Wmhd'])[j],(data['nebar_efit'])[j],\
     (data['beta_p'])[j],(data['P_ohm'])[j],(data['li'])[j],\
     (data['rmag'])[j],(data['Halpha'])[j]])
+    tau_E_data.append([(data['Wmhd'])[j],(data['p_icrf'])[j],(data['P_ohm'])[j]])
     j = j + 1
     
-#Loading saved model
-RF_LHI_pkl_filename = '/home/mathewsa/Desktop/00004_RF_classifier_LHI.pkl'
-RF_LHI_model_pkl = open(RF_LHI_pkl_filename, 'rb')
-RF_LHI_model = pickle.load(RF_LHI_model_pkl)
-NN_LHI_pkl_filename = '/home/mathewsa/Desktop/00004_NN_classifier_LHI.pkl'
-NN_LHI_model_pkl = open(NN_LHI_pkl_filename, 'rb')
-NN_LHI_model = pickle.load(NN_LHI_model_pkl)
-GNB_LHI_pkl_filename = '/home/mathewsa/Desktop/00004_NB_classifier_LHI.pkl'
-GNB_LHI_model_pkl = open(GNB_LHI_pkl_filename, 'rb')
-GNB_LHI_model = pickle.load(GNB_LHI_model_pkl)
-LR_LHI_pkl_filename = '/home/mathewsa/Desktop/00004_LR_classifier_LHI.pkl'
-LR_LHI_model_pkl = open(LR_LHI_pkl_filename, 'rb')
-LR_LHI_model = pickle.load(LR_LHI_model_pkl)
+tau_E = np.array(tau_E_data)[:,0]/(np.array(tau_E_data)[:,1] + np.array(tau_E_data)[:,2])
 
-scalerfile = '/home/mathewsa/Desktop/00004_scaler.sav'
+#Loading saved model
+RFR_tau_E_pkl_filename = '/home/mathewsa/Desktop/00005_RFR_regression_tau_E.pkl'
+RFR_tau_E_model_pkl = open(RFR_tau_E_pkl_filename, 'rb')
+RFR_tau_E_model = pickle.load(RFR_tau_E_model_pkl) 
+KNN_tau_E_pkl_filename = '/home/mathewsa/Desktop/00005_KNN_regression_tau_E.pkl'
+KNN_tau_E_model_pkl = open(KNN_tau_E_pkl_filename, 'rb')
+KNN_tau_E_model = pickle.load(KNN_tau_E_model_pkl) 
+REG_tau_E_pkl_filename = '/home/mathewsa/Desktop/00005_REG_regression_tau_E.pkl'
+REG_tau_E_model_pkl = open(REG_tau_E_pkl_filename, 'rb')
+REG_tau_E_model = pickle.load(REG_tau_E_model_pkl) 
+NN_tau_E_pkl_filename = '/home/mathewsa/Desktop/00005_NN_regression_tau_E.pkl'
+NN_tau_E_model_pkl = open(NN_tau_E_pkl_filename, 'rb')
+NN_tau_E_model = pickle.load(NN_tau_E_model_pkl)
+
+scalerfile = '/home/mathewsa/Desktop/00005_scaler.sav'
 scaler = pickle.load(open(scalerfile, 'rb')) #must use transformation applied to training data
 
 #score = RF_LH_model.score(X_test, y_test)
 X_data_normalized = scaler.transform(X_data)
-prediction_RF = RF_LHI_model.predict(X_data_normalized)
-prediction_proba_RF_L = RF_LHI_model.predict_proba(X_data_normalized)[:,0]
-prediction_proba_RF_H = RF_LHI_model.predict_proba(X_data_normalized)[:,1]
-prediction_proba_RF_I = RF_LHI_model.predict_proba(X_data_normalized)[:,2]
-prediction_NN = NN_LHI_model.predict(X_data_normalized)
-prediction_proba_NN_L = NN_LHI_model.predict_proba(X_data_normalized)[:,0]
-prediction_proba_NN_H = NN_LHI_model.predict_proba(X_data_normalized)[:,1]
-prediction_proba_NN_I = NN_LHI_model.predict_proba(X_data_normalized)[:,2]
-prediction_GNB = GNB_LHI_model.predict(X_data_normalized)
-prediction_proba_GNB_L = GNB_LHI_model.predict_proba(X_data_normalized)[:,0]
-prediction_proba_GNB_H = GNB_LHI_model.predict_proba(X_data_normalized)[:,1]
-prediction_proba_GNB_I = GNB_LHI_model.predict_proba(X_data_normalized)[:,2]
-prediction_LR = LR_LHI_model.predict(X_data_normalized)
-prediction_proba_LR_L = LR_LHI_model.predict_proba(X_data_normalized)[:,0]
-prediction_proba_LR_H = LR_LHI_model.predict_proba(X_data_normalized)[:,1]
-prediction_proba_LR_I = LR_LHI_model.predict_proba(X_data_normalized)[:,2]
-    
-    
+prediction_RFR = RFR_tau_E_model.predict(X_data_normalized) 
+prediction_KNN = KNN_tau_E_model.predict(X_data_normalized) 
+prediction_REG = REG_tau_E_model.predict(X_data_normalized)
+prediction_NN = NN_tau_E_model.predict(X_data_normalized)
+     
 plt.figure()
-plt.plot(timebase,prediction_proba_RF_H,color='black',label='Random Forest')
-plt.plot(timebase,prediction_proba_NN_H,label='Neural Net')
-plt.plot(timebase,prediction_proba_GNB_H,label='Gaussian naive Bayes')
-plt.plot(timebase,prediction_proba_LR_H,label='Logistic Regression') 
-plt.ylabel(r'Prediction Probability (H-mode)')
+plt.plot(timebase,prediction_RFR,label='Random Forest')
+plt.plot(timebase,prediction_KNN,label='KNeighborsRegressor')
+plt.plot(timebase,prediction_REG,label='Ridge Regression')
+plt.plot(timebase,prediction_NN,label='NeuralNet') 
+plt.plot(timebase,tau_E,color='black',label='True') 
+plt.ylabel(r"$\tau_E$")
 plt.xlabel(r'time (s)')
-plt.ylim([-0.1,1.1])
-plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-plt.show()
-plt.figure()
-plt.plot(timebase,prediction_proba_RF_I,color='black',label='Random Forest')
-plt.plot(timebase,prediction_proba_NN_I,label='Neural Net')
-plt.plot(timebase,prediction_proba_GNB_I,label='Gaussian naive Bayes')
-plt.plot(timebase,prediction_proba_LR_I,label='Logistic Regression') 
-plt.ylabel(r'Prediction Probability (I-mode)')
-plt.xlabel(r'time (s)') 
-plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-plt.show()
-plt.figure()
-plt.plot(timebase,prediction_proba_RF_L,label='L-mode')
-plt.plot(timebase,prediction_proba_RF_H,label='H-mode')
-plt.plot(timebase,prediction_proba_RF_I,label='I-mode')  
-plt.ylabel(r'Prediction Probability (RF)')
-plt.xlabel(r'Time (s)')
-plt.ylim([-0.1,1.1])
-plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-plt.show()
-plt.figure()
-plt.plot(timebase,prediction_proba_NN_L,label='L-mode')
-plt.plot(timebase,prediction_proba_NN_H,label='H-mode')
-plt.plot(timebase,prediction_proba_NN_I,label='I-mode')  
-plt.ylabel(r'Prediction Probability (NN)')
-plt.xlabel(r'Time (s)')
-plt.ylim([-0.1,1.1])
-plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-plt.show()
-plt.figure()
-plt.plot(timebase,prediction_proba_GNB_L,label='L-mode')
-plt.plot(timebase,prediction_proba_GNB_H,label='H-mode')
-plt.plot(timebase,prediction_proba_GNB_I,label='I-mode')  
-plt.ylabel(r'Prediction Probability (GNB)')
-plt.xlabel(r'Time (s)')
-plt.ylim([-0.1,1.1])
-plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-plt.show()
-plt.figure()
-plt.plot(timebase,prediction_proba_LR_L,label='L-mode')
-plt.plot(timebase,prediction_proba_LR_H,label='H-mode')
-plt.plot(timebase,prediction_proba_LR_I,label='I-mode')  
-plt.ylabel(r'Prediction Probability (LR)')
-plt.xlabel(r'Time (s)')
 plt.ylim([-0.1,1.1])
 plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 plt.show()
@@ -242,68 +190,7 @@ plt.figure()
 plt.plot(timebase,(extra_variables['ne_t']),color='red')
 plt.ylabel(r'ne_t')
 plt.xlabel(r'Time (s)')
-plt.show()
-plt.figure()
-plt.plot(timebase,prediction_proba_RF_H,color='black',label='Random Forest')
-plt.plot(timebase,prediction_proba_NN_H,label='Neural Net')
-plt.plot(timebase,prediction_proba_GNB_H,label='Gaussian naive Bayes')
-plt.plot(timebase,prediction_proba_LR_H,label='Logistic Regression') 
-plt.ylabel(r'Prediction Probability (H-mode)')
-plt.xlabel(r'time (s)')
-plt.ylim([-0.1,1.1])
-plt.xlim([1.5,1.8])
-plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-plt.show()
-plt.figure()
-plt.plot(timebase,prediction_proba_RF_I,color='black',label='Random Forest')
-plt.plot(timebase,prediction_proba_NN_I,label='Neural Net')
-plt.plot(timebase,prediction_proba_GNB_I,label='Gaussian naive Bayes')
-plt.plot(timebase,prediction_proba_LR_I,label='Logistic Regression') 
-plt.ylabel(r'Prediction Probability (I-mode)')
-plt.xlabel(r'time (s)') 
-plt.xlim([1.5,1.8])
-plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-plt.show()
-plt.figure()
-plt.plot(timebase,prediction_proba_RF_L,label='L-mode')
-plt.plot(timebase,prediction_proba_RF_H,label='H-mode')
-plt.plot(timebase,prediction_proba_RF_I,label='I-mode')  
-plt.ylabel(r'Prediction Probability (RF)')
-plt.xlabel(r'Time (s)')
-plt.ylim([-0.1,1.1])
-plt.xlim([1.5,1.8])
-plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-plt.show()
-plt.figure()
-plt.plot(timebase,prediction_proba_NN_L,label='L-mode')
-plt.plot(timebase,prediction_proba_NN_H,label='H-mode')
-plt.plot(timebase,prediction_proba_NN_I,label='I-mode')  
-plt.ylabel(r'Prediction Probability (NN)')
-plt.xlabel(r'Time (s)')
-plt.ylim([-0.1,1.1])
-plt.xlim([1.5,1.8])
-plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-plt.show()
-plt.figure()
-plt.plot(timebase,prediction_proba_GNB_L,label='L-mode')
-plt.plot(timebase,prediction_proba_GNB_H,label='H-mode')
-plt.plot(timebase,prediction_proba_GNB_I,label='I-mode')  
-plt.ylabel(r'Prediction Probability (GNB)')
-plt.xlabel(r'Time (s)')
-plt.ylim([-0.1,1.1])
-plt.xlim([1.5,1.8])
-plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-plt.show()
-plt.figure()
-plt.plot(timebase,prediction_proba_LR_L,label='L-mode')
-plt.plot(timebase,prediction_proba_LR_H,label='H-mode')
-plt.plot(timebase,prediction_proba_LR_I,label='I-mode')  
-plt.ylabel(r'Prediction Probability (LR)')
-plt.xlabel(r'Time (s)')
-plt.ylim([-0.1,1.1])
-plt.xlim([1.5,1.8])
-plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-plt.show()
+plt.show()  
 plt.figure()
 plt.plot(timebase,(data['Wmhd']),color='green')
 plt.ylabel(r"$W_{mhd}$")
@@ -518,15 +405,6 @@ while q < len(Y_data0):
     q = q + 1
 print('I-mode fraction to total dataset time slices: ',p_i,'/',len(Y_data0))
 
-
-#------------------------------------------------------
-#Below is the regions as distinguished by the classifiers
-#They are generalized and not specific to any shot but instead the entire database
-#------------------------------------------------------
-
-eclf = VotingClassifier(estimators=[('rf', RF_LHI_model), ('mlp', NN_LHI_model),
-                                    ('lr', LR_LHI_model), ('gnb', GNB_LHI_model)],
-                                    voting='soft')#, weights=[2, 1, 2])
 origin = 'lower'
 #origin = 'upper'                    
 # Plotting decision regions
@@ -604,111 +482,20 @@ for item in x_labels:
 y_axis_labels = []
 for item in y_labels:
     y_axis_labels.append(y_fmt(item, 1))
-    
-f, axarr = plt.subplots(2, 2, sharex='col', sharey='row', figsize=(14, 14))
-
-for idx, clf, tt in zip(product([0, 1], [0, 1]),
-                        [RF_LHI_model, NN_LHI_model, LR_LHI_model, GNB_LHI_model],#, eclf],
-                        ['Random Forest', 'NeuralNet', 'Logistic Regression',\
-                         'Gaussian naive Bayes']):#, 'Soft Voting']):
-
-    Z = clf.predict(np.c_[Wmhd_input, nebar_efit_input, beta_p_input, P_ohm_input,
-                          li_input, rmag_input, Halpha_input])
-    Z = Z.reshape((grid_steps,grid_steps))
-
-    cntr = axarr[idx[0], idx[1]].contourf(x_input_, y_input_, Z, alpha=0.4, cmap="RdBu_r", origin = origin)         
-     
-    axarr[idx[0], idx[1]].set_xticks(x_ticks)    
-    axarr[idx[0], idx[1]].set_xticklabels(x_axis_labels)    
-    axarr[idx[0], idx[1]].set_yticks(y_ticks)                                                           
-    axarr[idx[0], idx[1]].set_yticklabels(y_axis_labels) 
-    axarr[idx[0], idx[1]].set_title(tt)
-    axarr[idx[0], idx[1]].set_xlabel(x_description)
-    axarr[idx[0], idx[1]].set_ylabel(y_description) 
-    axarr[idx[0], idx[1]].set_xlim([np.min(x_input_),np.max(x_input_)])
-    axarr[idx[0], idx[1]].set_ylim([np.min(y_input_),np.max(y_input_)]) 
-    axarr[idx[0], idx[1]].legend(loc="upper center", ncol=2)
-f.colorbar(cntr, orientation="horizontal", pad=0.25)
-f.autofmt_xdate()     
-plt.show() 
-
-#sns.set(style="white")
-#
-#f, axarr = plt.subplots(2, 2, sharex='col', sharey='row', figsize=(14, 14))
-#
-#for idx, clf, tt in zip(product([0, 1], [0, 1]),
-#                        [RF_LHI_model, NN_LHI_model, LR_LHI_model, GNB_LHI_model],#, eclf],
-#                        ['Random Forest', 'NeuralNet', 'Logistic Regression',\
-#                         'Gaussian naive Bayes']):#, 'Soft Voting']):
-#    
-#    grid = np.c_[x_input_.ravel(), y_input_.ravel()]
-#    probs = clf.predict_proba(np.c_[Wmhd_input, nebar_efit_input, beta_p_input, P_ohm_input,
-#                          li_input, rmag_input, Halpha_input])[:, 1].reshape((grid_steps,grid_steps))
-#    bounds=np.linspace(0.0,1.0,number_ticks)                      
-#    cntr = axarr[idx[0], idx[1]].contourf(x_input_, y_input_, probs, vmin = 0.0,\
-#    vmax = 1.0, levels = bounds, alpha=0.4, cmap="Greens", origin = origin)   
-#    
-#    axarr[idx[0], idx[1]].set_xticks(x_ticks)    
-#    axarr[idx[0], idx[1]].set_xticklabels(x_axis_labels)    
-#    axarr[idx[0], idx[1]].set_yticks(y_ticks)                                                           
-#    axarr[idx[0], idx[1]].set_yticklabels(y_axis_labels) 
-#    axarr[idx[0], idx[1]].set_title(tt)
-#    axarr[idx[0], idx[1]].set_xlabel(x_description)
-#    axarr[idx[0], idx[1]].set_ylabel(y_description) 
-#    axarr[idx[0], idx[1]].set_xlim([np.min(x_input_),np.max(x_input_)])
-#    axarr[idx[0], idx[1]].set_ylim([np.min(y_input_),np.max(y_input_)]) 
-#    axarr[idx[0], idx[1]].legend(loc="upper center", ncol=2)
-#f.colorbar(cntr, orientation="horizontal", pad=0.25)    
-#f.autofmt_xdate()   
-#plt.show()  
-#
-#sns.set(style="white")
-#
-#f, axarr = plt.subplots(2, 2, sharex='col', sharey='row', figsize=(14, 14))
-#
-#for idx, clf, tt in zip(product([0, 1], [0, 1]),
-#                        [RF_LHI_model, NN_LHI_model, LR_LHI_model, GNB_LHI_model],#, eclf],
-#                        ['Random Forest', 'NeuralNet', 'Logistic Regression',\
-#                         'Gaussian naive Bayes']):#, 'Soft Voting']):
-# 
-#    
-#    grid = np.c_[x_input_.ravel(), y_input_.ravel()]
-#    probs = clf.predict_proba(np.c_[Wmhd_input, nebar_efit_input, beta_p_input, P_ohm_input,
-#                          li_input, rmag_input, Halpha_input])[:, 2].reshape((grid_steps,grid_steps))
-#    bounds=np.linspace(0.0,1.0,number_ticks)                      
-#    cntr = axarr[idx[0], idx[1]].contourf(x_input_, y_input_, probs, vmin = 0.0,\
-#    vmax = 1.0, levels = bounds, alpha=0.4, cmap="Reds", origin = origin)   
-#     
-#    axarr[idx[0], idx[1]].set_xticks(x_ticks)    
-#    axarr[idx[0], idx[1]].set_xticklabels(x_axis_labels)    
-#    axarr[idx[0], idx[1]].set_yticks(y_ticks)                                                           
-#    axarr[idx[0], idx[1]].set_yticklabels(y_axis_labels) 
-#    axarr[idx[0], idx[1]].set_title(tt)
-#    axarr[idx[0], idx[1]].set_xlabel(x_description)
-#    axarr[idx[0], idx[1]].set_ylabel(y_description) 
-#    axarr[idx[0], idx[1]].set_xlim([np.min(x_input_),np.max(x_input_)])
-#    axarr[idx[0], idx[1]].set_ylim([np.min(y_input_),np.max(y_input_)]) 
-#    axarr[idx[0], idx[1]].legend(loc="upper center", ncol=2)
-#f.colorbar(cntr, orientation="horizontal", pad=0.25) 
-#f.autofmt_xdate()  
-#plt.show()
 
 f, axarr = plt.subplots(2, 2, sharex='col', sharey='row', figsize=(14, 14))
 
 for idx, clf, tt in zip(product([0, 1], [0, 1]),
-                        [RF_LHI_model, NN_LHI_model, LR_LHI_model, GNB_LHI_model],#, eclf],
-                        ['Random Forest', 'NeuralNet', 'Logistic Regression',\
-                         'Gaussian naive Bayes']):#, 'Soft Voting']):
+                        [RFR_tau_E_model, KNN_tau_E_model, REG_tau_E_model, NN_tau_E_model],#, eclf],
+                        ['Random Forest', 'KNeighborsRegressor', 'Ridge Regression',\
+                         'NeuralNet']):#, 'Soft Voting']):
 
 
     grid = np.c_[x_input_.ravel(), y_input_.ravel()]
-    probs1 = clf.predict_proba(np.c_[Wmhd_input, nebar_efit_input, beta_p_input, P_ohm_input,
-                          li_input, rmag_input, Halpha_input])[:, 1].reshape((grid_steps,grid_steps))
-    probs2 = clf.predict_proba(np.c_[Wmhd_input, nebar_efit_input, beta_p_input, P_ohm_input,
-                          li_input, rmag_input, Halpha_input])[:, 2].reshape((grid_steps,grid_steps))
-    bounds=np.linspace(0.0,1.0,number_ticks)                      
-    cntr1 = axarr[idx[0], idx[1]].contourf(x_input_, y_input_, probs2, vmin = 0.0,    vmax = 1.0, levels = bounds, alpha=0.4, cmap="Reds", origin = origin)
-    cntr2 = axarr[idx[0], idx[1]].contourf(x_input_, y_input_, probs1, vmin = 0.0,    vmax = 1.0, levels = bounds, alpha=0.4, cmap="Greens", origin = origin)   
+    tau_E_predict = clf.predict(np.c_[Wmhd_input, nebar_efit_input, beta_p_input, P_ohm_input,
+                          li_input, rmag_input, Halpha_input])[:, 1].reshape((grid_steps,grid_steps)) 
+#    bounds=np.linspace(0.0,1.0,number_ticks)                      
+    cntr1 = axarr[idx[0], idx[1]].contourf(x_input_, y_input_, tau_E_predict, vmin = 0.0,    vmax = 1.0, levels = bounds, alpha=0.4, cmap="Reds", origin = origin)
 
     axarr[idx[0], idx[1]].set_xticks(x_ticks)    
     axarr[idx[0], idx[1]].set_xticklabels(x_axis_labels)    
@@ -720,20 +507,13 @@ for idx, clf, tt in zip(product([0, 1], [0, 1]),
     axarr[idx[0], idx[1]].set_xlim([np.min(x_input_),np.max(x_input_)])
     axarr[idx[0], idx[1]].set_ylim([np.min(y_input_),np.max(y_input_)]) 
     axarr[idx[0], idx[1]].legend(loc="upper center", ncol=2) 
-cbar_ax1 = f.add_axes([1.05, 0.1, 0.03, 0.8])
-cbar_ax2 = f.add_axes([0.95, 0.1, 0.03, 0.8])
-cbar1 = f.colorbar(cntr1, extend='both', cax=cbar_ax1) 
-cbar1.ax.set_title(r"$\bf{I-mode}$", y=1.01, rotation=0)
-cbar1.ax.set_ylabel(r"$\bf{Probability}$",  labelpad=20, rotation=270)    
-cbar2 = f.colorbar(cntr2, cax=cbar_ax2)
-cbar2.ax.set_title(r"$\bf{H-mode}$", y=1.01, rotation=0) 
+cbar_ax1 = f.add_axes([1.05, 0.1, 0.03, 0.8]) 
+cbar1 = f.colorbar(cntr1, extend='both', cax=cbar_ax1)  
+cbar1.ax.set_ylabel(r"$\tau_E (s)$",  labelpad=20, rotation=270)  
 f.autofmt_xdate()  
 f.suptitle((r"$\beta_p = $"+y_fmt(beta_p_constant, 1)+
              r", $P_{ohm} = $"+y_fmt(P_ohm_constant, 1)+r"$W$"
              r"$,\ l_{i} = $"+y_fmt(li_constant, 1)+
              r"$,\ r_{mag} = $"+y_fmt(rmag_constant, 1)+"$m$"
              r"$,\ H_{\alpha} = $"+y_fmt(Halpha_constant, 1)+"$\\frac{W}{m^2 sr}$"),fontsize=25)
-plt.show()
-
-print(LR_LHI_model.coef_)
-print(LR_LHI_model.intercept_) 
+plt.show() 

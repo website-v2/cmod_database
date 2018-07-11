@@ -29,6 +29,8 @@ from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.utils import shuffle
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
+from sklearn.metrics import roc_curve, auc
+from sklearn.model_selection import StratifiedKFold
 import itertools
 import operator
 import random
@@ -39,6 +41,7 @@ import sys
 import matplotlib.pyplot as plt 
 from mpl_toolkits.mplot3d import Axes3D 
 import seaborn as sns
+sns.set_style("whitegrid",{'axes.facecolor': 'white','axes.grid': True,}) 
 import pandas as pd
  
 sqlite_file = '/home/mathewsa/Desktop/am_transitions.db'
@@ -107,11 +110,11 @@ total_x_data = []
 bad_shot = 0 #initialize
 i = 0 
 while i < len(rows):  
-    if (values['ip'][i] != None) and (values['btor'][i] != None) and (values['Wmhd'][i] != None) and (values['nebar_efit'][i] != None) and (values['beta_p'][i] != None) and (values['P_ohm'][i] != None) and (values['li'][i] != None) and (values['rmag'][i] != None) and (values['p_icrf'][i] != None) and (values['Halpha'][i] != None) and (values['psurfa'][i] != None):
+    if (values['ip'][i] != None) and (values['btor'][i] != None) and (values['Wmhd'][i] != None) and (values['nebar_efit'][i] != None) and (values['beta_p'][i] != None) and (values['P_ohm'][i] != None) and (values['li'][i] != None) and (values['rmag'][i] != None) and (values['Halpha'][i] != None):
         if values['present_mode'][i] != 'I': #not considering I-modes right now
             Y_data0.append((values['present_mode'])[i])
-            X_data0.append([(values['shot'])[i],(values['btor'])[i],(values['nebar_efit'])[i],(values['psurfa'])[i],                            (values['P_ohm'])[i],(values['p_icrf'])[i],(values['ssep'])[i],(values['zvsin'])[i],
-                            (values['zvsout'])[i],(values['rvsin'])[i],(values['rvsout'])[i]]) #first element must be shot!
+            X_data0.append([(values['shot'])[i],(values['Wmhd'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
+                            (values['P_ohm'])[i],(values['li'])[i],(values['rmag'])[i],(values['Halpha'])[i]]) #first element must be shot!
             total_x_data.append([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
                   (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
                   (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
@@ -189,6 +192,28 @@ true_L_Logistic = []
 true_H_Logistic = []
 false_L_Logistic = []
 false_H_Logistic = []
+
+RF_00 = []
+RF_01 = []
+RF_10  = []
+RF_11  = []
+NB_00 = []
+NB_01 = []
+NB_10  = []
+NB_11  = []
+NN_00 = []
+NN_01 = []
+NN_10  = []
+NN_11  = []
+LR_00 = []
+LR_01 = []
+LR_10  = []
+LR_11  = []
+
+tprs = []
+aucs = []
+mean_fpr = np.linspace(0, 1, 100)
+
 fraction_ = 0.80
 train_valid_frac = 0.80
 update_index = 0#(spectroscopy.getNode('\SPECTROSCOPY::z_ave')).units_of()
@@ -197,9 +222,8 @@ while update_index < cycles:
     print('Fraction of total data for training + validation = ',train_valid_frac)
     print('Fraction of training + validation data used for training = ',fraction_)
     #use below 4 lines if randomizing shots AND time slices for train/validation set
-    print("ML_testing_all_normalized_100trees_NN_100x100x100_layers_([(values['shot'])[i],(values['btor'])[i],(values['nebar_efit'])[i],(values['psurfa'])[i],\
-                            (values['P_ohm'])[i],(values['p_icrf'])[i],(values['ssep'])[i],(values['zvsin'])[i],\
-                            (values['zvsout'])[i],(values['rvsin'])[i],(values['rvsout'])[i]]), cycles =",cycles,\
+    print("ML_testing_all_normalized_100trees_NN_100x100x100_layers_([(values['shot'])[i],(values['Wmhd'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],\
+                            (values['P_ohm'])[i],(values['li'])[i],(values['rmag'])[i],(values['Halpha'])[i]]), cycles =",cycles,\
                     shots_number,' distinct shots in this dataset being considered',\
                     'H-mode fraction to total dataset time slices: ',p,'/',len(Y_data0))    
     data = np.insert(X_data0, len(X_data0[0]), values=Y_data0, axis=-1)
@@ -240,12 +264,13 @@ while update_index < cycles:
     tree_depth_max = [estimator.tree_.depth for estimator in rfc.estimators_]
     
     # Plot calibration plots
-    
-    plt.figure(figsize=(10, 10))
-    ax1 = plt.subplot2grid((4, 1), (0, 0))
-    ax2 = plt.subplot2grid((4, 1), (1, 0))
-    ax3 = plt.subplot2grid((4, 1), (2, 0))
-    ax4 = plt.subplot2grid((4, 1), (3, 0))
+    plt.figure(figsize=(10, 14))
+    ax1 = plt.subplot2grid((6, 1), (0, 0))
+    ax2 = plt.subplot2grid((6, 1), (1, 0))
+    ax3 = plt.subplot2grid((6, 1), (2, 0))
+    ax4 = plt.subplot2grid((6, 1), (3, 0))
+    ax5 = plt.subplot2grid((6, 1), (4, 0))
+    ax6 = plt.subplot2grid((6, 1), (5, 0))
     
     prediction_prob = {}
     prediction = {}
@@ -312,7 +337,17 @@ while update_index < cycles:
                      label="%s valid" % (name, ))
         ax4.hist(prob_pos_valid, range=(0, 1), bins=20, label=name,
                      histtype="step", lw=2)
-        
+    
+        fpr, tpr, thresholds = roc_curve(y_test_np,prob_pos)     
+        tprs.append(np.interp(mean_fpr, fpr, tpr))
+        tprs[-1][0] = 0.0
+        roc_auc = auc(fpr, tpr)
+        aucs.append(roc_auc)
+        ax5.plot(fpr, tpr, lw=1, alpha=0.4,
+             label='ROC fold %s (AUC = %0.2f)' % (name, roc_auc))
+        ax6.plot(fpr, tpr, lw=1, alpha=0.4,
+         label='ROC fold %s (AUC = %0.2f)' % (name, roc_auc))          
+             
     ax1.set_ylabel("Fraction of positives")
     ax1.set_ylim([-0.05, 1.05])
     ax1.legend(loc="lower right")
@@ -327,9 +362,47 @@ while update_index < cycles:
     ax3.set_title('Calibration plots - validation (reliability curve)')
     ax4.set_xlabel("Mean predicted value")
     ax4.set_ylabel("Count")
-    ax4.legend(loc="upper center", ncol=2)
+    ax4.legend(loc="upper center", ncol=2)   
     
-    plt.tight_layout()
+    ax5.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',
+         label='Luck', alpha=.4)
+    ax6.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',
+         label='Luck', alpha=.4)
+         
+    mean_tpr = np.mean(tprs, axis=0)
+    mean_tpr[-1] = 1.0
+    mean_auc = auc(mean_fpr, mean_tpr)
+    std_auc = np.std(aucs)
+    ax5.plot(mean_fpr, mean_tpr, color='black',
+             label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (mean_auc, std_auc),
+             lw=2, alpha=.4)
+    ax6.plot(mean_fpr, mean_tpr, color='black',
+         label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (mean_auc, std_auc),
+         lw=2, alpha=.4)
+    
+    std_tpr = np.std(tprs, axis=0)
+    tprs_upper = np.minimum(mean_tpr + std_tpr, 1)
+    tprs_lower = np.maximum(mean_tpr - std_tpr, 0)
+    ax5.fill_between(mean_fpr, tprs_lower, tprs_upper, color='grey', alpha=.2,
+                     label=r'$\pm$ 1 std. dev.')
+    ax6.fill_between(mean_fpr, tprs_lower, tprs_upper, color='grey', alpha=.2,
+                     label=r'$\pm$ 1 std. dev.')
+    
+    ax5.set_xlim([0.0, 1.05])
+    ax5.set_ylim([0.0, 1.05])
+    ax5.set_xlabel('False Positive Rate')
+    ax5.set_ylabel('True Positive Rate')
+    ax5.set_title('Receiver Operating Characteristic')
+    ax5.legend(loc="lower right")
+    
+    ax6.set_xlim([0.0, 0.10])
+    ax6.set_ylim([0.0, 1.05])
+    ax6.set_xlabel('False Positive Rate')
+    ax6.set_ylabel('True Positive Rate')
+    ax6.set_title('Receiver Operating Characteristic')
+    ax6.legend(loc="lower right")
+    
+    plt.tight_layout() 
     plt.show() 
     
     true_L_RF.append(c_matrix['Random Forest'][0][0]/float(c_matrix['Random Forest'][0][0] + c_matrix['Random Forest'][0][1])) #true negative
@@ -348,6 +421,23 @@ while update_index < cycles:
     false_H_Logistic.append(c_matrix['Logistic'][0][1]/float(c_matrix['Logistic'][0][0] + c_matrix['Logistic'][0][1]))
     false_L_Logistic.append(c_matrix['Logistic'][1][0]/float(c_matrix['Logistic'][1][0] + c_matrix['Logistic'][1][1]))
     true_H_Logistic.append(c_matrix['Logistic'][1][1]/float(c_matrix['Logistic'][1][0] + c_matrix['Logistic'][1][1]))
+    
+    RF_00.append(float(c_matrix['Random Forest'][0][0]))
+    RF_01.append(float(c_matrix['Random Forest'][0][1]))
+    RF_10.append(float(c_matrix['Random Forest'][1][0]))
+    RF_11.append(float(c_matrix['Random Forest'][1][1]))
+    NB_00.append(float(c_matrix['Naive Bayes'][0][0]))
+    NB_01.append(float(c_matrix['Naive Bayes'][0][1]))
+    NB_10.append(float(c_matrix['Naive Bayes'][1][0]))
+    NB_11.append(float(c_matrix['Naive Bayes'][1][1]))
+    NN_00.append(float(c_matrix['NeuralNet'][0][0]))
+    NN_01.append(float(c_matrix['NeuralNet'][0][1]))
+    NN_10.append(float(c_matrix['NeuralNet'][1][0]))
+    NN_11.append(float(c_matrix['NeuralNet'][1][1]))
+    LR_00.append(float(c_matrix['Logistic'][0][0]))
+    LR_01.append(float(c_matrix['Logistic'][0][1]))
+    LR_10.append(float(c_matrix['Logistic'][1][0]))
+    LR_11.append(float(c_matrix['Logistic'][1][1]))    
     
     print('Total accuracy: ', accuracy)
     #print(c_matrix)
@@ -807,6 +897,49 @@ print('FalseH - ',np.mean(false_H_RF),' +/- ',np.std(false_H_RF))
 print('trueL - ',np.mean(true_L_RF),' +/- ',np.std(true_L_RF))
 print('falseL - ',np.mean(false_L_RF),' +/- ',np.std(false_L_RF))
 
+RF_00 = np.array(RF_00)
+RF_01 = np.array(RF_01) 
+RF_10 = np.array(RF_10)
+RF_11 = np.array(RF_11) 
+NB_00 = np.array(NB_00)
+NB_01 = np.array(NB_01) 
+NB_10 = np.array(NB_10)
+NB_11 = np.array(NB_11) 
+NN_00 = np.array(NN_00)
+NN_01 = np.array(NN_01) 
+NN_10 = np.array(NN_10)
+NN_11 = np.array(NN_11) 
+LR_00 = np.array(LR_00)
+LR_01 = np.array(LR_01) 
+LR_10 = np.array(LR_10)
+LR_11 = np.array(LR_11) 
+
+precision_RF = RF_11/(RF_11 + RF_01) #actually H-mode out of total predicted H-mode
+recall_RF = RF_11/(RF_11 + RF_10) #sensitivity
+F1_score_RF = 2.*precision_RF*recall_RF/(precision_RF + recall_RF)
+precision_NB = NB_11/(NB_11 + NB_01) #actually H-mode out of total predicted H-mode
+recall_NB = NB_11/(NB_11 + NB_10) #sensitivity
+F1_score_NB = 2.*precision_NB*recall_NB/(precision_NB + recall_NB)
+precision_NN = NN_11/(NN_11 + NN_01) #actually H-mode out of total predicted H-mode
+recall_NN = NN_11/(NN_11 + NN_10) #sensitivity
+F1_score_NN = 2.*precision_NN*recall_NN/(precision_NN + recall_NN)
+precision_LR = LR_11/(LR_11 + LR_01) #actually H-mode out of total predicted H-mode
+recall_LR = LR_11/(LR_11 + LR_10) #sensitivity
+F1_score_LR = 2.*precision_LR*recall_LR/(precision_LR + recall_LR)
+
+print('precision_RF:', np.mean(precision_RF),' +/- ',np.std(precision_RF))
+print('recall_RF:', np.mean(recall_RF),' +/- ',np.std(recall_RF))
+print('F1_score_RF:', np.mean(F1_score_RF),' +/- ',np.std(F1_score_RF)) 
+print('precision_NB:', np.mean(precision_NB),' +/- ',np.std(precision_NB))
+print('recall_NB:', np.mean(recall_NB),' +/- ',np.std(recall_NB))
+print('F1_score_NB:', np.mean(F1_score_NB),' +/- ',np.std(F1_score_NB)) 
+print('precision_NN:', np.mean(precision_NN),' +/- ',np.std(precision_NN))
+print('recall_NN:', np.mean(recall_NN),' +/- ',np.std(recall_NN))
+print('F1_score_NN:', np.mean(F1_score_NN),' +/- ',np.std(F1_score_NN))
+print('precision_LR:', np.mean(precision_LR),' +/- ',np.std(precision_LR))
+print('recall_LR:', np.mean(recall_LR),' +/- ',np.std(recall_LR))
+print('F1_score_LR:', np.mean(F1_score_LR),' +/- ',np.std(F1_score_LR))
+
 import pickle
 #Saving created RF model
 RF_LH_pkl_filename = '/home/mathewsa/Desktop/RF_classifier_LH.pkl'
@@ -864,3 +997,5 @@ corr.style.background_gradient().set_precision(3)
 f, ax = plt.subplots(figsize=(10, 8))
 sns.heatmap(corr, annot=True, fmt='.3f', mask=np.zeros_like(corr, dtype=np.bool), cmap=sns.diverging_palette(220, 10, as_cmap=True),
             square=True, ax=ax)
+            
+print(LR_LH_model.coef_)

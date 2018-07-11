@@ -30,6 +30,7 @@ from sklearn.utils import shuffle
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 import itertools
+from sklearn.metrics import roc_curve, auc
 import operator
 import random
 import sqlite3
@@ -224,6 +225,13 @@ LR_20  = []
 LR_21  = []
 LR_22 = []
 
+tprs_H = []
+aucs_H = []
+mean_fpr_H = np.linspace(0, 1, 100)
+tprs_I = []
+aucs_I = []
+mean_fpr_I = np.linspace(0, 1, 100)
+
 fraction_ = 0.80
 train_valid_frac = 0.80
 update_index = 0#(spectroscopy.getNode('\SPECTROSCOPY::z_ave')).units_of()
@@ -241,7 +249,7 @@ while update_index < cycles:
     together = [list(i) for _, i in itertools.groupby(data, operator.itemgetter(0))]
     random.shuffle(together) #groups based on first item of x_data, which should be shot!
     final_random = [i for j in together for i in j]
-    X_data = (np.array(final_random))[:,1:-1] #removes shot and last column which is an id
+    X_data = (np.array(final_random))[:,1:-1]
     Y_data = (np.array(final_random, dtype = int))[:,-1]
     #this train_valid is data that is training, then to be validated
     X_train, y_train = X_data[:int(train_valid_frac*len(X_data))], Y_data[:int(train_valid_frac*len(X_data))]
@@ -311,18 +319,41 @@ while update_index < cycles:
     gnb = GaussianNB()  
     mlp = MLPClassifier(hidden_layer_sizes=(100,100,100))
     
-    prediction_prob = {}
+    prediction_prob_H = {}
+    prediction_prob_I = {}
     prediction = {}
-    prediction_prob_valid = {}
+    prediction_prob_valid_H = {}
+    prediction_prob_valid_I = {}
     prediction_valid = {}
     sum_array = {}
     accuracy = {}
-    c_matrix = {} #confusion matrix
-    c_matrix1 = {}
+    c_matrix = {} #confusion matrix 
     sum_array_valid = {}
     accuracy_valid = {}
-    c_matrix_valid = {} #confusion matrix
-    c_matrix1_valid = {}
+    c_matrix_valid = {} #confusion matrix 
+    
+    # Plot calibration plots
+    plt.figure(figsize=(10, 28))
+    
+    ax1 = plt.subplot2grid((6, 1), (0, 0))
+    ax2 = plt.subplot2grid((6, 1), (1, 0))
+    ax3 = plt.subplot2grid((6, 1), (2, 0))
+    ax4 = plt.subplot2grid((6, 1), (3, 0))
+    ax5 = plt.subplot2grid((6, 1), (4, 0))
+    ax6 = plt.subplot2grid((6, 1), (5, 0))
+    
+    ax7 = plt.subplot2grid((6, 1), (0, 0))
+    ax8 = plt.subplot2grid((6, 1), (1, 0))
+    ax9 = plt.subplot2grid((6, 1), (2, 0))
+    ax10 = plt.subplot2grid((6, 1), (3, 0))
+    ax11 = plt.subplot2grid((6, 1), (4, 0))
+    ax12 = plt.subplot2grid((6, 1), (5, 0))
+    
+    ax1.plot([0, 1], [0, 1], "k:", label="Perfectly calibrated")
+    ax3.plot([0, 1], [0, 1], "k:", label="Perfectly calibrated")
+    
+    ax7.plot([0, 1], [0, 1], "k:", label="Perfectly calibrated")
+    ax9.plot([0, 1], [0, 1], "k:", label="Perfectly calibrated")
 
     for clf, name in [(lr, 'Logistic'),
                   (gnb, 'Naive Bayes'),
@@ -331,16 +362,190 @@ while update_index < cycles:
                   (mlp, 'NeuralNet')]: 
         clf.fit(X_train_valid, y_train_valid)
     #   if hasattr(clf, "predict_proba"):
-        prob_pos = clf.predict_proba(X_test)[:, 1] #probability of 1, or H-mode
-        prob_pos_valid = clf.predict_proba(X_valid)[:, 1]
-        prediction_prob[str(name)] = np.array([int(numeric_string) for numeric_string in prob_pos])
-        prediction_prob_valid[str(name)] = np.array([int(numeric_string) for numeric_string in prob_pos_valid])
+        prob_pos_H = clf.predict_proba(X_test)[:, 1] #probability of 1, or H-mode
+        prob_pos_valid_H = clf.predict_proba(X_valid)[:, 1]
+        prob_pos_I = clf.predict_proba(X_test)[:, 2] #probability of 1, or H-mode
+        prob_pos_valid_I = clf.predict_proba(X_valid)[:, 2]
+        prediction_prob_H[str(name)] = np.array([int(numeric_string) for numeric_string in prob_pos_H])
+        prediction_prob_valid_H[str(name)] = np.array([int(numeric_string) for numeric_string in prob_pos_valid_H])
+        prediction_prob_I[str(name)] = np.array([int(numeric_string) for numeric_string in prob_pos_I])
+        prediction_prob_valid_I[str(name)] = np.array([int(numeric_string) for numeric_string in prob_pos_valid_I])        
         prediction[str(name)] = np.array([int(numeric_string) for numeric_string in clf.predict(X_test)])
         prediction_valid[str(name)] = np.array([int(numeric_string) for numeric_string in clf.predict(X_valid)])
     
         c_matrix[str(name)] = array3x3(confusion_matrix(y_test_np, prediction[str(name)]))
         c_matrix_valid[str(name)] = array3x3(confusion_matrix(y_valid_np, prediction_valid[str(name)]))
         
+        y_test_H = np.where(y_test == 0, 0, y_test)
+        y_test_H = np.where(y_test_H == 2, 0, y_test_H)
+        y_test_I = np.where(y_test == 0, 0, y_test)
+        y_test_I = np.where(y_test_I == 1, 0, y_test_I)
+        y_test_I = np.where(y_test_I == 2, 1, y_test_I)
+        
+        y_valid_H = np.where(y_valid == 0, 0, y_valid)
+        y_valid_H = np.where(y_valid_H == 2, 0, y_valid_H)
+        y_valid_I = np.where(y_valid == 0, 0, y_valid)
+        y_valid_I = np.where(y_valid_I == 1, 0, y_valid_I)
+        y_valid_I = np.where(y_valid_I == 2, 1, y_valid_I)
+
+        fraction_of_positives_H, mean_predicted_value_H = calibration_curve(y_test_H, prob_pos_H, n_bins=20)
+        fraction_of_positives_valid_H, mean_predicted_value_valid_H = calibration_curve(y_valid_H, prob_pos_valid_H, n_bins=20)
+        fraction_of_positives_I, mean_predicted_value_I = calibration_curve(y_test_I, prob_pos_I, n_bins=20)
+        fraction_of_positives_valid_I, mean_predicted_value_valid_I = calibration_curve(y_valid_I, prob_pos_valid_I, n_bins=20)    
+    
+        ax1.plot(mean_predicted_value_H, fraction_of_positives_H, "s-",
+                     label="%s test" % (name, ))
+        ax2.hist(prob_pos_H, range=(0, 1), bins=20, label=name,
+                     histtype="step", lw=2) 
+        
+        ax3.plot(mean_predicted_value_valid_H, fraction_of_positives_valid_H, "s-",
+                     label="%s valid" % (name, ))
+        ax4.hist(prob_pos_valid_H, range=(0, 1), bins=20, label=name,
+                     histtype="step", lw=2)
+    
+        fpr_H, tpr_H, thresholds = roc_curve(y_test_H,prob_pos_H)     
+        tprs_H.append(np.interp(mean_fpr_H, fpr_H, tpr_H))
+        tprs_H[-1][0] = 0.0
+        roc_auc_H = auc(fpr_H, tpr_H)
+        aucs_H.append(roc_auc_H)
+        ax5.plot(fpr_H, tpr_H, lw=1, alpha=0.4,
+             label='ROC fold %s (AUC = %0.2f)' % (name, roc_auc_H))
+        ax6.plot(fpr_H, tpr_H, lw=1, alpha=0.4,
+         label='ROC fold %s (AUC = %0.2f)' % (name, roc_auc_H))     
+         
+        ax7.plot(mean_predicted_value_I, fraction_of_positives_I, "s-",
+                     label="%s test" % (name, ))
+        ax8.hist(prob_pos_I, range=(0, 1), bins=20, label=name,
+                     histtype="step", lw=2) 
+        
+        ax9.plot(mean_predicted_value_valid_I, fraction_of_positives_valid_I, "s-",
+                     label="%s valid" % (name, ))
+        ax10.hist(prob_pos_valid_I, range=(0, 1), bins=20, label=name,
+                     histtype="step", lw=2)
+    
+        fpr_I, tpr_I, thresholds = roc_curve(y_test_I,prob_pos_I)     
+        tprs_I.append(np.interp(mean_fpr_I, fpr_I, tpr_I))
+        tprs_I[-1][0] = 0.0
+        roc_auc_I = auc(fpr_I, tpr_I)
+        aucs_I.append(roc_auc_I)
+        ax11.plot(fpr_I, tpr_I, lw=1, alpha=0.4,
+             label='ROC fold %s (AUC = %0.2f)' % (name, roc_auc_I))
+        ax12.plot(fpr_I, tpr_I, lw=1, alpha=0.4,
+         label='ROC fold %s (AUC = %0.2f)' % (name, roc_auc_I))          
+         
+    ax1.set_ylabel("Fraction of positives")
+    ax1.set_ylim([-0.05, 1.05])
+    ax1.legend(loc="lower right")
+    ax1.set_title('H-mode Calibration plots - testing (reliability curve)')
+    ax2.set_xlabel("Mean predicted value")
+    ax2.set_ylabel("Count")
+    ax2.legend(loc="upper center", ncol=2) 
+            
+    ax3.set_ylabel("Fraction of positives")
+    ax3.set_ylim([-0.05, 1.05])
+    ax3.legend(loc="lower right")
+    ax3.set_title('H-mode Calibration plots - validation (reliability curve)')
+    ax4.set_xlabel("Mean predicted value")
+    ax4.set_ylabel("Count")
+    ax4.legend(loc="upper center", ncol=2)   
+    
+    ax5.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',
+         label='Luck', alpha=.4)
+    ax6.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',
+         label='Luck', alpha=.4)
+         
+    mean_tpr_H = np.mean(tprs_H, axis=0)
+    mean_tpr_H[-1] = 1.0
+    mean_auc_H = auc(mean_fpr_H, mean_tpr_H)
+    std_auc_H = np.std(aucs_H)
+    ax5.plot(mean_fpr_H, mean_tpr_H, color='black',
+             label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (mean_auc_H, std_auc_H),
+             lw=2, alpha=.4)
+    ax6.plot(mean_fpr_H, mean_tpr_H, color='black',
+         label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (mean_auc_H, std_auc_H),
+         lw=2, alpha=.4)
+    
+    std_tpr_H = np.std(tprs_H, axis=0)
+    tprs_upper_H = np.minimum(mean_tpr_H + std_tpr_H, 1)
+    tprs_lower_H = np.maximum(mean_tpr_H - std_tpr_H, 0)
+    ax5.fill_between(mean_fpr_H, tprs_lower_H, tprs_upper_H, color='grey', alpha=.2,
+                     label=r'$\pm$ 1 std. dev.')
+    ax6.fill_between(mean_fpr_H, tprs_lower_H, tprs_upper_H, color='grey', alpha=.2,
+                     label=r'$\pm$ 1 std. dev.')
+    
+    ax5.set_xlim([0.0, 1.05])
+    ax5.set_ylim([0.0, 1.05])
+    ax5.set_xlabel('False Positive Rate')
+    ax5.set_ylabel('True Positive Rate')
+    ax5.set_title('H-mode Receiver Operating Characteristic')
+    ax5.legend(loc="lower right")
+    
+    ax6.set_xlim([0.0, 0.10])
+    ax6.set_ylim([0.0, 1.05])
+    ax6.set_xlabel('False Positive Rate')
+    ax6.set_ylabel('True Positive Rate')
+    ax6.set_title('H-mode Receiver Operating Characteristic')
+    ax6.legend(loc="lower right")
+    
+    
+    ax7.set_ylabel("Fraction of positives")
+    ax7.set_ylim([-0.05, 1.05])
+    ax7.legend(loc="lower right")
+    ax7.set_title('I-mode Calibration plots - testing (reliability curve)')
+    ax8.set_xlabel("Mean predicted value")
+    ax8.set_ylabel("Count")
+    ax8.legend(loc="upper center", ncol=2) 
+           
+    ax9.set_ylabel("Fraction of positives")
+    ax9.set_ylim([-0.05, 1.05])
+    ax9.legend(loc="lower right")
+    ax9.set_title('I-mode Calibration plots - validation (reliability curve)')
+    ax10.set_xlabel("Mean predicted value")
+    ax10.set_ylabel("Count")
+    ax10.legend(loc="upper center", ncol=2)   
+    
+    ax11.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',
+         label='Luck', alpha=.4)
+    ax12.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',
+         label='Luck', alpha=.4)
+         
+    mean_tpr_I = np.mean(tprs_I, axis=0)
+    mean_tpr_I[-1] = 1.0
+    mean_auc_I = auc(mean_fpr_I, mean_tpr_I)
+    std_auc_I = np.std(aucs_I)
+    ax11.plot(mean_fpr_I, mean_tpr_I, color='black',
+             label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (mean_auc_I, std_auc_I),
+             lw=2, alpha=.4)
+    ax12.plot(mean_fpr_I, mean_tpr_I, color='black',
+         label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (mean_auc_I, std_auc_I),
+         lw=2, alpha=.4)
+    
+    std_tpr_I = np.std(tprs_I, axis=0)
+    tprs_upper_I = np.minimum(mean_tpr_I + std_tpr_I, 1)
+    tprs_lower_I = np.maximum(mean_tpr_I - std_tpr_I, 0)
+    ax11.fill_between(mean_fpr_I, tprs_lower_I, tprs_upper_I, color='grey', alpha=.2,
+                     label=r'$\pm$ 1 std. dev.')
+    ax12.fill_between(mean_fpr_I, tprs_lower_I, tprs_upper_I, color='grey', alpha=.2,
+                     label=r'$\pm$ 1 std. dev.')
+    
+    ax11.set_xlim([0.0, 1.05])
+    ax11.set_ylim([0.0, 1.05])
+    ax11.set_xlabel('False Positive Rate')
+    ax11.set_ylabel('True Positive Rate')
+    ax11.set_title('I-mode Receiver Operating Characteristic')
+    ax11.legend(loc="lower right")
+    
+    ax12.set_xlim([0.0, 0.10])
+    ax12.set_ylim([0.0, 1.05])
+    ax12.set_xlabel('False Positive Rate')
+    ax12.set_ylabel('True Positive Rate')
+    ax12.set_title('I-mode Receiver Operating Characteristic')
+    ax12.legend(loc="lower right")
+    
+    
+    plt.tight_layout() 
+    plt.show() 
+    
     def plot_confusion_matrix(cm, classes,
                               normalize=False,
                               title='Confusion matrix',
