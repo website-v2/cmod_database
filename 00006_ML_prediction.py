@@ -4,7 +4,7 @@ Created on Tue Jul 10 19:22:03 2018
 
 @author: mathewsa
 
-Currently configured to conduct analysis/prediction of tau_E on a single shot
+Currently configured to conduct analysis/prediction of Lawson parameter on a single shot
 
 """
 
@@ -101,38 +101,39 @@ P_ohm_values = np.array(tau_E_data)[:,3]
 p_rad_core_values = np.array(tau_E_data)[:,4]
 dWmhddt_values = np.array(tau_E_data)[:,5]
 tau_E = Wmhd_values/(0.9*p_icrf_values + P_ohm_values - p_rad_core_values - dWmhddt_values)
+Lawson_p =  (np.array(X_data)[:,1])*tau_E 
 
 #Loading saved model
-RFR_tau_E_pkl_filename = '/home/mathewsa/Desktop/00005_RFR_regression_tau_E.pkl'
-RFR_tau_E_model_pkl = open(RFR_tau_E_pkl_filename, 'rb')
-RFR_tau_E_model = pickle.load(RFR_tau_E_model_pkl) 
-KNN_tau_E_pkl_filename = '/home/mathewsa/Desktop/00005_KNN_regression_tau_E.pkl'
-KNN_tau_E_model_pkl = open(KNN_tau_E_pkl_filename, 'rb')
-KNN_tau_E_model = pickle.load(KNN_tau_E_model_pkl) 
-REG_tau_E_pkl_filename = '/home/mathewsa/Desktop/00005_REG_regression_tau_E.pkl'
-REG_tau_E_model_pkl = open(REG_tau_E_pkl_filename, 'rb')
-REG_tau_E_model = pickle.load(REG_tau_E_model_pkl) 
-NN_tau_E_pkl_filename = '/home/mathewsa/Desktop/00005_NN_regression_tau_E.pkl'
-NN_tau_E_model_pkl = open(NN_tau_E_pkl_filename, 'rb')
-NN_tau_E_model = pickle.load(NN_tau_E_model_pkl)
+RFR_Lawson_p_pkl_filename = '/home/mathewsa/Desktop/00006_RFR_regression_Lawson_p.pkl'
+RFR_Lawson_p_model_pkl = open(RFR_Lawson_p_pkl_filename, 'rb')
+RFR_Lawson_p_model = pickle.load(RFR_Lawson_p_model_pkl) 
+KNN_Lawson_p_pkl_filename = '/home/mathewsa/Desktop/00006_KNN_regression_Lawson_p.pkl'
+KNN_Lawson_p_model_pkl = open(KNN_Lawson_p_pkl_filename, 'rb')
+KNN_Lawson_p_model = pickle.load(KNN_Lawson_p_model_pkl) 
+EN_Lawson_p_pkl_filename = '/home/mathewsa/Desktop/00006_EN_regression_Lawson_p.pkl'
+EN_Lawson_p_model_pkl = open(EN_Lawson_p_pkl_filename, 'rb')
+EN_Lawson_p_model = pickle.load(EN_Lawson_p_model_pkl) 
+NN_Lawson_p_pkl_filename = '/home/mathewsa/Desktop/00006_NN_regression_Lawson_p.pkl'
+NN_Lawson_p_model_pkl = open(NN_Lawson_p_pkl_filename, 'rb')
+NN_Lawson_p_model = pickle.load(NN_Lawson_p_model_pkl)
 
-scalerfile = '/home/mathewsa/Desktop/00005_scaler.sav'
+scalerfile = '/home/mathewsa/Desktop/00006_scaler.sav'
 scaler = pickle.load(open(scalerfile, 'rb')) #must use transformation applied to training data
 
 #score = RF_LH_model.score(X_test, y_test)
 X_data_normalized = scaler.transform(X_data)
-prediction_RFR = RFR_tau_E_model.predict(X_data_normalized) 
-prediction_KNN = KNN_tau_E_model.predict(X_data_normalized) 
-prediction_REG = REG_tau_E_model.predict(X_data_normalized)
-prediction_NN = NN_tau_E_model.predict(X_data_normalized)
+prediction_RFR = RFR_Lawson_p_model.predict(X_data_normalized) 
+prediction_KNN = KNN_Lawson_p_model.predict(X_data_normalized) 
+prediction_EN = EN_Lawson_p_model.predict(X_data_normalized)
+prediction_NN = NN_Lawson_p_model.predict(X_data_normalized)
      
 plt.figure()
 plt.plot(timebase,prediction_RFR,label='Random Forest')
 plt.plot(timebase,prediction_KNN,label='KNeighborsRegressor')
-plt.plot(timebase,prediction_REG,label='Ridge Regression')
+plt.plot(timebase,prediction_EN,label='ElasticNet')
 plt.plot(timebase,prediction_NN,label='NeuralNet') 
-plt.plot(timebase,tau_E,color='black',label='True') 
-plt.ylabel(r"$\tau_E$")
+plt.plot(timebase,Lawson_p,color='black',label='True') 
+plt.ylabel(r"$n \tau_E$")
 plt.xlabel(r'time (s)')
 plt.ylim([-0.05,0.18])
 plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
@@ -491,19 +492,19 @@ for item in y_labels:
 
 f, axarr = plt.subplots(2, 2, sharex='col', sharey='row', figsize=(14, 14))
 
-max_tau_E = 0.1
-min_tau_E = 0.0
+max_Lawson_p = 0.1*10.**19.
+min_Lawson_p = 0.0
 for idx, clf, tt in zip(product([0, 1], [0, 1]),
-                        [RFR_tau_E_model, KNN_tau_E_model, REG_tau_E_model, NN_tau_E_model],#, eclf],
-                        ['Random Forest', 'KNeighborsRegressor', 'Ridge Regression',\
+                        [RFR_Lawson_p_model, KNN_Lawson_p_model, EN_Lawson_p_model, NN_Lawson_p_model],#, eclf],
+                        ['Random Forest', 'KNeighborsRegressor', 'ElasticRegression',\
                          'NeuralNet']):#, 'Soft Voting']):
 
 
     grid = np.c_[x_input_.ravel(), y_input_.ravel()]
-    tau_E_predict = clf.predict(np.c_[Wmhd_input, nebar_efit_input, beta_p_input, P_ohm_input,
+    Lawson_p_predict = clf.predict(np.c_[Wmhd_input, nebar_efit_input, beta_p_input, P_ohm_input,
                           li_input, rmag_input, Halpha_input]).reshape((grid_steps,grid_steps)) 
-    bounds=np.linspace(min_tau_E,max_tau_E,number_ticks)                      
-    cntr1 = axarr[idx[0], idx[1]].contourf(x_input_, y_input_, tau_E_predict, vmin = min_tau_E, vmax = max_tau_E, levels = bounds, alpha=0.4, cmap="Blues", origin = origin)
+    bounds=np.linspace(min_Lawson_p,max_Lawson_p,number_ticks)                      
+    cntr1 = axarr[idx[0], idx[1]].contourf(x_input_, y_input_, Lawson_p_predict, vmin = min_Lawson_p, vmax = max_Lawson_p, levels = bounds, alpha=0.4, cmap="Blues", origin = origin)
 
     axarr[idx[0], idx[1]].set_xticks(x_ticks)    
     axarr[idx[0], idx[1]].set_xticklabels(x_axis_labels)    
@@ -517,7 +518,7 @@ for idx, clf, tt in zip(product([0, 1], [0, 1]),
     axarr[idx[0], idx[1]].legend(loc="upper center", ncol=2) 
 cbar_ax1 = f.add_axes([1.05, 0.1, 0.03, 0.8]) 
 cbar1 = f.colorbar(cntr1, extend='both', cax=cbar_ax1)  
-cbar1.ax.set_ylabel(r"$\tau_E (s)$",  labelpad=20, rotation=270)  
+cbar1.ax.set_ylabel(r"$n \tau_E (s)$",  labelpad=20, rotation=270)  
 f.autofmt_xdate()  
 f.suptitle((r"$\beta_p = $"+y_fmt(beta_p_constant, 1)+
              r", $P_{ohm} = $"+y_fmt(P_ohm_constant, 1)+r"$W$"

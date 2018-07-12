@@ -4,7 +4,7 @@ Created on Wed Jun 13 14:33:32 2018
 
 @author: mathewsa 
 
-This code is only used for multi-class regression of  confinement time (tau_E) for
+This code is only used for multi-class regression of  Lawson parameter (n*tau_E) for
 multiple modes (L, H, and I) using supervised machine learning methods from scikit learn
 """ 
 from sklearn.ensemble import RandomForestRegressor 
@@ -115,7 +115,7 @@ tau_E_data = []
 bad_shot = 0 #initialize
 i = 0 
 while i < len(rows):  
-    if (values['ip'][i] != None) and (values['btor'][i] != None) and (values['Wmhd'][i]) > 0. and (values['nebar_efit'][i] != None) and (values['beta_p'][i] != None) and (values['P_ohm'][i] > 0.) and (values['li'][i] != None) and (values['rmag'][i] != None) and (values['Halpha'][i] != None) and (values['dWmhddt'][i] != None) and (values['p_rad_core'][i] > 0.) and ((values['p_icrf'][i] > 0.) and ((values['Wmhd'][i]/(0.9*values['p_icrf'][i] + values['P_ohm'][i] - values['p_rad_core'][i] - values['dWmhddt'][i])) > 0.) and (values['Wmhd'][i]/(0.9*values['p_icrf'][i] + values['P_ohm'][i] - values['p_rad_core'][i] - values['dWmhddt'][i])) < 1.):
+    if (values['ip'][i] != None) and (values['btor'][i] != None) and (values['Wmhd'][i]) > 0. and (values['nebar_efit'][i] > 0.) and (values['beta_p'][i] != None) and (values['P_ohm'][i] > 0.) and (values['li'][i] != None) and (values['rmag'][i] != None) and (values['Halpha'][i] != None) and (values['dWmhddt'][i] != None) and (values['p_rad_core'][i] > 0.) and ((values['p_icrf'][i] > 0.) and ((values['Wmhd'][i]/(0.9*values['p_icrf'][i] + values['P_ohm'][i] - values['p_rad_core'][i] - values['dWmhddt'][i])) > 0.) and (values['Wmhd'][i]/(0.9*values['p_icrf'][i] + values['P_ohm'][i] - values['p_rad_core'][i] - values['dWmhddt'][i])) < 1.):
         Y_data0.append((values['present_mode'])[i])
         X_data0.append([(values['shot'])[i],(values['Wmhd'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
                         (values['P_ohm'])[i],(values['li'])[i],(values['rmag'])[i],(values['Halpha'])[i]]) #first element must be shot!
@@ -150,15 +150,23 @@ P_ohm_values = np.array(tau_E_data)[:,3]
 p_rad_core_values = np.array(tau_E_data)[:,4]
 dWmhddt_values = np.array(tau_E_data)[:,5]
 tau_E = Wmhd_values/(0.9*p_icrf_values + P_ohm_values - p_rad_core_values - dWmhddt_values)
-list_tau_E = list(tau_E)
-sorted_tau_E = tau_E.sort()
-index_N = list_tau_E.index(tau_E[Nth]) #finds index for 5th largest element
-print('Nth largest tau_E',tau_E_data[index_N])
+Lawson_p =  (np.array(X_data0)[:,2])*tau_E 
+list_Lawson_p = list(Lawson_p)
+sorted_Lawson_p = Lawson_p.sort()
+#index_N = list_Lawson_p.index(Lawson_p[Nth]) #finds index for 5th largest element
+#print('Nth largest Lawson parameter',sorted_Lawson_p[index_N])
  
 plt.xlabel(r"$\tau_E$")
 plt.ylabel('Counts')
-n, bins, patches = plt.hist(tau_E, 100, facecolor='g', alpha=0.75)
+n, bins, patches = plt.hist(tau_E, 200, facecolor='g', alpha=0.75)
 plt.axis([0., 0.2, 0., 0.2*len(tau_E)])
+plt.grid(True)
+plt.show() 
+
+plt.xlabel(r"$n \tau_E$")
+plt.ylabel('Counts')
+n, bins, patches = plt.hist(Lawson_p, 200, facecolor='g', alpha=0.75)
+plt.axis([0., 10.**20., 0., 0.5*len(tau_E)])
 plt.grid(True)
 plt.show() 
 
@@ -195,19 +203,19 @@ while q < len(Y_data0):
     q = q + 1
 print('I-mode fraction to total dataset time slices: ',p_i,'/',len(Y_data0))
  
-variance_KNN = []
-variance_valid_KNN = [] 
-variance_RFR = []
-variance_valid_RFR = []
-variance_EN = []
-variance_valid_EN = []
-variance_NN = []
-variance_valid_NN = []
+normalized_std_KNN = []
+normalized_std_valid_KNN = [] 
+normalized_std_RFR = []
+normalized_std_valid_RFR = []
+normalized_std_EN = []
+normalized_std_valid_EN = []
+normalized_std_NN = []
+normalized_std_valid_NN = []
 
 fraction_ = 0.80
 train_valid_frac = 0.80
 update_index = 0#(spectroscopy.getNode('\SPECTROSCOPY::z_ave')).units_of()
-cycles = 10 #runs
+cycles = 1 #runs
 while update_index < cycles:
     print('Fraction of total data for training + validation = ',train_valid_frac)
     print('Fraction of training + validation data used for training = ',fraction_)
@@ -217,14 +225,14 @@ while update_index < cycles:
     shots_number,' distinct shots in this dataset being considered',\
     'H-mode fraction to total dataset time slices: ',p,'/',len(Y_data0),\
     'I-mode fraction to total dataset time slices: ',p_i,'/',len(Y_data0))    
-    data = np.insert(X_data0, len(X_data0[0]), values=tau_E, axis=-1)
+    data = np.insert(X_data0, len(X_data0[0]), values=Lawson_p, axis=-1)
     together = [list(i) for _, i in itertools.groupby(data, operator.itemgetter(0))]
     random.shuffle(together) #groups based on first item of x_data, which should be shot!
     final_random = [i for j in together for i in j]
     X_data = (np.array(final_random))[:,1:-1]
-    Y_data = (np.array(final_random, dtype = float))[:,-1]
+    Y_data = (np.array(final_random, dtype = float))[:,-1] #since this is no longer classification, crucial to make this float!
     #this train_valid is data that is training, then to be validated
-    X_train, y_train = X_data[:int(train_valid_frac*len(X_data))], tau_E [:int(train_valid_frac*len(X_data))]
+    X_train, y_train = X_data[:int(train_valid_frac*len(X_data))], Lawson_p[:int(train_valid_frac*len(X_data))]
     
     X_train, y_train = shuffle(X_train, y_train, random_state=0) #or use this single line; random_state allows predictable output
 
@@ -263,52 +271,52 @@ while update_index < cycles:
                   (mlp, 'NeuralNet')]: 
         clf.fit(X_train_valid, y_train_valid)
         prediction[str(name)] = clf.predict(X_test)
-        avg_error = mean_squared_error(y_test_np, prediction[str(name)])
-        print("Mean squared error (test): ",avg_error,name)
+        avg_error = np.std((y_test_np/y_test_np) - (prediction[str(name)]/y_test_np))
+        print("Mean error (test): ",avg_error,name)
         prediction_valid[str(name)] = clf.predict(X_valid)
-        avg_error_valid = mean_squared_error(y_valid_np, prediction_valid[str(name)])
-        print("Mean squared error (valid): ",avg_error_valid,name)
+        avg_error_valid = np.std((y_valid_np/y_valid_np) - (prediction_valid[str(name)]/y_valid_np))
+        print("Mean error (valid): ",avg_error_valid,name)
         if name == 'KNeighborsRegressor':
-            variance_KNN.append(avg_error)
-            variance_valid_KNN.append(avg_error_valid)
+            normalized_std_KNN.append(avg_error)
+            normalized_std_valid_KNN.append(avg_error_valid)
         if name == 'ElasticNet':    
-            variance_EN.append(avg_error)
-            variance_valid_EN.append(avg_error_valid)
+            normalized_std_EN.append(avg_error)
+            normalized_std_valid_EN.append(avg_error_valid)
         if name == 'Random Forest':
-            variance_EN.append(avg_error)
-            variance_valid_EN.append(avg_error_valid)
+            normalized_std_RFR.append(avg_error)
+            normalized_std_valid_RFR.append(avg_error_valid)
         if name == 'NeuralNet':
-            variance_NN.append(avg_error)
-            variance_valid_NN.append(avg_error_valid)
+            normalized_std_NN.append(avg_error)
+            normalized_std_valid_NN.append(avg_error_valid)
     update_index = update_index + 1
      
-print('precision_KNN_tau_E:', np.mean(variance_KNN),' +/- ',np.std(variance_KNN))
-print('precision_valid_KNN_tau_E:', np.mean(variance_valid_KNN),' +/- ',np.std(variance_valid_KNN))
-print('precision_RFR_tau_E:', np.mean(variance_RFR),' +/- ',np.std(variance_RFR))
-print('precision_valid_RFR_tau_E:', np.mean(variance_valid_RFR),' +/- ',np.std(variance_valid_RFR))
-print('precision_EN_tau_E:', np.mean(variance_EN),' +/- ',np.std(variance_EN))
-print('precision_valid_EN_tau_E:', np.mean(variance_valid_EN),' +/- ',np.std(variance_valid_EN))
-print('precision_NN_tau_E:', np.mean(variance_NN),' +/- ',np.std(variance_NN))
-print('precision_valid_NN_tau_E:', np.mean(variance_valid_NN),' +/- ',np.std(variance_valid_NN))
+print('average_error_KNN_Lawson_p:', np.mean(normalized_std_KNN),' +/- ',np.std(normalized_std_KNN))
+print('average_error_valid_KNN_Lawson_p:', np.mean(normalized_std_valid_KNN),' +/- ',np.std(normalized_std_valid_KNN))
+print('average_error_RFR_Lawson_p:', np.mean(normalized_std_RFR),' +/- ',np.std(normalized_std_RFR))
+print('average_error_valid_RFR_Lawson_p:', np.mean(normalized_std_valid_RFR),' +/- ',np.std(normalized_std_valid_RFR))
+print('average_error_EN_Lawson_p:', np.mean(normalized_std_EN),' +/- ',np.std(normalized_std_EN))
+print('average_error_valid_EN_Lawson_p:', np.mean(normalized_std_valid_EN),' +/- ',np.std(normalized_std_valid_EN))
+print('average_error_NN_Lawson_p:', np.mean(normalized_std_NN),' +/- ',np.std(normalized_std_NN))
+print('average_error_valid_NN_Lawson_p:', np.mean(normalized_std_valid_NN),' +/- ',np.std(normalized_std_valid_NN))
 
 import pickle
 #Saving created model
-RFR_tau_E_pkl_filename = '/home/mathewsa/Desktop/RFR_regression_tau_E.pkl'
-RFR_tau_E_model_pkl = open(RFR_tau_E_pkl_filename, 'wb')
-pickle.dump(rfr, RFR_tau_E_model_pkl)
-RFR_tau_E_model_pkl.close()
-KNN_tau_E_pkl_filename = '/home/mathewsa/Desktop/KNN_regression_tau_E.pkl'
-KNN_tau_E_model_pkl = open(KNN_tau_E_pkl_filename, 'wb')
-pickle.dump(knn, KNN_tau_E_model_pkl)
-KNN_tau_E_model_pkl.close()
-EN_tau_E_pkl_filename = '/home/mathewsa/Desktop/EN_regression_tau_E.pkl'
-EN_tau_E_model_pkl = open(EN_tau_E_pkl_filename, 'wb')
-pickle.dump(reg, EN_tau_E_model_pkl)
-EN_tau_E_model_pkl.close()
-NN_tau_E_pkl_filename = '/home/mathewsa/Desktop/NN_regression_tau_E.pkl'
-NN_tau_E_model_pkl = open(NN_tau_E_pkl_filename, 'wb')
-pickle.dump(mlp, NN_tau_E_model_pkl)
-NN_tau_E_model_pkl.close()
+RFR_Lawson_p_pkl_filename = '/home/mathewsa/Desktop/RFR_regression_Lawson_p.pkl'
+RFR_Lawson_p_model_pkl = open(RFR_Lawson_p_pkl_filename, 'wb')
+pickle.dump(rfr, RFR_Lawson_p_model_pkl)
+RFR_Lawson_p_model_pkl.close()
+KNN_Lawson_p_pkl_filename = '/home/mathewsa/Desktop/KNN_regression_Lawson_p.pkl'
+KNN_Lawson_p_model_pkl = open(KNN_Lawson_p_pkl_filename, 'wb')
+pickle.dump(knn, KNN_Lawson_p_model_pkl)
+KNN_Lawson_p_model_pkl.close()
+EN_Lawson_p_pkl_filename = '/home/mathewsa/Desktop/EN_regression_Lawson_p.pkl'
+EN_Lawson_p_model_pkl = open(EN_Lawson_p_pkl_filename, 'wb')
+pickle.dump(reg, EN_Lawson_p_model_pkl)
+EN_Lawson_p_model_pkl.close()
+NN_Lawson_p_pkl_filename = '/home/mathewsa/Desktop/NN_regression_Lawson_p.pkl'
+NN_Lawson_p_model_pkl = open(NN_Lawson_p_pkl_filename, 'wb')
+pickle.dump(mlp, NN_Lawson_p_model_pkl)
+NN_Lawson_p_model_pkl.close()
 scalerfile = '/home/mathewsa/Desktop/scaler.sav'
 pickle.dump(scaler, open(scalerfile, 'wb'))
 

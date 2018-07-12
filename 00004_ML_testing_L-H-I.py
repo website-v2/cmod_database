@@ -120,10 +120,10 @@ total_x_data = []
 bad_shot = 0 #initialize
 i = 0 
 while i < len(rows):  
-    if (values['ip'][i] != None) and (values['btor'][i] != None) and (values['Wmhd'][i] > 0.) and (values['nebar_efit'][i] != None) and (values['beta_p'][i] != None) and (values['P_ohm'][i] > 0.) and (values['p_icrf'][i] > 0.) and (values['li'][i] != None) and (values['rmag'][i] != None) and (values['Halpha'][i] != None) and (values['psurfa'][i] != None):
+    if (values['ip'][i] != None) and (values['btor'][i] != None) and (values['Wmhd'][i] != None) and (values['nebar_efit'][i] != None) and (values['beta_p'][i] != None) and (values['P_ohm'][i] != None) and (values['li'][i] != None) and (values['rmag'][i] != None) and (values['Halpha'][i] != None) and (values['psurfa'][i] != None):
         Y_data0.append((values['present_mode'])[i])
-        X_data0.append([(values['shot'])[i],(values['nebar_efit'])[i]*np.pi*np.pi*(values['aout'])[i]*(10.**-20.)/(0.000001*(values['ip'])[i]),(values['beta_p'])[i],
-                        ((values['P_ohm'])[i] + (values['p_icrf'])[i])/(values['Wmhd'])[i],(values['li'])[i],(values['rmag'])[i]/(values['aout'])[i]]) #first element must be shot!
+        X_data0.append([(values['shot'])[i],(values['Wmhd'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
+                        (values['P_ohm'])[i],(values['li'])[i],(values['rmag'])[i],(values['Halpha'])[i]]) #first element must be shot!
         total_x_data.append([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
               (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
               (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
@@ -243,8 +243,8 @@ while update_index < cycles:
     print('Fraction of total data for training + validation = ',train_valid_frac)
     print('Fraction of training + validation data used for training = ',fraction_)
     #use below 4 lines if randomizing shots AND time slices for train/validation set
-    print("ML_testing_all_normalized_NN_100x100x100_layers_([(values['shot'])[i],(values['nebar_efit'])[i]*np.pi*np.pi*(values['aout'])[i]*(10.**-20.)/(0.000001*(values['ip'])[i]),(values['beta_p'])[i],\
-                        ((values['P_ohm'])[i] + (values['p_icrf'])[i])/(values['Wmhd'])[i],(values['li'])[i],(values['rmag'])[i]/(values['aout'])[i]]), cycles =",cycles,\
+    print("ML_testing_all_normalized_NN_100x100x100_layers_([(values['shot'])[i],(values['Wmhd'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],\
+                        (values['P_ohm'])[i],(values['li'])[i],(values['rmag'])[i],(values['Halpha'])[i]]), cycles =",cycles,\
     shots_number,' distinct shots in this dataset being considered',\
     'H-mode fraction to total dataset time slices: ',p,'/',len(Y_data0),\
     'I-mode fraction to total dataset time slices: ',p_i,'/',len(Y_data0))    

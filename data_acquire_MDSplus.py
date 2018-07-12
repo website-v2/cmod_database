@@ -251,6 +251,8 @@ def main(shot,timebase,path_shot):
             V_surf_efit = np.interp(timebase,time_efit,V_surf_efit,left=np.nan,right=np.nan)
             Wmhd = (efit.getNode('\efit_aeqdsk:wplasm')).data()[good_time_slices]; #diamagnetic/stored energy, [J]
             Wmhd = np.interp(timebase,time_efit,Wmhd,left=np.nan,right=np.nan)
+            dWmhddt = np.gradient(Wmhd,timebase)
+            dWmhddt = smooth(dWmhddt,11)   
             ssep = (efit.getNode('\efit_aeqdsk:ssep')).data()[good_time_slices]/100.; # distance on midplane between 1st and 2nd separatrices [m]
             ssep = np.interp(timebase,time_efit,ssep,left=np.nan,right=np.nan)
             n_over_ncrit = (efit.getNode('\efit_aeqdsk:xnnc')).data()[good_time_slices]; #vertical stability criterion (EFIT name: xnnc)
@@ -655,7 +657,7 @@ def main(shot,timebase,path_shot):
     rmag=rmag,zsep_lower=zsep_lower,zsep_upper=zsep_upper,rsep_lower=rsep_lower,
     rsep_upper=rsep_upper,zvsin=zvsin,rvsin=rvsin,zvsout=zvsout,rvsout=rvsout,
     upper_gap=upper_gap,lower_gap=lower_gap,q0=q0,qstar=qstar,q95=q95,V_loop_efit=V_loop_efit,
-    V_surf_efit=V_surf_efit,Wmhd=Wmhd,cpasma=cpasma,ssep=ssep,P_ohm=P_ohm,HoverHD=HoverHD,
+    V_surf_efit=V_surf_efit,Wmhd=Wmhd,dWmhddt=dWmhddt,cpasma=cpasma,ssep=ssep,P_ohm=P_ohm,HoverHD=HoverHD,
     Halpha=Halpha,Dalpha=Dalpha,z_ave=z_ave,p_rad=p_rad,p_rad_core=p_rad_core,nLave_04=nLave_04,
     NL_04=NL_04,nebar_efit=nebar_efit,piezo_4_gas_input=piezo_4_gas_input,g_side_rat=g_side_rat,
     e_bot_mks=e_bot_mks,b_bot_mks=b_bot_mks,rgap=rgap,lgap=lgap)
