@@ -93,7 +93,7 @@ returnNotMatches(list1,list2) #ensures same number of shots with start and end
 
 
 #making table for training set
-shots = list1[130:] #[1080523020] # input for shots from confinement training table 
+shots = list1#[130:] #[1080523020] # input for shots from confinement training table 
 #if individual shots, store in ascending order by id 
 i = 0
 index_i = 0 #additional index if shots != timebase shots

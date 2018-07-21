@@ -378,15 +378,65 @@ def main(shot,timebase,path_shot):
             HoverHD = (spectroscopy.getNode('\SPECTROSCOPY::BALMER_H_TO_D')).data(); #H/(H+D)
             time_HoverHD = spectroscopy.getNode('\SPECTROSCOPY::BALMER_H_TO_D').dim_of().data()
             HoverHD = np.interp(timebase,time_HoverHD,HoverHD,left=np.nan,right=np.nan)
-            Halpha = (spectroscopy.getNode('\SPECTROSCOPY::HA_2_BRIGHT')).data(); #H-Alpha at H Port
-            time_Halpha = (spectroscopy.getNode('\SPECTROSCOPY::HA_2_BRIGHT')).dim_of().data();
-            Halpha = np.interp(timebase,time_Halpha,Halpha,left=np.nan,right=np.nan)
             Dalpha = (spectroscopy.getNode('\SPECTROSCOPY::TOP.VUV.VIS_SIGNALS:MCP_VIS_SIG1')).data() # D-alpha (W/m^2/st)
             time_Dalpha = (spectroscopy.getNode('\SPECTROSCOPY::TOP.VUV.VIS_SIGNALS:MCP_VIS_SIG1')).dim_of().data()
             Dalpha = np.interp(timebase,time_Dalpha,Dalpha,left=np.nan,right=np.nan)
+    #use twopi_diode instead as in Granetz code if avoiding non-causal filtering
+    #rad_fraction = p_rad/p_input (if p_input==0 then NaN/0)
+            break
+        except (TreeNODATA,TreeFOPENR,TreeNNF):
+            HoverHD = Dalpha = NaN
+            time_HoverHD = time_Dalpha = timebase    
+            print("No values stored for spectroscopy") 
+            print(shot)
+            break
+        except:
+            print("Unexpected error for spectroscopy")
+            print(shot)
+            raise
+            
+            
+    while True:
+        try:
+            spectroscopy = MDSplus.Tree('SPECTROSCOPY', shot) 
+            Halpha = (spectroscopy.getNode('\SPECTROSCOPY::HA_2_BRIGHT')).data(); #H-Alpha at H Port
+            time_Halpha = (spectroscopy.getNode('\SPECTROSCOPY::HA_2_BRIGHT')).dim_of().data();
+            Halpha = np.interp(timebase,time_Halpha,Halpha,left=np.nan,right=np.nan)
+    #use twopi_diode instead as in Granetz code if avoiding non-causal filtering
+    #rad_fraction = p_rad/p_input (if p_input==0 then NaN/0)
+            break
+        except (TreeNODATA,TreeFOPENR,TreeNNF):
+            Halpha = NaN
+            time_Halpha = timebase    
+            print("No values stored for spectroscopy") 
+            print(shot)
+            break
+        except:
+            print("Unexpected error for spectroscopy")
+            print(shot)
+            raise
+    
+    while True:
+        try:
             z_ave = (spectroscopy.getNode('\SPECTROSCOPY::z_ave')).data() 
             time_z_ave = (spectroscopy.getNode('\SPECTROSCOPY::z_ave')).dim_of().data() 
             z_ave = np.interp(timebase,time_z_ave,z_ave,left=np.nan,right=np.nan)
+    #use twopi_diode instead as in Granetz code if avoiding non-causal filtering
+    #rad_fraction = p_rad/p_input (if p_input==0 then NaN/0)
+            break
+        except (TreeNODATA,TreeFOPENR,TreeNNF):
+            z_ave = NaN
+            time_z_ave = timebase    
+            print("No values stored for spectroscopy") 
+            print(shot)
+            break
+        except:
+            print("Unexpected error for spectroscopy")
+            print(shot)
+            raise
+            
+    while True:
+        try:
             p_rad_tree = MDSplus.Tree('SPECTROSCOPY', shot) #[W]
             time_p_rad = (p_rad_tree.getNode('\TWOPI_FOIL')).dim_of().data()
             p_rad = (p_rad_tree.getNode('\TWOPI_FOIL')).data()
@@ -398,8 +448,8 @@ def main(shot,timebase,path_shot):
     #rad_fraction = p_rad/p_input (if p_input==0 then NaN/0)
             break
         except (TreeNODATA,TreeFOPENR,TreeNNF):
-            HoverHD = Halpha = Dalpha = z_ave = p_rad = p_rad_core = NaN
-            time_HoverHD = time_Halpha = time_Dalpha = time_z_ave = time_p_rad = time_p_rad_core = timebase    
+            p_rad = p_rad_core = NaN
+            time_p_rad = time_p_rad_core = timebase    
             print("No values stored for spectroscopy") 
             print(shot)
             break
@@ -407,7 +457,6 @@ def main(shot,timebase,path_shot):
             print("Unexpected error for spectroscopy")
             print(shot)
             raise
-    
     
 #    while True:
 #        try:

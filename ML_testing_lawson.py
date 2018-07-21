@@ -19,7 +19,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split 
 from sklearn import preprocessing
-from sklearn.preprocessing import StandardScaler   
+from sklearn.preprocessing import StandardScaler, MaxAbsScaler   
 from sklearn.utils import shuffle
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
@@ -115,10 +115,10 @@ tau_E_data = []
 bad_shot = 0 #initialize
 i = 0 
 while i < len(rows):  
-    if (values['ip'][i] != None) and (values['btor'][i] != None) and (values['Wmhd'][i]) > 0. and (values['nebar_efit'][i] > 0.) and (values['beta_p'][i] != None) and (values['P_ohm'][i] > 0.) and (values['li'][i] != None) and (values['rmag'][i] != None) and (values['Halpha'][i] != None) and (values['dWmhddt'][i] != None) and (values['p_rad_core'][i] > 0.) and ((values['p_icrf'][i] > 0.) and ((values['Wmhd'][i]/(0.9*values['p_icrf'][i] + values['P_ohm'][i] - values['p_rad_core'][i] - values['dWmhddt'][i])) > 0.) and (values['Wmhd'][i]/(0.9*values['p_icrf'][i] + values['P_ohm'][i] - values['p_rad_core'][i] - values['dWmhddt'][i])) < 1.):
+    if (values['ip'][i] != None) and (values['btor'][i] != None) and (values['Wmhd'][i]) > 0. and (values['nebar_efit'][i] > 0.) and (values['beta_p'][i] != None) and (values['li'][i] != None) and (values['P_ohm'][i] != None) and (values['p_icrf'][i] != None) and (values['rmag'][i] != None) and (values['dWmhddt'][i] != None):
         Y_data0.append((values['present_mode'])[i])
-        X_data0.append([(values['shot'])[i],(values['Wmhd'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
-                        (values['P_ohm'])[i],(values['li'])[i],(values['rmag'])[i],(values['Halpha'])[i]]) #first element must be shot!
+        X_data0.append([(values['shot'])[i],(values['beta_N'])[i],((values['nebar_efit'])[i]*np.pi*np.pi*0.22*(10.**-20.)/(0.000001*(values['ip'])[i])),(values['beta_p'])[i],
+                        (values['li'])[i],(((values['rmag'])[i]-0.68)/0.22)]) #first element must be shot!
         total_x_data.append([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
               (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
               (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
@@ -134,7 +134,7 @@ while i < len(rows):
               (values['P_ohm'])[i],(values['NL_04'])[i],(values['g_side_rat'])[i],
               (values['e_bot_mks'])[i],(values['b_bot_mks'])[i]])
         tau_E_data.append([(values['shot'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],\
-        (values['P_ohm'])[i],(values['p_rad_core'])[i],(values['dWmhddt'])[i]])
+        (values['P_ohm'])[i],(values['p_rad_core'])[i],(values['dWmhddt'])[i],(values['nebar_efit'])[i]])
         #the above for loop just ensures there is stored value for
         #those quantities being indexed, otherwise skip that column      
     if (((values['q95'])[i]) < 2.0) or (((values['li'])[i]) < 1.0) or (((values['e_bot_mks'])[i]) > 200.0):
@@ -149,8 +149,9 @@ p_icrf_values = np.array(tau_E_data)[:,2]
 P_ohm_values = np.array(tau_E_data)[:,3]
 p_rad_core_values = np.array(tau_E_data)[:,4]
 dWmhddt_values = np.array(tau_E_data)[:,5]
-tau_E = Wmhd_values/(0.9*p_icrf_values + P_ohm_values - p_rad_core_values - dWmhddt_values)
-Lawson_p =  (np.array(X_data0)[:,2])*tau_E 
+nebar_efit_values = np.array(tau_E_data)[:,6]
+tau_E = Wmhd_values/(0.9*p_icrf_values + P_ohm_values)# - p_rad_core_values - dWmhddt_values)
+Lawson_p =  nebar_efit_values*tau_E 
 list_Lawson_p = list(Lawson_p)
 sorted_Lawson_p = Lawson_p.sort()
 #index_N = list_Lawson_p.index(Lawson_p[Nth]) #finds index for 5th largest element
@@ -212,16 +213,25 @@ normalized_std_valid_EN = []
 normalized_std_NN = []
 normalized_std_valid_NN = []
 
+R2_KNN = []
+R2_valid_KNN = [] 
+R2_RFR = []
+R2_valid_RFR = []
+R2_EN = []
+R2_valid_EN = []
+R2_NN = []
+R2_valid_NN = []
+
 fraction_ = 0.80
 train_valid_frac = 0.80
 update_index = 0#(spectroscopy.getNode('\SPECTROSCOPY::z_ave')).units_of()
-cycles = 1 #runs
+cycles = 100 #runs
 while update_index < cycles:
     print('Fraction of total data for training + validation = ',train_valid_frac)
     print('Fraction of training + validation data used for training = ',fraction_)
     #use below 4 lines if randomizing shots AND time slices for train/validation set
-    print("ML_testing_all_normalized_NN_100x100x100_layers_([(values['shot'])[i],(values['Wmhd'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],\
-                        (values['P_ohm'])[i],(values['li'])[i],(values['rmag'])[i],(values['Halpha'])[i]]), cycles =",cycles,\
+    print("ML_testing_all_normalized_NN_100x100x100_layers_([(values['shot'])[i],(values['beta_N'])[i],((values['nebar_efit'])[i]*np.pi*np.pi*0.22*(10.**-20.)/(0.000001*(values['ip'])[i])),(values['beta_p'])[i],\
+                        (values['li'])[i],(((values['rmag'])[i]-0.68)/0.22)]), cycles =",cycles,\
     shots_number,' distinct shots in this dataset being considered',\
     'H-mode fraction to total dataset time slices: ',p,'/',len(Y_data0),\
     'I-mode fraction to total dataset time slices: ',p_i,'/',len(Y_data0))    
@@ -239,20 +249,24 @@ while update_index < cycles:
     X_train_valid, y_train_valid = X_train[:int(fraction_*len(X_train))], y_train[:int(fraction_*len(X_train))]
     X_valid, y_valid = X_train[int(fraction_*len(X_train)):], y_train[int(fraction_*len(X_train)):]
     X_test, y_test = X_data[int(train_valid_frac*len(X_data)):], Y_data[int(train_valid_frac*len(X_data)):]
-    y_valid_np = np.array([int(numeric_string) for numeric_string in y_valid])
-    y_test_np = np.array([int(numeric_string) for numeric_string in y_test])
-    y_train_np = np.array([int(numeric_string) for numeric_string in y_train_valid])
+#    y_valid_np = np.array([int(numeric_string) for numeric_string in y_valid])
+#    y_test_np = np.array([int(numeric_string) for numeric_string in y_test])
+#    y_train_np = np.array([int(numeric_string) for numeric_string in y_train_valid])
     scaler = StandardScaler()
-    scaler.fit(X_train)
-    X_train_validNN = scaler.transform(X_train_valid)
-    X_validNN = scaler.transform(X_valid)
-    X_testNN = scaler.transform(X_test)
+    scaler.fit(X_train) 
+    
+    scaler_output = MaxAbsScaler()
+    scaler_output.fit(y_train)
     
     #uncommenting below 3 lines ensures all algorithms get normalized data
     #this means subtracting mean and dividing by standard deviation
-    X_train_valid = X_train_validNN
-    X_valid = X_validNN
-    X_test = X_testNN  
+    X_train_valid = scaler.transform(X_train_valid)
+    X_valid = scaler.transform(X_valid)
+    X_test = scaler.transform(X_test) 
+    
+    y_train_valid = scaler_output.transform(y_train_valid.reshape(-1,1))
+    y_valid = scaler_output.transform(y_valid.reshape(-1,1))
+    y_test = scaler_output.transform(y_test.reshape(-1,1)) 
     
     n_neighbors = 10
     
@@ -269,35 +283,54 @@ while update_index < cycles:
 #                  (svc, 'Support Vector Classification'),
                   (rfr, 'Random Forest'),
                   (mlp, 'NeuralNet')]: 
-        clf.fit(X_train_valid, y_train_valid)
-        prediction[str(name)] = clf.predict(X_test)
-        avg_error = np.std((y_test_np/y_test_np) - (prediction[str(name)]/y_test_np))
-        print("Mean error (test): ",avg_error,name)
-        prediction_valid[str(name)] = clf.predict(X_valid)
-        avg_error_valid = np.std((y_valid_np/y_valid_np) - (prediction_valid[str(name)]/y_valid_np))
-        print("Mean error (valid): ",avg_error_valid,name)
+        clf.fit(X_train_valid, y_train_valid[:,0])
+        prediction[str(name)] = (clf.predict(X_test))
+        avg_error = (np.mean(((((scaler_output.inverse_transform(y_test.reshape(-1,1))) - scaler_output.inverse_transform(prediction[str(name)].reshape(-1,1))))/(scaler_output.inverse_transform(y_test.reshape(-1,1))))**2.))
+        r2_test = r2_score(y_test, prediction[str(name)])
+        print("Mean error (test): ",avg_error,"R2:",r2_test,name)
+        prediction_valid[str(name)] = (clf.predict(X_valid))
+        avg_error_valid = (np.mean((((scaler_output.inverse_transform(y_valid.reshape(-1,1)) - scaler_output.inverse_transform(prediction_valid[str(name)].reshape(-1,1))))/scaler_output.inverse_transform(y_valid.reshape(-1,1)))**2.))
+        r2_valid = r2_score(y_valid, prediction_valid[str(name)])        
+        print("Mean error (valid): ",avg_error_valid,"R2:",r2_valid,name)
         if name == 'KNeighborsRegressor':
             normalized_std_KNN.append(avg_error)
             normalized_std_valid_KNN.append(avg_error_valid)
+            R2_KNN.append(r2_test)
+            R2_valid_KNN.append(r2_valid)
         if name == 'ElasticNet':    
             normalized_std_EN.append(avg_error)
             normalized_std_valid_EN.append(avg_error_valid)
+            R2_EN.append(r2_test)
+            R2_valid_EN.append(r2_valid)
         if name == 'Random Forest':
             normalized_std_RFR.append(avg_error)
             normalized_std_valid_RFR.append(avg_error_valid)
+            R2_RFR.append(r2_test)
+            R2_valid_RFR.append(r2_valid)
         if name == 'NeuralNet':
             normalized_std_NN.append(avg_error)
             normalized_std_valid_NN.append(avg_error_valid)
+            R2_NN.append(r2_test)
+            R2_valid_NN.append(r2_valid)
     update_index = update_index + 1
      
-print('average_error_KNN_Lawson_p:', np.mean(normalized_std_KNN),' +/- ',np.std(normalized_std_KNN))
-print('average_error_valid_KNN_Lawson_p:', np.mean(normalized_std_valid_KNN),' +/- ',np.std(normalized_std_valid_KNN))
-print('average_error_RFR_Lawson_p:', np.mean(normalized_std_RFR),' +/- ',np.std(normalized_std_RFR))
-print('average_error_valid_RFR_Lawson_p:', np.mean(normalized_std_valid_RFR),' +/- ',np.std(normalized_std_valid_RFR))
-print('average_error_EN_Lawson_p:', np.mean(normalized_std_EN),' +/- ',np.std(normalized_std_EN))
-print('average_error_valid_EN_Lawson_p:', np.mean(normalized_std_valid_EN),' +/- ',np.std(normalized_std_valid_EN))
-print('average_error_NN_Lawson_p:', np.mean(normalized_std_NN),' +/- ',np.std(normalized_std_NN))
-print('average_error_valid_NN_Lawson_p:', np.mean(normalized_std_valid_NN),' +/- ',np.std(normalized_std_valid_NN))
+print('average_error_KNN_Lawson_p:', np.mean(normalized_std_KNN)**0.5,' +/- ',np.std(normalized_std_KNN)**0.5)
+print('average_error_valid_KNN_Lawson_p:', np.mean(normalized_std_valid_KNN)**0.5,' +/- ',np.std(normalized_std_valid_KNN)**0.5)
+print('average_error_RFR_Lawson_p:', np.mean(normalized_std_RFR)**0.5,' +/- ',np.std(normalized_std_RFR)**0.5)
+print('average_error_valid_RFR_Lawson_p:', np.mean(normalized_std_valid_RFR)**0.5,' +/- ',np.std(normalized_std_valid_RFR)**0.5)
+print('average_error_EN_Lawson_p:', np.mean(normalized_std_EN)**0.5,' +/- ',np.std(normalized_std_EN)**0.5)
+print('average_error_valid_EN_Lawson_p:', np.mean(normalized_std_valid_EN)**0.5,' +/- ',np.std(normalized_std_valid_EN)**0.5)
+print('average_error_NN_Lawson_p:', np.mean(normalized_std_NN)**0.5,' +/- ',np.std(normalized_std_NN)**0.5)
+print('average_error_valid_NN_Lawson_p:', np.mean(normalized_std_valid_NN)**0.5,' +/- ',np.std(normalized_std_valid_NN)**0.5)
+
+print('average_R2_KNN_Lawson_p:', np.mean(R2_KNN),' +/- ',np.std(R2_KNN))
+print('average_R2_valid_KNN_Lawson_p:', np.mean(R2_valid_KNN),' +/- ',np.std(R2_valid_KNN))
+print('average_R2_RFR_Lawson_p:', np.mean(R2_RFR),' +/- ',np.std(R2_RFR))
+print('average_R2_valid_RFR_Lawson_p:', np.mean(R2_valid_RFR),' +/- ',np.std(R2_valid_RFR))
+print('average_R2_EN_Lawson_p:', np.mean(R2_EN),' +/- ',np.std(R2_EN))
+print('average_R2_valid_EN_Lawson_p:', np.mean(R2_valid_EN),' +/- ',np.std(R2_valid_EN))
+print('average_R2_NN_Lawson_p:', np.mean(R2_NN),' +/- ',np.std(R2_NN))
+print('average_R2_valid_NN_Lawson_p:', np.mean(R2_valid_NN),' +/- ',np.std(R2_valid_NN))
 
 import pickle
 #Saving created model
@@ -319,6 +352,8 @@ pickle.dump(mlp, NN_Lawson_p_model_pkl)
 NN_Lawson_p_model_pkl.close()
 scalerfile = '/home/mathewsa/Desktop/scaler.sav'
 pickle.dump(scaler, open(scalerfile, 'wb'))
+scaler_outputfile = '/home/mathewsa/Desktop/scaler.sav'
+pickle.dump(scaler_output, open(scaler_outputfile, 'wb'))
 
 #Loading saved model
 #RF_LHI_model_pkl = open(RF_LHI_pkl_filename, 'rb')

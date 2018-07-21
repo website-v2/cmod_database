@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jun 26 13:50:18 2018
+Created on Fri Jul 20 17:16:08 2018
 
 @author: mathewsa
-
-Inserting a single column and populating it in an existing database;
-This example is only adding column of psurfa or dWmhddt and populating this particular column
+Inserting values into an existing single column and populating it in an existing database;
+This example is only adding Halpha or p_rad_core and populating this particular column
 """
 
 import sqlite3
@@ -129,32 +128,26 @@ while i < len(shots):
             ones = np.ones(len(timebase))
             
             while True:
-                try:  
-                    path_shot = path_shot['{}'.format(shot)][0]
-                    efit = MDSplus.Tree('{}'.format(path_shot), shot)
-                    IDL.run("good_time_slices = efit_check(shot={},tree='{}')".format(shot,path_shot)) 
-                    good_time_slices = getattr(IDL,"good_time_slices") #returns indexes for values passing efit_check test
-                    time_efit = (efit.getNode('\efit_aeqdsk:time')).data()[good_time_slices]
-                    psurfa = (efit.getNode('\efit_aeqdsk:psurfa')).data()[good_time_slices]; #surface area of lcfs
-                    psurfa = np.interp(timebase,time_efit,psurfa,left=np.nan,right=np.nan)  
-                    Wmhd = (efit.getNode('\efit_aeqdsk:wplasm')).data()[good_time_slices]; #diamagnetic/stored energy, [J]
-                    Wmhd = np.interp(timebase,time_efit,Wmhd,left=np.nan,right=np.nan)
-                    dWmhddt = np.gradient(Wmhd,timebase)
-                    dWmhddt = smooth(dWmhddt,11)                          
+                try:
+                    spectroscopy = MDSplus.Tree('SPECTROSCOPY', shot) 
+                    Halpha = (spectroscopy.getNode('\SPECTROSCOPY::HA_2_BRIGHT')).data(); #H-Alpha at H Port
+                    time_Halpha = (spectroscopy.getNode('\SPECTROSCOPY::HA_2_BRIGHT')).dim_of().data();
+                    Halpha = np.interp(timebase,time_Halpha,Halpha,left=np.nan,right=np.nan)
+            #use twopi_diode instead as in Granetz code if avoiding non-causal filtering
+            #rad_fraction = p_rad/p_input (if p_input==0 then NaN/0)
                     break
-                except TreeNODATA:
-                    time_efit = timebase
-                    psurfa = NaN
-                    dWmhddt = NaN
-                    print("No values stored for efit") 
+                except (TreeNODATA,TreeFOPENR,TreeNNF):
+                    Halpha = NaN
+                    time_Halpha = timebase    
+                    print("No values stored for spectroscopy") 
                     print(shot)
                     break
                 except:
-                    print("Unexpected error for efit")
+                    print("Unexpected error for spectroscopy")
                     print(shot)
                     raise
             
-            np.savez('/home/mathewsa/Desktop/single_shot_training_table_py.npz', dWmhddt=dWmhddt)
+            np.savez('/home/mathewsa/Desktop/single_shot_training_table_py.npz', Halpha=Halpha)
             np.savez('/home/mathewsa/Desktop/extra_variables.npz', timebase=timebase)
 
 #acquiring data to put into table above
@@ -169,22 +162,22 @@ while i < len(shots):
             column5 = 'time'
             column6 = 'time_at_transition'
             
-            new_columns = [['dWmhddt','REAL']] 
+#            new_columns = [['dWmhddt','REAL']] 
             
             # Connecting to the database file
             conn = sqlite3.connect(sqlite_file)
             cursor = conn.cursor() 
             
-            ii = 0
-            while ii < len(new_columns):
-                try:
-                    cursor.execute("ALTER TABLE {tn} ADD COLUMN '{c}' {ct}"\
-                            .format(tn=table_name, c=new_columns[ii][0], ct=new_columns[ii][1]))
-                except:
-                    print("Column {} already exists".format(new_columns[ii][0]))
-                ii = ii + 1 
+#            ii = 0
+#            while ii < len(new_columns):
+#                try:
+#                    cursor.execute("ALTER TABLE {tn} ADD COLUMN '{c}' {ct}"\
+#                            .format(tn=table_name, c=new_columns[ii][0], ct=new_columns[ii][1]))
+#                except:
+#                    print("Column {} already exists".format(new_columns[ii][0]))
+#                ii = ii + 1 
              
-            conn.commit()  
+#            conn.commit()  
             cursor.execute('select shot,id,present_mode,next_mode,time,time_at_transition from {}'.format(table_name))
             rows = cursor.fetchall()   
             data = np.load('/home/mathewsa/Desktop/single_shot_training_table_py.npz')
@@ -202,14 +195,26 @@ while i < len(shots):
                     try:
                         for iii in data:   
                             conn.commit()  
-                            cursor.execute((("UPDATE {} SET {}= ? WHERE id = ?").\
-                            format(table_name,iii)),((data['{}'.format(iii)])[j],rows[k][1]))  
+                            cursor.execute((("UPDATE {} SET Halpha= ? WHERE id = ?").\
+                            format(table_name)),((data['{}'.format(iii)])[j],rows[k][1]))  
                         
                         current_time = datetime.now()    
                         current_time = str(datetime.now()) 
                         conn.commit()  
                         cursor.execute("UPDATE {} SET {} = ? WHERE id = ?".format(table_name,\
                         'update_time'),(current_time,rows[k][1]))
+                        
+#                            conn.commit()  
+#                            cursor.execute("""UPDATE %s SET 'Halpha' = %s WHERE id = %s""",(table_name, (data['{}'.format(iii)])[j], rows[k][1]))  
+#                            print('Supposedly doing job')
+#                        current_time = datetime.now()    
+#                        current_time = str(datetime.now()) 
+#                        conn.commit()  
+#                        cursor.execute("UPDATE {} SET {} = ? WHERE id = ?".format(table_name,\
+#                        'update_time'),(current_time,rows[k][1]))
+#                             
+##                    except sqlite3.IntegrityError:
+##                        print('ERROR: ID already exists in PRIMARY KEY column {}'.format(column2))
                              
                     except sqlite3.IntegrityError:
                         print('ERROR: ID already exists in PRIMARY KEY column {}'.format(column2))
@@ -231,3 +236,4 @@ while i < len(shots):
     #can define an alternative timebase if desired, but using this
     #definition of > ~100kA as start/end condition currently for table
     i = i + 1
+
