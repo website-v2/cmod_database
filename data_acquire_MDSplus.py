@@ -121,27 +121,87 @@ def main(shot,timebase,path_shot):
             time_p_icrf = (p_icrf_tree.getNode('\RF::RF_POWER_NET')).dim_of().data()
             p_icrf = 1000000.*(p_icrf_tree.getNode('\RF::RF_POWER_NET')).data(); #[W] net icrf power
             p_icrf = np.interp(timebase,time_p_icrf,p_icrf,left=np.nan,right=np.nan)
-            time_p_icrf_d = (p_icrf_tree.getNode('\RF::RF_POWER_D')).dim_of().data()
-            p_icrf_d = 1000000.*(p_icrf_tree.getNode('\RF::RF_POWER_D')).data()
-            p_icrf_d = np.interp(timebase,time_p_icrf_d,p_icrf_d,left=np.nan,right=np.nan)
-            time_p_icrf_e = (p_icrf_tree.getNode('\RF::RF_POWER_E')).dim_of().data()
-            p_icrf_e = 1000000.*(p_icrf_tree.getNode('\RF::RF_POWER_E')).data()
-            p_icrf_e = np.interp(timebase,time_p_icrf_e,p_icrf_e,left=np.nan,right=np.nan)
-            time_p_icrf_j3 = (p_icrf_tree.getNode('\RF::RF_POWER_J3')).dim_of().data()
-            p_icrf_j3 = 1000000.*(p_icrf_tree.getNode('\RF::RF_POWER_J3')).data()
-            p_icrf_j3 = np.interp(timebase,time_p_icrf_j3,p_icrf_j3,left=np.nan,right=np.nan)
-            time_p_icrf_j4 = (p_icrf_tree.getNode('\RF::RF_POWER_J4')).dim_of().data()
-            p_icrf_j4 = 1000000.*(p_icrf_tree.getNode('\RF::RF_POWER_J4')).data()
-            p_icrf_j4 = np.interp(timebase,time_p_icrf_j4,p_icrf_j4,left=np.nan,right=np.nan)
             break
         except (TreeNODATA,TreeFOPENR,TreeNNF):
-            p_icrf = p_icrf_d = p_icrf_e = p_icrf_j3 = p_icrf_j4 = NaN
-            time_p_icrf = time_p_icrf_d = time_p_icrf_e = time_p_icrf_j3 = time_p_icrf_j4 = timebase
+            p_icrf = NaN
+            time_p_icrf = timebase
             print("No values stored for p_icrf") 
             print(shot)
             break
         except:
             print("Unexpected error for p_icrf")
+            print(shot)
+            raise
+             
+    while True:
+        try:
+            p_icrf_tree = MDSplus.Tree('rf', shot) 
+            time_p_icrf_d = (p_icrf_tree.getNode('\RF::RF_POWER_D')).dim_of().data()
+            p_icrf_d = 1000000.*(p_icrf_tree.getNode('\RF::RF_POWER_D')).data()
+            p_icrf_d = np.interp(timebase,time_p_icrf_d,p_icrf_d,left=np.nan,right=np.nan)
+            break
+        except (TreeNODATA,TreeFOPENR,TreeNNF):
+            p_icrf_d = NaN
+            time_p_icrf_d = timebase
+            print("No values stored for p_icrf_x") 
+            print(shot)
+            break
+        except:
+            print("Unexpected error for p_icrf_x")
+            print(shot)
+            raise
+            
+    while True:
+        try:
+            p_icrf_tree = MDSplus.Tree('rf', shot) 
+            time_p_icrf_e = (p_icrf_tree.getNode('\RF::RF_POWER_E')).dim_of().data()
+            p_icrf_e = 1000000.*(p_icrf_tree.getNode('\RF::RF_POWER_E')).data()
+            p_icrf_e = np.interp(timebase,time_p_icrf_e,p_icrf_e,left=np.nan,right=np.nan)
+            break
+        except (TreeNODATA,TreeFOPENR,TreeNNF):
+            p_icrf_e = NaN
+            time_p_icrf_e = timebase
+            print("No values stored for p_icrf_x") 
+            print(shot)
+            break
+        except:
+            print("Unexpected error for p_icrf_x")
+            print(shot)
+            raise
+            
+    while True:
+        try:
+            p_icrf_tree = MDSplus.Tree('rf', shot) 
+            time_p_icrf_j3 = (p_icrf_tree.getNode('\RF::RF_POWER_J3')).dim_of().data()
+            p_icrf_j3 = 1000000.*(p_icrf_tree.getNode('\RF::RF_POWER_J3')).data()
+            p_icrf_j3 = np.interp(timebase,time_p_icrf_j3,p_icrf_j3,left=np.nan,right=np.nan)
+            break
+        except (TreeNODATA,TreeFOPENR,TreeNNF):
+            p_icrf_j3 = NaN
+            time_p_icrf_j3 = timebase
+            print("No values stored for p_icrf_x") 
+            print(shot)
+            break
+        except:
+            print("Unexpected error for p_icrf_x")
+            print(shot)
+            raise
+            
+    while True:
+        try:
+            p_icrf_tree = MDSplus.Tree('rf', shot) 
+            time_p_icrf_j4 = (p_icrf_tree.getNode('\RF::RF_POWER_J4')).dim_of().data()
+            p_icrf_j4 = 1000000.*(p_icrf_tree.getNode('\RF::RF_POWER_J4')).data()
+            p_icrf_j4 = np.interp(timebase,time_p_icrf_j4,p_icrf_j4,left=np.nan,right=np.nan)
+            break
+        except (TreeNODATA,TreeFOPENR,TreeNNF):
+            p_icrf_j4 = NaN
+            time_p_icrf_j4 = timebase
+            print("No values stored for p_icrf_x") 
+            print(shot)
+            break
+        except:
+            print("Unexpected error for p_icrf_x")
             print(shot)
             raise
 
@@ -438,9 +498,6 @@ def main(shot,timebase,path_shot):
     while True:
         try:
             p_rad_tree = MDSplus.Tree('SPECTROSCOPY', shot) #[W]
-            time_p_rad = (p_rad_tree.getNode('\TWOPI_FOIL')).dim_of().data()
-            p_rad = (p_rad_tree.getNode('\TWOPI_FOIL')).data()
-            p_rad = np.interp(timebase,time_p_rad,p_rad,left=np.nan,right=np.nan)
             time_p_rad_core = (p_rad_tree.getNode('\\top.bolometer.results.foil:main_power')).dim_of().data()
             p_rad_core = (p_rad_tree.getNode('\\top.bolometer.results.foil:main_power')).data() 
             p_rad_core = np.interp(timebase,time_p_rad_core,p_rad_core,left=np.nan,right=np.nan)
@@ -448,8 +505,28 @@ def main(shot,timebase,path_shot):
     #rad_fraction = p_rad/p_input (if p_input==0 then NaN/0)
             break
         except (TreeNODATA,TreeFOPENR,TreeNNF):
-            p_rad = p_rad_core = NaN
-            time_p_rad = time_p_rad_core = timebase    
+            p_rad_core = NaN
+            time_p_rad_core = timebase    
+            print("No values stored for spectroscopy") 
+            print(shot)
+            break
+        except:
+            print("Unexpected error for spectroscopy")
+            print(shot)
+            raise
+            
+    while True:
+        try:
+            p_rad_tree = MDSplus.Tree('SPECTROSCOPY', shot) #[W]
+            time_p_rad = (p_rad_tree.getNode('\TWOPI_FOIL')).dim_of().data()
+            p_rad = (p_rad_tree.getNode('\TWOPI_FOIL')).data()
+            p_rad = np.interp(timebase,time_p_rad,p_rad,left=np.nan,right=np.nan)
+    #use twopi_diode instead as in Granetz code if avoiding non-causal filtering
+    #rad_fraction = p_rad/p_input (if p_input==0 then NaN/0)
+            break
+        except (TreeNODATA,TreeFOPENR,TreeNNF):
+            p_rad = NaN
+            time_p_rad = timebase    
             print("No values stored for spectroscopy") 
             print(shot)
             break
@@ -673,6 +750,24 @@ def main(shot,timebase,path_shot):
             print(shot)
             raise
             
+    while True:
+        try:
+            pressure = MDSplus.Tree('edge', shot)
+            b_bot_mks = pressure.getNode('\\b_bot_mks').data()[0] #[mtorr]
+            time_b_bot_mks = pressure.getNode(('\\b_bot_mks')).dim_of().data()
+            b_bot_mks = np.interp(timebase,time_b_bot_mks,b_bot_mks,left=np.nan,right=np.nan)
+            break
+        except (TreeNODATA,TreeFOPENR,TreeNNF):
+            b_bot_mks = NaN
+            time_b_bot_mks = timebase
+            print("No values stored for edge pressures") 
+            print(shot)
+            break
+        except:
+            print("Unexpected error for edge pressures")
+            print(shot)
+            raise 
+            
             
     while True:
         try:
@@ -680,16 +775,28 @@ def main(shot,timebase,path_shot):
             g_side_rat = pressure.getNode('\g_side_rat').data() #[mtorr]
             time_g_side_rat = pressure.getNode(('\g_side_rat')).dim_of().data()
             g_side_rat = np.interp(timebase,time_g_side_rat,g_side_rat,left=np.nan,right=np.nan)
+            break
+        except (TreeNODATA,TreeFOPENR,TreeNNF):
+            g_side_rat = NaN
+            time_g_side_rat = timebase
+            print("No values stored for edge pressures") 
+            print(shot)
+            break
+        except:
+            print("Unexpected error for edge pressures")
+            print(shot)
+            raise 
+            
+    while True:
+        try:
+            pressure = MDSplus.Tree('edge', shot)
             e_bot_mks = (pressure.getNode('\e_bot_mks').data())[0] #[mtorr]
             time_e_bot_mks = pressure.getNode(('\e_bot_mks')).dim_of().data()
             e_bot_mks = np.interp(timebase,time_e_bot_mks,e_bot_mks,left=np.nan,right=np.nan)
-            b_bot_mks = pressure.getNode('\\b_bot_mks').data()[0] #[mtorr]
-            time_b_bot_mks = pressure.getNode(('\\b_bot_mks')).dim_of().data()
-            b_bot_mks = np.interp(timebase,time_b_bot_mks,b_bot_mks,left=np.nan,right=np.nan)
             break
         except (TreeNODATA,TreeFOPENR,TreeNNF):
-            g_side_rat = e_bot_mks = b_bot_mks = NaN
-            time_g_side_rat = time_e_bot_mks = time_b_bot_mks = timebase
+            e_bot_mks = NaN
+            time_e_bot_mks = timebase
             print("No values stored for edge pressures") 
             print(shot)
             break
