@@ -75,14 +75,15 @@ def smooth(y,box_pts):
     x = (np.linspace(-box_pts/2.,box_pts/2.,box_pts + 1))
     sigma = box_pts/5.
     integral = quad(gaussian, x[0], x[-1], args=(sigma))[0]
-    box = gaussian(x, sigma)/integral
+    box = gaussian(x, sigma)
+    box = gaussian(x, sigma)/box.sum() #integral
     y_smooth = np.convolve(y,box,mode='same')
     return y_smooth
     
-start_time = 0.383 #seconds
-end_time = 1.744 #seconds
+start_time = 0.070 #seconds
+end_time = 1.810 #seconds
 timebase = np.arange(round(start_time,3),round(end_time,3),0.001) #using 1 millisecond constant interval
-shot = 1160930033
+shot = 1091016033
 tstart = 1000.*start_time #milliseconds
 dt = 1.0 #milliseconds
 tend = 1000.*end_time #milliseconds     
@@ -105,16 +106,84 @@ box_size = 50
 Pinput = (data['P_ohm'] + data['p_icrf'] - np.gradient(data['Wmhd'], timebase))
 tau_E = smooth(data['Wmhd'],box_size)/smooth(Pinput,box_size)
 dtau_Edt = smooth(np.gradient(tau_E, timebase),box_size)
+nebar_efit = data['nebar_efit']
     
+plt.figure()
+plt.plot(timebase,(smooth(data['p_icrf'], box_size)),color='green')
+
+plt.figure()
+plt.plot(timebase,(smooth(data['P_ohm'], box_size)),color='green')
+
+plt.figure()
+plt.plot(timebase,(smooth(data['P_ohm'], box_size)) + (smooth(data['p_icrf'], box_size)),color='green')
+
 plt.figure()
 plt.plot(timebase,tau_E*dtau_Edt,color='green')
 plt.ylabel(r"$(\frac {d\tau_E}{dt}) \tau_E $")
 plt.xlabel(r'Time (s)')
+#plt.axvspan(0.5, 0.825, facecolor='blue', alpha=0.1) 
+#plt.axvspan(0.825, 0.857, facecolor='blue', alpha=0.1)
+#plt.axvspan(0.857, 0.948, facecolor='red', alpha=0.5)
+#plt.axvspan(0.948, 1.009, facecolor='red', alpha=0.1)
+#plt.axvspan(1.009,1.076, facecolor='green', alpha=0.5) 
+#plt.axvspan(1.076,1.095, facecolor='blue', alpha=0.5)  
+#plt.xlim([0.5,1.095]) 
 plt.show()
 
-dnebar_efit_Edt = smooth(np.gradient(data['nebar_efit'], timebase),box_size)
+dnebar_efit_Edt = smooth(np.gradient(nebar_efit, timebase),box_size)
 plt.figure()
-plt.plot(timebase,dnebar_efit_Edt/data['nebar_efit'],color='green')
+plt.plot(timebase,dnebar_efit_Edt/nebar_efit,color='green')
 plt.ylabel(r"$(\frac {d\bar{n}}{dt})/{\bar {n}} $")
 plt.xlabel(r'Time (s)')
+#plt.axvspan(0.5, 0.825, facecolor='blue', alpha=0.1) 
+#plt.axvspan(0.825, 0.857, facecolor='blue', alpha=0.1)
+#plt.axvspan(0.857, 0.948, facecolor='red', alpha=0.5)
+#plt.axvspan(0.948, 1.009, facecolor='red', alpha=0.1)
+#plt.axvspan(1.009,1.076, facecolor='green', alpha=0.5) 
+#plt.axvspan(1.076,1.095, facecolor='blue', alpha=0.5)  
+#plt.xlim([0.5,1.095]) 
 plt.show()
+
+plt.figure()
+plt.plot(timebase,np.sign(dtau_Edt)*((tau_E*dtau_Edt*smooth(np.array(X_data)[:,0],box_size))**2.)/np.nanmax(np.abs(((tau_E*dtau_Edt*smooth(np.array(X_data)[:,0],box_size))**2.))),color='green')
+plt.ylabel(r"$[(\frac{d\tau_E}{dt}) W_{mhd} \tau_E]^2 {(normalized \ transition \ predictor)} $")
+plt.xlabel(r'Time (s)')
+#plt.axvspan(0.5, 0.825, facecolor='blue', alpha=0.1) 
+#plt.axvspan(0.825, 0.857, facecolor='blue', alpha=0.1)
+#plt.axvspan(0.857, 0.948, facecolor='red', alpha=0.5)
+#plt.axvspan(0.948, 1.009, facecolor='red', alpha=0.1)
+#plt.axvspan(1.009,1.076, facecolor='green', alpha=0.5) 
+#plt.axvspan(1.076,1.095, facecolor='blue', alpha=0.5)  
+#plt.xlim([0.5,1.095]) 
+plt.show()
+
+plt.figure()
+predictor = (np.sign(dtau_Edt)*((tau_E*dtau_Edt*smooth(np.array(X_data)[:,0],box_size))**2.)*(np.exp(-2.*np.abs(dnebar_efit_Edt/nebar_efit))))
+plt.plot(timebase,predictor/np.nanmax(np.abs(predictor)),color='green')
+#plt.ylabel(r"$[(\frac{d\tau_E}{dt}) W_{mhd} \tau_E]^2 {(normalized \ transition \ predictor)} $")
+plt.xlabel(r'Time (s)')
+#plt.axvspan(0.5, 0.825, facecolor='blue', alpha=0.1) 
+#plt.axvspan(0.825, 0.857, facecolor='blue', alpha=0.1)
+#plt.axvspan(0.857, 0.948, facecolor='red', alpha=0.5)
+#plt.axvspan(0.948, 1.009, facecolor='red', alpha=0.1)
+#plt.axvspan(1.009,1.067, facecolor='green', alpha=0.5) 
+#plt.axvspan(1.067,1.095, facecolor='blue', alpha=0.5)  
+#plt.xlim([0.5,1.095]) 
+plt.show()
+
+plt.figure()
+predictor = (np.sign(dtau_Edt)*((tau_E*dtau_Edt*smooth(np.array(X_data)[:,0],box_size))**10.)*(np.exp(-10.*np.abs(dnebar_efit_Edt/nebar_efit))))
+plt.plot(timebase,predictor/np.nanmax(np.abs(predictor)),color='green')
+#plt.ylabel(r"$[(\frac{d\tau_E}{dt}) W_{mhd} \tau_E]^2 {(normalized \ transition \ predictor)} $")
+plt.xlabel(r'Time (s)')
+#plt.axvspan(0.5, 0.825, facecolor='blue', alpha=0.1) 
+#plt.axvspan(0.825, 0.857, facecolor='blue', alpha=0.1)
+#plt.axvspan(0.857, 0.948, facecolor='red', alpha=0.5)
+#plt.axvspan(0.948, 1.009, facecolor='red', alpha=0.1)
+#plt.axvspan(1.009,1.067, facecolor='green', alpha=0.5) 
+#plt.axvspan(1.067,1.095, facecolor='blue', alpha=0.5)  
+#plt.xlim([0.5,1.095]) 
+plt.show()
+
+H_predictor = smooth((((tau_E*dtau_Edt*smooth(np.array(X_data)[:,0],box_size)))*(np.exp(1.*np.abs(dnebar_efit_Edt/nebar_efit)/np.nanmax(np.abs(dnebar_efit_Edt/nebar_efit))))), box_size)
+plt.plot(timebase,H_predictor/np.nanmax(np.abs(H_predictor)),color='green')

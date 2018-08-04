@@ -37,6 +37,10 @@ import sqlite3
 from datetime import datetime
 import numpy as np
 import sys
+import matplotlib
+from matplotlib import rcParams
+matplotlib.rcParams['text.usetex'] = True
+matplotlib.rcParams['text.latex.unicode'] = True
 import matplotlib.pyplot as plt 
 from mpl_toolkits.mplot3d import Axes3D 
 import seaborn as sns
@@ -120,10 +124,10 @@ total_x_data = []
 bad_shot = 0 #initialize
 i = 0 
 while i < len(rows):  
-    if (values['ip'][i] != None) and (values['btor'][i] != None) and (values['Wmhd'][i] > 0.) and (values['nebar_efit'][i] > 0.) and (values['beta_p'][i] > 0.) and (values['P_ohm'][i] != None) and (values['li'][i] != None) and (values['rmag'][i] != None):
+    if (values['ip'][i] != None) and (values['btor'][i] != None) and (values['Wmhd'][i] > 0.) and (values['nebar_efit'][i] > 0.) and (values['beta_p'][i] > 0.) and (values['li'][i] != None) and (values['rmag'][i] != None) and (values['p_icrf'][i] != None):
         Y_data0.append((values['present_mode'])[i])
-        X_data0.append([(values['shot'])[i],(values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
-                        (values['li'])[i],(((values['rmag'])[i]-0.68)/0.22)]) #first element must be shot!
+        X_data0.append([(values['shot'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],(values['li'])[i],
+                        (((values['rmag'])[i]-0.68)),((values['p_icrf'])[i] + (values['P_ohm'])[i])]) #first element must be shot!
         total_x_data.append([(values['shot'])[i],(values['ip'])[i],(values['btor'])[i],(values['li'])[i],
               (values['q95'])[i],(values['Wmhd'])[i],(values['p_icrf'])[i],
               (values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],
@@ -166,181 +170,199 @@ L_index = [i for i,val in enumerate(Y_data0) if val=='0']
 H_index = [i for i,val in enumerate(Y_data0) if val=='1']
 I_index = [i for i,val in enumerate(Y_data0) if val=='2']
 
-Wmhd_L = (np.array(X_data0)[:,1])[L_index]
-Wmhd_H = (np.array(X_data0)[:,1])[H_index]
-Wmhd_I = (np.array(X_data0)[:,1])[I_index]
-nebar_efit_L = (np.array(X_data0)[:,2])[L_index]
-nebar_efit_H = (np.array(X_data0)[:,2])[H_index]
-nebar_efit_I = (np.array(X_data0)[:,2])[I_index]
-beta_p_L = (np.array(X_data0)[:,3])[L_index]
-beta_p_H = (np.array(X_data0)[:,3])[H_index]
-beta_p_I = (np.array(X_data0)[:,3])[I_index]
-li_L = (np.array(X_data0)[:,4])[L_index]
-li_H = (np.array(X_data0)[:,4])[H_index]
-li_I = (np.array(X_data0)[:,4])[I_index]
-rmag_L = (np.array(X_data0)[:,5])[L_index]
-rmag_H = (np.array(X_data0)[:,5])[H_index]
-rmag_I = (np.array(X_data0)[:,5])[I_index]
-
-plt.xlabel(r"$W_{mhd} \ (J)$")
-plt.ylabel('Counts')
-n, bins, patches = plt.hist(Wmhd_L, 200, facecolor='b', label = 'L-mode', alpha=0.4)
-n, bins, patches = plt.hist(Wmhd_H, 200, facecolor='g', label = 'H-mode', alpha=0.4)
-n, bins, patches = plt.hist(Wmhd_I, 200, facecolor='r', label = 'I-mode', alpha=0.4)
-#plt.axis([0., 0.2, 0., 0.2*len(tau_E)])
-plt.legend()
-plt.grid(True)
-plt.show()
-
-plt.xlabel(r"$\bar{n}$")
-plt.ylabel('Counts')
-n, bins, patches = plt.hist(nebar_efit_L, 200, facecolor='b', label = 'L-mode', alpha=0.4)
-n, bins, patches = plt.hist(nebar_efit_H, 200, facecolor='g', label = 'H-mode', alpha=0.4)
-n, bins, patches = plt.hist(nebar_efit_I, 200, facecolor='r', label = 'I-mode', alpha=0.4)
-#plt.axis([0., 0.2, 0., 0.2*len(tau_E)])
-plt.legend()
-plt.grid(True)
-plt.show()
-
-plt.xlabel(r"$\beta_p$")
-plt.ylabel('Counts')
-n, bins, patches = plt.hist(beta_p_L, 200, facecolor='b', label = 'L-mode', alpha=0.4)
-n, bins, patches = plt.hist(beta_p_H, 200, facecolor='g', label = 'H-mode', alpha=0.4)
-n, bins, patches = plt.hist(beta_p_I, 200, facecolor='r', label = 'I-mode', alpha=0.4)
-#plt.axis([0., 0.2, 0., 0.2*len(tau_E)])
-plt.legend()
-plt.grid(True)
-plt.show()
-
-plt.xlabel(r"$l_i$")
-plt.ylabel('Counts')
-n, bins, patches = plt.hist(li_L, 200, facecolor='b', label = 'L-mode', alpha=0.4)
-n, bins, patches = plt.hist(li_H, 200, facecolor='g', label = 'H-mode', alpha=0.4)
-n, bins, patches = plt.hist(li_I, 200, facecolor='r', label = 'I-mode', alpha=0.4)
-#plt.axis([0., 0.2, 0., 0.2*len(tau_E)])
-plt.legend()
-plt.grid(True)
-plt.show()
-
-plt.xlabel(r"$r_{mag} \ (m)$")
-plt.ylabel('Counts')
-n, bins, patches = plt.hist(rmag_L, 200, facecolor='b', label = 'L-mode', alpha=0.4)
-n, bins, patches = plt.hist(rmag_H, 200, facecolor='g', label = 'H-mode', alpha=0.4)
-n, bins, patches = plt.hist(rmag_I, 200, facecolor='r', label = 'I-mode', alpha=0.4)
-#plt.axis([0., 0.2, 0., 0.2*len(tau_E)])
-plt.legend()
-plt.grid(True)
-plt.show()
-
-L_data = (np.array(total_x_data,dtype=np.float64)[:,6])[L_index]
-H_data = (np.array(total_x_data,dtype=np.float64)[:,6])[H_index]
-I_data = (np.array(total_x_data,dtype=np.float64)[:,6])[I_index]
-
-n, bins, patches = plt.hist(L_data[np.isfinite(L_data)], 200, facecolor='b', label = 'L-mode', alpha=0.4)
-n, bins, patches = plt.hist(H_data[np.isfinite(H_data)], 200, facecolor='g', label = 'H-mode', alpha=0.4)
-n, bins, patches = plt.hist(I_data[np.isfinite(I_data)], 200, facecolor='r', label = 'I-mode', alpha=0.4)
-#plt.xlim(xmin=10000, xmax = 10000002.5)
-#plt.ylim(ymin=0, ymax = 2000)
-plt.legend()
-plt.grid(True)
-plt.show() 
-
-#fig = plt.figure()
-#ax1 = fig.add_subplot(111) 
-#ax1.scatter(nebar_efit_L, beta_p_L, s=10, c='b', label='L-mode')
-#ax1.scatter(nebar_efit_H, beta_p_H, s=10, c='g', label='H-mode')
-#ax1.scatter(nebar_efit_I, beta_p_I, s=10, c='r', label='I-mode')
-#plt.legend(loc='upper left');
+#beta_N_L = (np.array(X_data0)[:,1])[L_index]
+#beta_N_H = (np.array(X_data0)[:,1])[H_index]
+#beta_N_I = (np.array(X_data0)[:,1])[I_index]
+#beta_p_L = (np.array(X_data0)[:,3])[L_index]
+#beta_p_H = (np.array(X_data0)[:,3])[H_index]
+#beta_p_I = (np.array(X_data0)[:,3])[I_index]
+#plt.figure() #plt.scatter(X_data[:,0],X_data[:,2])
+#plt.scatter(beta_N_L,beta_p_L,alpha=0.05,
+#       facecolors='none', edgecolors='blue', label = 'L-mode')
+#plt.scatter(beta_N_H,beta_p_H,alpha=0.1,
+#       facecolors='none', edgecolors='green', label = 'H-mode')
+#plt.scatter(beta_N_I,beta_p_I,alpha=0.1,
+#       facecolors='none', edgecolors='r', label = 'I-mode')
+#plt.ylabel(r'$\beta_p$')
+#plt.xlabel(r'$\beta_N$')
+#plt.axvspan(-0.2,1.6, facecolor='whitesmoke', alpha=0.5)
+#plt.xlim([-0.1,1.5])
+#plt.legend()
 #plt.show()
 
-heatmap_L, xedges_L, yedges_L = np.histogram2d(nebar_efit_L, beta_p_L, bins=50)
-extent_L = [xedges_L[0], xedges_L[-1], yedges_L[0], yedges_L[-1]]  
-
-heatmap_H, xedges_H, yedges_H = np.histogram2d(nebar_efit_H, beta_p_H, bins=50)
-extent_H = [xedges_H[0], xedges_H[-1], yedges_H[0], yedges_H[-1]]  
-
-heatmap_I, xedges_I, yedges_I = np.histogram2d(nebar_efit_I, beta_p_I, bins=50)
-extent_I = [xedges_I[0], xedges_I[-1], yedges_I[0], yedges_I[-1]]
-plt.figure(figsize=(14, 6))
-plt.clf()
-plt.xlabel(r"$\bar{n} \ (m^{-3})$")
-plt.ylabel(r"$\beta_p$")
-imL = plt.imshow(heatmap_L.T, extent=extent_L, origin='lower',aspect='auto', cmap='Blues', alpha=0.3, label = 'L-mode')
-imH = plt.imshow(heatmap_H.T, extent=extent_H, origin='lower',aspect='auto',cmap='Greens', alpha=0.3, label = 'H-mode')
-imI = plt.imshow(heatmap_I.T, extent=extent_I, origin='lower',aspect='auto',cmap='Reds', alpha=0.3, label = 'I-mode')
-plt.autoscale()
-plt.xlim([0.,5.*(10.**20.)]) 
-plt.ylim([0.,0.6])
-cbarI = plt.colorbar(imI, extend='both', ticks=[], pad=-0.05)
-cbarH = plt.colorbar(imH, extend='both', ticks=[], pad=-0.04) 
-cbarL = plt.colorbar(imL, extend='both', ticks=[])
-cbarL.ax.set_title(r"$\bf{L-mode}$", y=1.01, rotation=0)
-cbarH.ax.set_title(r"$\bf{H-mode}$", y=1.01, rotation=0)
-cbarI.ax.set_title(r"$\bf{I-mode}$", y=1.01, rotation=0)
-cbarL.ax.set_xticklabels([])
-cbarH.ax.set_xticklabels([])
-cbarI.ax.set_xticklabels([])
-plt.legend()
-plt.show()
-
-heatmap_L, xedges_L, yedges_L = np.histogram2d((np.array(total_x_data,dtype=np.float64)[:,9])[L_index], rmag_L, bins=50)
-extent_L = [xedges_L[0], xedges_L[-1], yedges_L[0], yedges_L[-1]]  
-
-heatmap_H, xedges_H, yedges_H = np.histogram2d((np.array(total_x_data,dtype=np.float64)[:,9])[H_index], rmag_H, bins=50)
-extent_H = [xedges_H[0], xedges_H[-1], yedges_H[0], yedges_H[-1]]  
-
-heatmap_I, xedges_I, yedges_I = np.histogram2d((np.array(total_x_data,dtype=np.float64)[:,9])[I_index], rmag_I, bins=50)
-extent_I = [xedges_I[0], xedges_I[-1], yedges_I[0], yedges_I[-1]]
-plt.figure(figsize=(14, 6))
-plt.clf()
-plt.xlabel(r"$\beta_N$")
-plt.ylabel(r"$r_{mag} \ (m)$")
-imL = plt.imshow(heatmap_L.T, extent=extent_L, origin='lower',aspect='auto', cmap='Blues', alpha=0.3, label = 'L-mode')
-imH = plt.imshow(heatmap_H.T, extent=extent_H, origin='lower',aspect='auto',cmap='Greens', alpha=0.3, label = 'H-mode')
-imI = plt.imshow(heatmap_I.T, extent=extent_I, origin='lower',aspect='auto',cmap='Reds', alpha=0.3, label = 'I-mode')
-plt.autoscale() 
-plt.ylim([0.67,0.693])
-cbarI = plt.colorbar(imI, extend='both', ticks=[], pad=-0.05)
-cbarH = plt.colorbar(imH, extend='both', ticks=[], pad=-0.04) 
-cbarL = plt.colorbar(imL, extend='both', ticks=[])
-cbarL.ax.set_title(r"$\bf{L-mode}$", y=1.01, rotation=0)
-cbarH.ax.set_title(r"$\bf{H-mode}$", y=1.01, rotation=0)
-cbarI.ax.set_title(r"$\bf{I-mode}$", y=1.01, rotation=0)
-cbarL.ax.set_xticklabels([])
-cbarH.ax.set_xticklabels([])
-cbarI.ax.set_xticklabels([])
-plt.legend()
-plt.show()
-
-heatmap_L, xedges_L, yedges_L = np.histogram2d(nebar_efit_L, beta_p_L, bins=50)
-extent_L = np.array([xedges_L[0], xedges_L[-1], yedges_L[0], yedges_L[-1]])
-heatmap_H, xedges_H, yedges_H = np.histogram2d(nebar_efit_H, beta_p_H, bins=50)
-extent_H = np.array([xedges_H[0], xedges_H[-1], yedges_H[0], yedges_H[-1]])
-heatmap_I, xedges_I, yedges_I = np.histogram2d(nebar_efit_I, beta_p_I, bins=50)
-extent_I = np.array([xedges_I[0], xedges_I[-1], yedges_I[0], yedges_I[-1]])
-flatL = np.reshape(heatmap_L, 2500)
-flatH = np.reshape(heatmap_H, 2500)  # flatten the 2D arrays
-flatI = np.reshape(heatmap_I, 2500)
-maxL = flatL.max()  # Find the maximum in each
-maxH = flatH.max()
-maxI = flatI.max() 
-augL = np.array([(0, 0, 1, x/maxL) for x in flatL]).reshape((50, 50, 4))
-augH = np.array([(0, 1, 0, x/maxH) for x in flatH]).reshape((50, 50, 4))
-augI = np.array([(1, 0, 0, x/maxI) for x in flatI]).reshape((50, 50, 4))
-plt.clf()
-# Plot without cmap as colours are now part of the data array passed.
-imL = plt.imshow(augL, extent=extent_L, origin='lower',label='L-mode',aspect='auto')
-imH = plt.imshow(augH, extent=extent_H, origin='lower',label='H-mode',aspect='auto')
-imI = plt.imshow(augI, extent=extent_I, origin='lower',label='I-mode',aspect='auto')
-plt.autoscale()
-plt.xlabel(r"$\bar{n} \ (m^{-3})$")
-plt.ylabel(r"$\beta_p$")
-plt.xlim([0.,5.*(10.**20.)]) 
-plt.ylim([0.,0.6])
-plt.legend()
-plt.show() 
-
-
+#Wmhd_L = (np.array(X_data0)[:,1])[L_index]
+#Wmhd_H = (np.array(X_data0)[:,1])[H_index]
+#Wmhd_I = (np.array(X_data0)[:,1])[I_index]
+#nebar_efit_L = (np.array(X_data0)[:,2])[L_index]
+#nebar_efit_H = (np.array(X_data0)[:,2])[H_index]
+#nebar_efit_I = (np.array(X_data0)[:,2])[I_index]
+#beta_p_L = (np.array(X_data0)[:,3])[L_index]
+#beta_p_H = (np.array(X_data0)[:,3])[H_index]
+#beta_p_I = (np.array(X_data0)[:,3])[I_index]
+#li_L = (np.array(X_data0)[:,4])[L_index]
+#li_H = (np.array(X_data0)[:,4])[H_index]
+#li_I = (np.array(X_data0)[:,4])[I_index]
+#rmag_L = (np.array(X_data0)[:,5])[L_index]
+#rmag_H = (np.array(X_data0)[:,5])[H_index]
+#rmag_I = (np.array(X_data0)[:,5])[I_index]
+#
+#plt.xlabel(r"$W_{mhd} \ (J)$")
+#plt.ylabel('Counts')
+#n, bins, patches = plt.hist(Wmhd_L, 200, facecolor='b', label = 'L-mode', alpha=0.4)
+#n, bins, patches = plt.hist(Wmhd_H, 200, facecolor='g', label = 'H-mode', alpha=0.4)
+#n, bins, patches = plt.hist(Wmhd_I, 200, facecolor='r', label = 'I-mode', alpha=0.4)
+##plt.axis([0., 0.2, 0., 0.2*len(tau_E)])
+#plt.legend()
+#plt.grid(True)
+#plt.show()
+#
+#plt.xlabel(r"$\bar{n}$")
+#plt.ylabel('Counts')
+#n, bins, patches = plt.hist(nebar_efit_L, 200, facecolor='b', label = 'L-mode', alpha=0.4)
+#n, bins, patches = plt.hist(nebar_efit_H, 200, facecolor='g', label = 'H-mode', alpha=0.4)
+#n, bins, patches = plt.hist(nebar_efit_I, 200, facecolor='r', label = 'I-mode', alpha=0.4)
+##plt.axis([0., 0.2, 0., 0.2*len(tau_E)])
+#plt.legend()
+#plt.grid(True)
+#plt.show()
+#
+#plt.xlabel(r"$\beta_p$")
+#plt.ylabel('Counts')
+#n, bins, patches = plt.hist(beta_p_L, 200, facecolor='b', label = 'L-mode', alpha=0.4)
+#n, bins, patches = plt.hist(beta_p_H, 200, facecolor='g', label = 'H-mode', alpha=0.4)
+#n, bins, patches = plt.hist(beta_p_I, 200, facecolor='r', label = 'I-mode', alpha=0.4)
+##plt.axis([0., 0.2, 0., 0.2*len(tau_E)])
+#plt.legend()
+#plt.grid(True)
+#plt.show()
+#
+#plt.xlabel(r"$l_i$")
+#plt.ylabel('Counts')
+#n, bins, patches = plt.hist(li_L, 200, facecolor='b', label = 'L-mode', alpha=0.4)
+#n, bins, patches = plt.hist(li_H, 200, facecolor='g', label = 'H-mode', alpha=0.4)
+#n, bins, patches = plt.hist(li_I, 200, facecolor='r', label = 'I-mode', alpha=0.4)
+##plt.axis([0., 0.2, 0., 0.2*len(tau_E)])
+#plt.legend()
+#plt.grid(True)
+#plt.show()
+#
+#plt.xlabel(r"$r_{mag} \ (m)$")
+#plt.ylabel('Counts')
+#n, bins, patches = plt.hist(rmag_L, 200, facecolor='b', label = 'L-mode', alpha=0.4)
+#n, bins, patches = plt.hist(rmag_H, 200, facecolor='g', label = 'H-mode', alpha=0.4)
+#n, bins, patches = plt.hist(rmag_I, 200, facecolor='r', label = 'I-mode', alpha=0.4)
+##plt.axis([0., 0.2, 0., 0.2*len(tau_E)])
+#plt.legend()
+#plt.grid(True)
+#plt.show()
+#
+#L_data = (np.array(total_x_data,dtype=np.float64)[:,6])[L_index]
+#H_data = (np.array(total_x_data,dtype=np.float64)[:,6])[H_index]
+#I_data = (np.array(total_x_data,dtype=np.float64)[:,6])[I_index]
+#
+#n, bins, patches = plt.hist(L_data[np.isfinite(L_data)], 200, facecolor='b', label = 'L-mode', alpha=0.4)
+#n, bins, patches = plt.hist(H_data[np.isfinite(H_data)], 200, facecolor='g', label = 'H-mode', alpha=0.4)
+#n, bins, patches = plt.hist(I_data[np.isfinite(I_data)], 200, facecolor='r', label = 'I-mode', alpha=0.4)
+##plt.xlim(xmin=10000, xmax = 10000002.5)
+##plt.ylim(ymin=0, ymax = 2000)
+#plt.legend()
+#plt.grid(True)
+#plt.show() 
+#
+##fig = plt.figure()
+##ax1 = fig.add_subplot(111) 
+##ax1.scatter(nebar_efit_L, beta_p_L, s=10, c='b', label='L-mode')
+##ax1.scatter(nebar_efit_H, beta_p_H, s=10, c='g', label='H-mode')
+##ax1.scatter(nebar_efit_I, beta_p_I, s=10, c='r', label='I-mode')
+##plt.legend(loc='upper left');
+##plt.show()
+#
+#heatmap_L, xedges_L, yedges_L = np.histogram2d(nebar_efit_L, beta_p_L, bins=50)
+#extent_L = [xedges_L[0], xedges_L[-1], yedges_L[0], yedges_L[-1]]  
+#
+#heatmap_H, xedges_H, yedges_H = np.histogram2d(nebar_efit_H, beta_p_H, bins=50)
+#extent_H = [xedges_H[0], xedges_H[-1], yedges_H[0], yedges_H[-1]]  
+#
+#heatmap_I, xedges_I, yedges_I = np.histogram2d(nebar_efit_I, beta_p_I, bins=50)
+#extent_I = [xedges_I[0], xedges_I[-1], yedges_I[0], yedges_I[-1]]
+#plt.figure(figsize=(14, 6))
+#plt.clf()
+#plt.xlabel(r"$\bar{n} \ (m^{-3})$")
+#plt.ylabel(r"$\beta_p$")
+#imL = plt.imshow(heatmap_L.T, extent=extent_L, origin='lower',aspect='auto', cmap='Blues', alpha=0.3, label = 'L-mode')
+#imH = plt.imshow(heatmap_H.T, extent=extent_H, origin='lower',aspect='auto',cmap='Greens', alpha=0.3, label = 'H-mode')
+#imI = plt.imshow(heatmap_I.T, extent=extent_I, origin='lower',aspect='auto',cmap='Reds', alpha=0.3, label = 'I-mode')
+#plt.autoscale()
+#plt.xlim([0.,5.*(10.**20.)]) 
+#plt.ylim([0.,0.6])
+#cbarI = plt.colorbar(imI, extend='both', ticks=[], pad=-0.05)
+#cbarH = plt.colorbar(imH, extend='both', ticks=[], pad=-0.04) 
+#cbarL = plt.colorbar(imL, extend='both', ticks=[])
+#cbarL.ax.set_title(r"$\bf{L-mode}$", y=1.01, rotation=0)
+#cbarH.ax.set_title(r"$\bf{H-mode}$", y=1.01, rotation=0)
+#cbarI.ax.set_title(r"$\bf{I-mode}$", y=1.01, rotation=0)
+#cbarL.ax.set_xticklabels([])
+#cbarH.ax.set_xticklabels([])
+#cbarI.ax.set_xticklabels([])
+#plt.legend()
+#plt.show()
+#
+#heatmap_L, xedges_L, yedges_L = np.histogram2d((np.array(total_x_data,dtype=np.float64)[:,9])[L_index], rmag_L, bins=50)
+#extent_L = [xedges_L[0], xedges_L[-1], yedges_L[0], yedges_L[-1]]  
+#
+#heatmap_H, xedges_H, yedges_H = np.histogram2d((np.array(total_x_data,dtype=np.float64)[:,9])[H_index], rmag_H, bins=50)
+#extent_H = [xedges_H[0], xedges_H[-1], yedges_H[0], yedges_H[-1]]  
+#
+#heatmap_I, xedges_I, yedges_I = np.histogram2d((np.array(total_x_data,dtype=np.float64)[:,9])[I_index], rmag_I, bins=50)
+#extent_I = [xedges_I[0], xedges_I[-1], yedges_I[0], yedges_I[-1]]
+#plt.figure(figsize=(14, 6))
+#plt.clf()
+#plt.xlabel(r"$\beta_N$")
+#plt.ylabel(r"$r_{mag} \ (m)$")
+#imL = plt.imshow(heatmap_L.T, extent=extent_L, origin='lower',aspect='auto', cmap='Blues', alpha=0.3, label = 'L-mode')
+#imH = plt.imshow(heatmap_H.T, extent=extent_H, origin='lower',aspect='auto',cmap='Greens', alpha=0.3, label = 'H-mode')
+#imI = plt.imshow(heatmap_I.T, extent=extent_I, origin='lower',aspect='auto',cmap='Reds', alpha=0.3, label = 'I-mode')
+#plt.autoscale() 
+#plt.ylim([0.67,0.693])
+#cbarI = plt.colorbar(imI, extend='both', ticks=[], pad=-0.05)
+#cbarH = plt.colorbar(imH, extend='both', ticks=[], pad=-0.04) 
+#cbarL = plt.colorbar(imL, extend='both', ticks=[])
+#cbarL.ax.set_title(r"$\bf{L-mode}$", y=1.01, rotation=0)
+#cbarH.ax.set_title(r"$\bf{H-mode}$", y=1.01, rotation=0)
+#cbarI.ax.set_title(r"$\bf{I-mode}$", y=1.01, rotation=0)
+#cbarL.ax.set_xticklabels([])
+#cbarH.ax.set_xticklabels([])
+#cbarI.ax.set_xticklabels([])
+#plt.legend()
+#plt.show()
+#
+#heatmap_L, xedges_L, yedges_L = np.histogram2d(nebar_efit_L, beta_p_L, bins=50)
+#extent_L = np.array([xedges_L[0], xedges_L[-1], yedges_L[0], yedges_L[-1]])
+#heatmap_H, xedges_H, yedges_H = np.histogram2d(nebar_efit_H, beta_p_H, bins=50)
+#extent_H = np.array([xedges_H[0], xedges_H[-1], yedges_H[0], yedges_H[-1]])
+#heatmap_I, xedges_I, yedges_I = np.histogram2d(nebar_efit_I, beta_p_I, bins=50)
+#extent_I = np.array([xedges_I[0], xedges_I[-1], yedges_I[0], yedges_I[-1]])
+#flatL = np.reshape(heatmap_L, 2500)
+#flatH = np.reshape(heatmap_H, 2500)  # flatten the 2D arrays
+#flatI = np.reshape(heatmap_I, 2500)
+#maxL = flatL.max()  # Find the maximum in each
+#maxH = flatH.max()
+#maxI = flatI.max() 
+#augL = np.array([(0, 0, 1, x/maxL) for x in flatL]).reshape((50, 50, 4))
+#augH = np.array([(0, 1, 0, x/maxH) for x in flatH]).reshape((50, 50, 4))
+#augI = np.array([(1, 0, 0, x/maxI) for x in flatI]).reshape((50, 50, 4))
+#plt.clf()
+## Plot without cmap as colours are now part of the data array passed.
+#imL = plt.imshow(augL, extent=extent_L, origin='lower',label='L-mode',aspect='auto')
+#imH = plt.imshow(augH, extent=extent_H, origin='lower',label='H-mode',aspect='auto')
+#imI = plt.imshow(augI, extent=extent_I, origin='lower',label='I-mode',aspect='auto')
+#plt.autoscale()
+#plt.xlabel(r"$\bar{n} \ (m^{-3})$")
+#plt.ylabel(r"$\beta_p$")
+#plt.xlim([0.,5.*(10.**20.)]) 
+#plt.ylim([0.,0.6])
+#plt.legend()
+#plt.show() 
 
 q = 0
 p = 0
@@ -470,8 +492,8 @@ while update_index < cycles:
     print('Fraction of total data for training + validation = ',train_valid_frac)
     print('Fraction of training + validation data used for training = ',fraction_)
     #use below 4 lines if randomizing shots AND time slices for train/validation set
-    print("ML_testing_all_normalized_NN_100x100x100_layers_([(values['shot'])[i],(values['beta_N'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],\
-                        (values['li'])[i],(((values['rmag'])[i]-0.68)/0.22)]), cycles =",cycles,\
+    print("ML_testing_all_normalized_NN_100x100x100_layers_([(values['shot'])[i],(values['nebar_efit'])[i],(values['beta_p'])[i],(values['li'])[i],\
+                        (((values['rmag'])[i]-0.68)),((values['p_icrf'])[i] + (values['P_ohm'])[i])]), cycles =",cycles,\
     shots_number,' distinct shots in this dataset being considered',\
     'H-mode fraction to total dataset time slices: ',p,'/',len(Y_data0),\
     'I-mode fraction to total dataset time slices: ',p_i,'/',len(Y_data0))    
@@ -1106,14 +1128,19 @@ while update_index < cycles:
     print("Feature ranking:")
 
     for f in range(len(X_test[0])):
-        print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
-    
+        print("%d. feature %d (%f +/- %f)" % (f + 1, indices[f], importances[indices[f]], std[indices[f]]))
+    matplotlib.rcParams['text.usetex'] = True
+    matplotlib.rcParams['text.latex.unicode'] = True
     plt.figure()
-    plt.title("Feature importances")
+    plt.title(r'$\mathrm{Relative \ feature \ importance}$')
     plt.bar(range(len(X_test[0])), importances[indices],
-           color="r", yerr=std[indices], align="center")
-    plt.xticks(range(len(X_test[0])), indices)
+           yerr=std[indices], alpha=0.5,
+           color=['red'],#, 'green', 'blue', 'cyan', 'magenta'],
+           error_kw=dict(ecolor='gray', lw=2, capsize=5, capthick=2), align="center")
+    plt.xticks(range(len(X_test[0])), [r'$\beta_N$', r'$n/n_G$', r'$\beta_p$',
+                       r'$l_i$', r'$\Delta$'])
     plt.xlim([-1,len(X_test[0])])
+    plt.axvspan(-10000000000000000.,100000000000000., facecolor='whitesmoke', alpha=0.5) 
     plt.show()
 #    # Annotate points on the simplex
 #    plt.annotate(r'($\frac{1}{3}$, $\frac{1}{3}$, $\frac{1}{3}$)',
@@ -1458,6 +1485,15 @@ tot_acc_NN = (NN_00 + NN_11 + NN_22)/(NN_00 + NN_01 + NN_02 + NN_10 + NN_11 +\
             NN_12 + NN_20 + NN_21 + NN_22)
 tot_acc_LR = (LR_00 + LR_11 + LR_22)/(LR_00 + LR_01 + LR_02 + LR_10 + LR_11 +\
             LR_12 + LR_20 + LR_21 + LR_22)
+            
+#plt.figure() #plt.scatter(X_data[:,0],X_data[:,2])
+#plt.scatter(X_data[:,0],X_data[:,2],alpha=0.1,
+#       facecolors='none', edgecolors='r')
+#plt.ylabel(r'$\beta_p$')
+#plt.xlabel(r'$\beta_N$')
+#plt.axvspan(-0.2,1.6, facecolor='whitesmoke', alpha=0.5)
+#plt.xlim([-0.1,1.5])
+#plt.show()
 
 print('precision_RF_L:', np.mean(precision_RF_L),' +/- ',np.std(precision_RF_L))
 print('recall_RF_L:', np.mean(recall_RF_L),' +/- ',np.std(recall_RF_L))
@@ -2000,6 +2036,17 @@ print('tot_acc_NB_valid:', np.mean(tot_acc_NB_valid),' +/- ',np.std(tot_acc_NB_v
 print('tot_acc_NN_valid:', np.mean(tot_acc_NN_valid),' +/- ',np.std(tot_acc_NN_valid)) 
 print('tot_acc_LR_valid:', np.mean(tot_acc_LR_valid),' +/- ',np.std(tot_acc_LR_valid)) 
 
+#df = pd.DataFrame(X_data0)
+#corr = df.corr()
+#corr.style.background_gradient().set_precision(3)
+#f, ax = plt.subplots(figsize=(10, 8))
+#sns.heatmap(corr, annot=True, fmt='.3f', mask=np.zeros_like(corr, dtype=np.bool), cmap=sns.diverging_palette(220, 10, as_cmap=True),
+#            square=True, ax=ax)
+#ax.set_xticklabels(['shot', r'$W_{mhd}$', r'$\bar{n}$', r'$\beta_p$', r'$P_{ohm}$',
+#                   r'$l_i$', r'$r_{mag}$', r'$H_\alpha$'])  
+#ax.set_yticklabels(['shot', r'$W_{mhd}$', r'$\bar{n}$', r'$\beta_p$', r'$P_{ohm}$',
+#                   r'$l_i$', r'$r_{mag}$', r'$H_\alpha$'][::-1])
+                   
 import pickle
 #Saving created model
 RF_LHI_pkl_filename = '/home/mathewsa/Desktop/RF_classifier_LHI.pkl'
